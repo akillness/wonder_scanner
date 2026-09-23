@@ -6,3 +6,4 @@ dist/
 *.log
 .qa/
 .vercel
+graphify-out/
