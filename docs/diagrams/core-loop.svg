@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 260" width="900" height="260" font-family="-apple-system,Segoe UI,Pretendard,sans-serif">
+  <defs><linearGradient id="g1" x1="0" x2="1"><stop offset="0" stop-color="#6ee7ff"/><stop offset="1" stop-color="#a78bfa"/></linearGradient><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5L0 10z" fill="#8b95ad"/></marker></defs>
+  <rect width="900" height="260" rx="20" fill="#0b0f1a"/>
+  <text x="450" y="34" text-anchor="middle" fill="#e8ecf5" font-size="18" font-weight="800">코어 루프 — 스캔 → 공명 → 포획 → 발견 → 추억 → 성장</text>
+  <g font-size="13" fill="#e8ecf5" text-anchor="middle">
+    <g><rect x="30" y="80" width="130" height="90" rx="16" fill="#121a2b" stroke="#6ee7ff" stroke-width="2"/><text x="95" y="112" font-size="26">📷</text><text x="95" y="138" font-weight="700">스캔</text><text x="95" y="156" fill="#8b95ad" font-size="11">온디바이스 AI · 80종</text></g>
+    <g><rect x="200" y="80" width="130" height="90" rx="16" fill="#121a2b" stroke="#7cf59a" stroke-width="2"/><text x="265" y="112" font-size="26">⏳</text><text x="265" y="138" font-weight="700">공명 + 정령</text><text x="265" y="156" fill="#8b95ad" font-size="11">게이지 · AR 탭</text></g>
+    <g><rect x="370" y="80" width="130" height="90" rx="16" fill="#121a2b" stroke="#ffd166" stroke-width="2"/><text x="435" y="112" font-size="26">🎯</text><text x="435" y="138" font-weight="700">타이밍 포획</text><text x="435" y="156" fill="#8b95ad" font-size="11">퍼펙트/그레이트/굿/미스</text></g>
+    <g><rect x="540" y="80" width="130" height="90" rx="16" fill="#121a2b" stroke="#d29bff" stroke-width="2"/><text x="605" y="112" font-size="26">✨</text><text x="605" y="138" font-weight="700">발견 · 스크래치</text><text x="605" y="156" fill="#8b95ad" font-size="11">이름·정체 긁어서 확인</text></g>
+    <g><rect x="710" y="80" width="160" height="90" rx="16" fill="#121a2b" stroke="url(#g1)" stroke-width="2"/><text x="790" y="112" font-size="26">📸</text><text x="790" y="138" font-weight="700">추억 · 클립 · 카드</text><text x="790" y="156" fill="#8b95ad" font-size="11">앨범 · 공유 · 선물 코드</text></g>
+  </g>
+  <g stroke="#8b95ad" stroke-width="2" fill="none" marker-end="url(#ar)"><path d="M160 125H198"/><path d="M330 125H368"/><path d="M500 125H538"/><path d="M670 125H708"/></g>
+  <path d="M790 172 C790 230 95 230 95 172" stroke="#ffd166" stroke-width="2" fill="none" stroke-dasharray="6 5" marker-end="url(#ar)"/>
+  <rect x="300" y="196" width="300" height="34" rx="10" fill="#1a2338" stroke="#ffd166"/><text x="450" y="218" text-anchor="middle" fill="#ffd166" font-size="12" font-weight="700">성장: XP · 별가루 · 랭크 · 챕터 스토리 · 의뢰 · 업적 · 보물상자 · 추억 진화</text>
+</svg>

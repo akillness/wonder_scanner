@@ -12,6 +12,10 @@ import { createCapture } from '../../game/capture.js';
 import { createSpirits } from '../../ar/spirits.js';
 import { createTracker, coverTransform, drawFrame, drawTarget, drawCaptureRing, drawGradeBurst } from '../../ar/overlay.js';
 import * as fx from '../fx.js';
+import { createRecorder } from '../../scanner/recorder.js';
+import { addMoment, MEDIA } from '../../game/media.js';
+import { bumpCombo, claimMilestones } from '../../game/economy.js';
+import { advise, eventMod, onDiscoverEvent, markEventSeen, activeEvent } from '../../game/companion.js';
 
 let modelPromise = null;
 export const warmModel = () => (modelPromise ??= loadDetector());
@@ -25,6 +29,8 @@ register('scan', () => {
     <canvas class="overlay"></canvas>
     <div class="hud" id="hud">${hudHtml()}</div>
     <div class="hud2" id="hud2"></div>
+    <div class="vignette" id="vig"></div><div class="rec hidden" id="rec">● REC</div>
+    <button class="companion" id="comp" title="루페에게 묻기"><img src="/img/lupe.svg" alt="루페"/><span class="dot"></span></button>
     <div class="hint-chip">${nudge.missing.length ? `<span class="pill">🧭 ${esc(nudge.chapter.title)} ${nudge.remain}개 남음 · ${nudge.missing.slice(0, 3).map(l => `${WONDERS[l].emoji} ${l}`).join(' · ')}</span>` : ''}</div>
     <div class="status" id="status"><div class="spinner"></div><div id="statusText">렌즈를 여는 중…</div></div>
     <div class="bottom">
@@ -44,11 +50,14 @@ register('scan', () => {
   </section>`;
   const video = $('video'), overlay = $('canvas.overlay'), still = $('img.still'), lupe = $('#lupe'), status = $('#status'), statusText = $('#statusText'), hud2 = $('#hud2');
   const S = { alive: true, mode: 'scan', source: video, target: null, fixedTarget: null, lock: null, gauge: 0, lastT: performance.now(), raf: 0, lastLupe: 0, center: null, capTarget: null, lostSince: 0, gradeAnim: null, armPrism: false, floats: [] };
-  const tracker = createTracker(), spirits = createSpirits(), capture = createCapture();
+  const tracker = createTracker(), spirits = createSpirits(), capture = createCapture(), recorder = createRecorder(); let lastBeat = 0, recBadge = null;
   startGyro();
   const setLupe = (t) => { if (lupe) lupe.textContent = t; S.lastLupe = performance.now(); };
   const renderHud2 = () => { hud2.innerHTML = `<span class="pill">◇ ${state.fragments}/${BALANCE.spirits.fragmentsPerBoost}</span>${state.boost ? `<span class="pill gold">⚡ 부스트 ${state.boost}</span>` : ''}${state.prismTokens ? `<button class="pill ${S.armPrism ? 'armed' : 'prism'}" id="arm">✨ 토큰 ${state.prismTokens} ${S.armPrism ? '장착됨 · 변이체 확정' : '장착'}</button>` : ''}${gyro().active ? '<span class="pill">🧭 AR</span>' : ''}`; const a = $('#arm'); if (a) a.onclick = () => { S.armPrism = !S.armPrism; fx.blip(); renderHud2(); }; };
   renderHud2();
+  const ev = activeEvent(); if (ev && !ev.done) $('#hud2').insertAdjacentHTML('beforeend', `<span class="pill event">⚡ ${esc(ev.title)}</span>`);
+  $('#comp').onclick = () => { fx.blip(); const tip = advise({ screen: 'scan', armed: S.armPrism }); setLupe(`${tip.icon} ${tip.text}`); markEventSeen(); $('#comp .dot')?.remove(); if (tip.action === 'arm' && $('#arm')) { S.armPrism = true; renderHud2(); } };
+  setTimeout(() => { if (S.alive) { const tip = advise({ screen: 'scan', armed: S.armPrism }); if (tip.action === 'event') { setLupe(`${tip.icon} ${tip.text}`); markEventSeen(); } } }, 2500);
   $('#back').onclick = () => go('title'); $('#codex').onclick = () => go('codex');
   $('#flip').onclick = async () => { fx.blip(); try { await flipCamera(video); } catch {} };
   $('#file').onchange = (e) => scanImage(e.target.files[0]);
@@ -111,11 +120,13 @@ register('scan', () => {
     const tgt = S.fixedTarget ?? S.target; let cooldown = null;
     if (S.mode === 'scan') {
       if (tgt) {
-        if (S.lock !== tgt.label) { S.lock = tgt.label; S.gauge = Math.min(S.gauge, 0.15); }
+        if (S.lock !== tgt.label) { S.lock = tgt.label; S.gauge = Math.min(S.gauge, 0.15); if (state.hints.includes(tgt.label) && !owned(tgt.label)) setLupe('친구가 보여준 그 원더야! 👀'); }
         const cd = canRescan(tgt.label);
-        if (cd.ok) { S.gauge = Math.min(1, S.gauge + resonanceFillRate(tgt.score, boosted) * dt); fx.tick(S.gauge); if (t - S.lastLupe > 3500) setLupe(say.scanning()); }
+        if (cd.ok) { S.gauge = Math.min(1, S.gauge + resonanceFillRate(tgt.score, boosted) * eventMod('fill') * dt); fx.tick(S.gauge); if (t - S.lastLupe > 3500) setLupe(say.scanning());
+          if (S.gauge >= MEDIA.preRollGauge && state.settings.recordClips && S.source === video && !recorder.recording && recorder.supported && document.visibilityState === 'visible') { if (recorder.start(S.source, overlay)) $('#rec')?.classList.remove('hidden'); }
+          if (WONDERS[tgt.label].rarity === 4 && !owned(tgt.label)) { $('#vig')?.classList.add('on'); if (t - lastBeat > 900) { fx.heartbeat(); fx.vibrate([15]); lastBeat = t; } } else $('#vig')?.classList.remove('on'); }
         else { cooldown = cd.remainMs; S.gauge = Math.max(0, S.gauge - 2 * dt); if (t - S.lastLupe > 3500) setLupe(say.cooldown()); }
-      } else { S.gauge = Math.max(0, S.gauge - BALANCE.resonance.decayPerSec * dt); if (S.gauge === 0) S.lock = null; }
+      } else { S.gauge = Math.max(0, S.gauge - BALANCE.resonance.decayPerSec * dt); if (S.gauge === 0) { S.lock = null; if (recorder.recording) { recorder.cancel(); $('#rec')?.classList.add('hidden'); } } $('#vig')?.classList.remove('on'); }
       const box = tracker.update(tgt?.bbox ?? null, dt);
       S.center = box ? drawTarget(x, { box, label: tgt.label, score: tgt.score, gauge: S.gauge, cooldownMs: cooldown, owned: owned(tgt.label), now: t, dt, reduceMotion: rm, boosted }, tf) : null;
       if (S.gauge >= 1 && tgt && cooldown == null) {
@@ -132,9 +143,10 @@ register('scan', () => {
       else { const p = (t - S.gradeAnim.t0) / 750; drawGradeBurst(x, S.center, S.gradeAnim.grade, Math.min(1, p)); if (p >= 1) { if (S.gradeAnim.grade === 'MISS') { S.mode = 'scan'; S.gauge = BALANCE.capture.missGaugeReset; } else return finish(S.gradeAnim.grade); } }
     }
     // AR 정령 + 플로팅 텍스트
-    spirits.update(t, dt, cw, ch, S.center ? { x: S.center.cx, y: S.center.cy } : null); spirits.draw(x);
+    spirits.update(t, dt * eventMod('spirit'), cw, ch, S.center ? { x: S.center.cx, y: S.center.cy } : null); spirits.draw(x);
     S.floats = S.floats.filter(f => t - f.t0 < 900);
     for (const f of S.floats) { const p = (t - f.t0) / 900; x.globalAlpha = 1 - p; x.font = '800 15px system-ui'; x.textAlign = 'center'; x.fillStyle = f.color; x.fillText(f.text, f.x, f.y - 20 - p * 50); x.globalAlpha = 1; }
+    if (recorder.recording) recorder.frame();
     S.raf = requestAnimationFrame(drawLoop);
   }
   async function scanImage(file) {
@@ -152,17 +164,25 @@ register('scan', () => {
     if (!cd.ok) { setLupe(`${say.cooldown()} (${Math.ceil(cd.remainMs / 1000)}초)`); fx.denied(); setTimeout(back, 1600); return; }
     S.fixedTarget = tgt; // 이후 흐름(공명 → 포획 링)은 카메라와 동일
   }
-  function finish(grade) {
-    if (!S.alive) return;
+  async function finish(grade) {
+    if (!S.alive) return; S.alive = false; cancelAnimationFrame(S.raf); // 이중 호출 방지
     const tgt = S.capTarget, fromImage = S.source === still;
     const photo = snapshot(S.source, fromImage ? null : tgt.bbox);
     const usedToken = S.armPrism && state.prismTokens > 0;
     const isVariant = rollVariant(tgt.score, BALANCE.capture.grades[grade].variantMul, usedToken);
+    const combo = bumpCombo(grade);
     const result = discover(tgt.label, { confidence: tgt.score, isVariant, grade, usedToken });
+    const evDust = eventMod('dust', { chapter: result.wonder.chapter }); if (evDust > 1) { const extra = result.reward.dust * (evDust - 1); state.dust += extra; result.reward.dust += extra; save(); }
+    const errand = onDiscoverEvent(tgt.label);
     const questsDone = questEvent({ type: 'discover', isNew: result.isNew, chapter: result.wonder.chapter, rarity: result.wonder.rarity, grade });
+    const milestones = claimMilestones();
     const achs = checkAchievements();
-    go('reveal', { ...result, photo, questsDone, achs, usedToken });
+    // 클립: 등급 연출이 담기도록 잠깐 더 녹화 후 종료
+    let clip = null; if (recorder.recording) { await new Promise(r => setTimeout(r, 350)); clip = await recorder.stop(); if (clip) { state.stats.clips += 1; save(); } }
+    stopCamera(video);
+    let momentId = null; try { const m = await addMoment({ label: tgt.label, grade, variant: isVariant, frame: state.activeFrame, photoDataUrl: photo, clip, clipType: clip?.type ?? null }); momentId = m.id; } catch {}
+    go('reveal', { ...result, photo, questsDone, achs, usedToken, combo, milestones, clip, momentId, errand });
   }
   if (location.search.includes('debug')) window.__scan = { S, capture, spirits, ring: () => capture.tick(performance.now()) };
-  return () => { S.alive = false; cancelAnimationFrame(S.raf); stopCamera(video); };
+  return () => { S.alive = false; cancelAnimationFrame(S.raf); recorder.cancel(); stopCamera(video); };
 });

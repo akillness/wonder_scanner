@@ -12,7 +12,8 @@
   "dependencies": {
     "@tensorflow-models/coco-ssd": "^2.2.3",
     "@tensorflow/tfjs": "^4.22.0",
-    "canvas-confetti": "^1.9.4"
+    "canvas-confetti": "^1.9.4",
+    "firebase": "^12.19.0"
   },
   "devDependencies": {
     "vite": "^7.0.0"

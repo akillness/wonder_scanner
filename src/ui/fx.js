@@ -30,8 +30,10 @@ function retrigger(el, cls) { el.classList.remove(cls); void el.offsetWidth; el.
 export function vibrate(pattern) { if (!state.settings.haptics) return; try { navigator.vibrate?.(pattern); } catch {} }
 
 // ── Web Audio (에셋 없이 합성)
-let ctx = null;
-function ac() { if (!state.settings.sound) return null; if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)(); if (ctx.state === 'suspended') ctx.resume(); return ctx; }
+let ctx = null, master = null, tapDest = null;
+function ac() { if (!state.settings.sound) return null; if (!ctx) { ctx = new (window.AudioContext || window.webkitAudioContext)(); master = ctx.createGain(); master.gain.value = 1; master.connect(ctx.destination); } if (ctx.state === 'suspended') ctx.resume(); return ctx; }
+/** 녹화기가 게임 사운드를 믹스할 수 있도록 MediaStream 제공 */
+export function audioStream() { const c = ac(); if (!c) return null; if (!tapDest) { tapDest = c.createMediaStreamDestination(); master.connect(tapDest); } return tapDest.stream; }
 export function unlockAudio() { ac(); }
 function tone(freq, { type = 'sine', dur = 0.12, vol = 0.18, at = 0, slide = 0 } = {}) {
   const c = ac(); if (!c) return;
@@ -41,7 +43,7 @@ function tone(freq, { type = 'sine', dur = 0.12, vol = 0.18, at = 0, slide = 0 }
   g.gain.setValueAtTime(0, c.currentTime + at);
   g.gain.linearRampToValueAtTime(vol, c.currentTime + at + 0.01);
   g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + at + dur);
-  o.connect(g).connect(c.destination); o.start(c.currentTime + at); o.stop(c.currentTime + at + dur + 0.02);
+  o.connect(g).connect(master); o.start(c.currentTime + at); o.stop(c.currentTime + at + dur + 0.02);
 }
 let lastTick = 0;
 export function tick(progress) { // 게이지가 차오를수록 빨라지고 높아짐
@@ -57,3 +59,8 @@ export function chime(rarity, isVariant) {
 export function thud() { tone(160, { type: 'sine', dur: 0.2, vol: 0.2, slide: -90 }); }
 export function blip() { tone(880, { type: 'square', dur: 0.06, vol: 0.06 }); }
 export function denied() { tone(220, { type: 'square', dur: 0.15, vol: 0.08 }); tone(180, { type: 'square', dur: 0.2, vol: 0.08, at: 0.15 }); }
+
+export function heartbeat() { tone(55, { type: 'sine', dur: 0.18, vol: 0.25, slide: -20 }); tone(50, { type: 'sine', dur: 0.22, vol: 0.2, at: 0.22, slide: -20 }); }
+export function comboTone(n) { tone(520 + Math.min(n, 8) * 70, { type: 'triangle', dur: 0.12, vol: 0.12 }); tone(780 + Math.min(n, 8) * 70, { type: 'triangle', dur: 0.16, vol: 0.1, at: 0.08 }); }
+export function chest() { [330, 415, 494, 660].forEach((f, i) => tone(f, { type: 'triangle', dur: 0.3, vol: 0.14, at: i * 0.08 })); tone(880, { type: 'sine', dur: 0.6, vol: 0.12, at: 0.35 }); }
+export function drumroll(ms = 1200) { const n = Math.floor(ms / 70); for (let i = 0; i < n; i++) tone(90 + (i % 2) * 20, { type: 'square', dur: 0.05, vol: 0.05 + (i / n) * 0.08, at: i * 0.07 }); }

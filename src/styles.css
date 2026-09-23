@@ -200,3 +200,90 @@ h1.logo{margin:8px 0 0;font-size:34px;letter-spacing:.12em;background:linear-gra
 .scan .hud,.scan .hud2,.scan .hint-chip{z-index:4}
 .title .actions .row .btn{white-space:nowrap;padding:12px 6px;font-size:14px}
 .title .actions .row .btn small{display:block;margin:0;font-size:11px}
+
+/* ═══════════ v3: 소셜 · 경제 · 연출 ═══════════ */
+.chips.left{justify-content:flex-start;margin:6px 0}
+.pill.on{background:var(--ink);color:var(--bg)}
+.album-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.mom{position:relative;aspect-ratio:1;border-radius:12px;overflow:hidden;border:1px solid var(--line);padding:0;background:var(--bg2)}
+.mom img{width:100%;height:100%;object-fit:cover;display:block}
+.mom.variant{border-color:#ff8ad4;box-shadow:0 0 10px rgba(255,138,212,.4)}
+.mom .tag{position:absolute;left:4px;bottom:4px;font-size:10px;background:rgba(11,15,26,.75);border-radius:6px;padding:2px 5px;color:#fff}
+.empty{text-align:center;color:var(--mute);padding:40px 10px;font-size:15px;line-height:1.6}
+.sheet{background:var(--bg2);border:1px solid var(--line);border-radius:20px;padding:18px;width:min(380px,100%);display:flex;flex-direction:column;gap:10px;animation:pop .35s both;max-height:88vh;overflow-y:auto}
+.sheet h3{margin:0}.sheet small{color:var(--mute);line-height:1.5}.sheet label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--mute)}
+.sheet input,.sheet select{background:var(--bg);border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:10px;font:inherit}
+.sheet hr{border:0;border-top:1px solid var(--line);margin:4px 0}
+.code{background:var(--bg);border:1px dashed var(--accent);border-radius:12px;padding:10px;font-family:ui-monospace,monospace;font-size:13px;word-break:break-all;text-align:center}
+.msg{font-size:13px;min-height:1.2em}
+.shop-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.shop-item{background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:12px;text-align:left;display:flex;flex-direction:column;gap:3px;position:relative}
+.shop-item .ic{font-size:26px}.shop-item b{font-size:14px}.shop-item small{color:var(--mute);font-size:11px;line-height:1.4}.shop-item .price{margin-top:6px;color:var(--gold);font-weight:800;font-size:13px}
+.shop-item.poor .price{color:var(--mute)}.shop-item.owned{opacity:.6;border-color:var(--gold)}
+.frames{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.frame-pick{aspect-ratio:3/2;border-radius:14px;border:3px solid var(--line);background:var(--bg2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:13px;font-weight:700}
+.frame-pick.locked{opacity:.5}.frame-pick.on{outline:2px solid var(--ink);outline-offset:2px}.frame-pick small{color:var(--gold);font-size:11px}
+.frame-aurora{border-image:linear-gradient(135deg,#6ee7ff,#a78bfa,#7cf59a) 1!important}
+.frame-ember{border-image:linear-gradient(135deg,#ffd166,#ff8a5c,#ff6ea8) 1!important}
+.frame-void{border-image:linear-gradient(135deg,#ffffff,#3b2a8a,#0b0f1a) 1!important}
+.card.frame-aurora,.card.frame-ember,.card.frame-void{border-width:3px;border-style:solid}
+.goals{width:min(360px,100%);display:flex;flex-direction:column;gap:6px;margin:8px 0}
+.goal{display:flex;gap:10px;align-items:center;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:12px;padding:8px 10px;text-align:left}
+.goal .gi{font-size:22px;width:30px;text-align:center}.goal .gi img{width:26px;height:26px}.goal b{font-size:13px}.goal small{color:var(--mute);font-size:11px}
+.vignette{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .4s;background:radial-gradient(ellipse at center,transparent 45%,rgba(255,209,102,.35) 100%);z-index:2}
+.vignette.on{opacity:1;animation:beat 1s ease-in-out infinite}
+@keyframes beat{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
+.rec{position:absolute;right:12px;top:calc(var(--safe-t) + 132px);z-index:4;font-size:11px;font-weight:800;color:#ff6e6e;background:rgba(11,15,26,.7);border-radius:8px;padding:4px 8px;animation:blink 1s steps(1) infinite}
+.suspense{display:flex;flex-direction:column;align-items:center;gap:12px;animation:fade .4s both}
+.suspense .orb{width:120px;height:120px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#fff,var(--c) 40%,transparent 75%);box-shadow:0 0 60px var(--c);animation:orbPulse 1.3s ease-in-out infinite}
+.suspense .q{font-size:64px;font-weight:900;color:#fff;animation:shakeQ .25s linear infinite}.suspense small{color:var(--mute)}
+@keyframes orbPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.25);filter:brightness(1.4)}}
+@keyframes shakeQ{0%,100%{transform:translateX(-2px) rotate(-3deg)}50%{transform:translateX(2px) rotate(3deg)}}
+.combo{position:absolute;top:calc(var(--safe-t) + 14px);left:50%;transform:translateX(-50%);font-weight:900;font-size:22px;color:var(--gold);text-shadow:0 0 16px #ff8a5c;animation:pop .5s cubic-bezier(.2,1.6,.4,1) both;letter-spacing:.08em}
+.chest{background:var(--bg2);border:1px solid var(--gold);border-radius:22px;padding:22px;text-align:center;width:min(320px,90%);animation:pop .5s both;box-shadow:0 0 40px rgba(255,209,102,.4)}
+.chest .box{font-size:72px;display:inline-block;transition:transform .4s cubic-bezier(.2,1.6,.4,1)}.chest .box.open{transform:scale(1.35) rotate(-8deg);filter:drop-shadow(0 0 30px var(--gold))}
+.chest h3{margin:8px 0 2px}.chest small{color:var(--mute)}.chest .loot{display:flex;gap:8px;justify-content:center;margin:14px 0;flex-wrap:wrap}.chest .loot span{background:var(--bg);border:1px solid var(--gold);color:var(--gold);border-radius:10px;padding:6px 10px;font-weight:800;font-size:13px}
+.album .progress.sm{margin-bottom:6px}
+.tab-btn{font-size:10px}
+
+/* ═══════════ v4: 스크래치 · 추억 진화 · 클라우드 ═══════════ */
+.scratch-zone{position:relative;border-radius:12px;overflow:hidden}
+.scratch{position:absolute;inset:0;width:100%;height:100%;border-radius:12px;cursor:grab;touch-action:none;transition:opacity .4s,transform .4s;z-index:2}
+.scratch.gone{opacity:0;transform:scale(1.06);pointer-events:none}
+.recall{display:flex;gap:10px;align-items:center;width:min(360px,100%);background:linear-gradient(90deg,rgba(255,209,102,.12),rgba(167,139,250,.12));border:1px solid rgba(255,209,102,.4);border-radius:14px;padding:8px 10px;text-align:left;margin:6px 0;animation:pop .5s both}
+.recall img{width:52px;height:52px;border-radius:10px;object-fit:cover}.recall b{display:block;font-size:14px}.recall small{display:block;color:var(--mute);font-size:11px}.recall>span{color:var(--gold);font-weight:800;font-size:13px;white-space:nowrap}
+.stage-row{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--mute)}
+.stage-badge{background:rgba(124,245,154,.12);border:1px solid rgba(124,245,154,.4);color:#c9f7d4;border-radius:8px;padding:2px 8px;font-weight:700}
+.stage-row i{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.12)}.stage-row i.on{background:#7cf59a;box-shadow:0 0 6px #7cf59a}
+.stage-row small{margin-left:auto}
+.caption{font-size:13px;color:#f3e7c4;font-style:italic;line-height:1.4}.caption .mute{color:var(--mute);font-style:normal}
+.avatar{width:32px;height:32px;border-radius:50%;object-fit:cover;background:var(--bg2)}
+.collector{width:100%;text-align:left}.collector .avatar{width:36px;height:36px}
+.info-card.warn{border-color:rgba(255,209,102,.45)}.info-card code{background:var(--bg);padding:1px 5px;border-radius:5px;font-size:11px}
+.info-card .btn{margin-top:6px;align-self:stretch}
+
+/* ═══════════ v5: 대결 · 동행 NPC · 사건 ═══════════ */
+.companion{position:absolute;right:12px;bottom:calc(var(--safe-b) + 150px);z-index:4;width:54px;height:54px;border-radius:50%;background:rgba(18,26,43,.85);border:1px solid var(--line);display:grid;place-items:center;box-shadow:0 0 18px rgba(167,139,250,.45);animation:float 3s ease-in-out infinite}
+.companion img{width:40px;height:40px}.companion .dot{position:absolute;top:2px;right:2px;width:12px;height:12px;border-radius:50%;background:#ff6e6e;box-shadow:0 0 8px #ff6e6e;animation:blink 1.2s steps(1) infinite}
+.pill.event{border-color:#ffd166;color:#ffd166;background:rgba(255,209,102,.1)}
+.event-card{display:flex;gap:10px;align-items:center;width:min(360px,100%);background:rgba(255,209,102,.08);border:1px solid rgba(255,209,102,.45);border-radius:14px;padding:8px 12px;text-align:left;margin:6px 0;font-size:13px}
+.event-card>span{font-size:24px}.event-card small{display:block;color:var(--mute);font-size:11px;margin-top:2px}
+.duel-screen{background:radial-gradient(ellipse at 50% 30%,#2a1a3a 0%,var(--bg) 70%)}
+.duel-screen header{display:flex;align-items:center;gap:10px}.duel-screen h2{margin:0;flex:1;font-size:18px}
+.arena{display:flex;gap:10px;align-items:stretch;justify-content:center;margin:14px 0}
+.arena.rumble{animation:shake .5s linear infinite}
+.duel-card{flex:1;background:var(--bg2);border:2px solid var(--r-color);border-radius:16px;padding:8px;display:flex;flex-direction:column;gap:5px;align-items:center;text-align:center;position:relative;transition:transform .2s,filter .3s;max-width:170px}
+.duel-card img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px}.duel-card b{font-size:12px}.duel-card small{font-size:10px;color:var(--mute)}
+.duel-card.shadow img{filter:grayscale(1) brightness(.5) contrast(1.4)}.duel-card.shadow{border-style:dashed}
+.duel-card .hp{width:100%;height:8px;background:rgba(255,255,255,.12);border-radius:4px;overflow:hidden}.duel-card .hp i{display:block;height:100%;background:linear-gradient(90deg,#7cf59a,#ffd166,#ff6e6e);transition:width .5s cubic-bezier(.2,.8,.2,1)}
+.duel-card .st{display:flex;flex-direction:column;gap:2px;width:100%;font-size:10px;color:var(--mute)}.duel-card .st span{display:flex;justify-content:space-between;padding:2px 6px;border-radius:6px}.duel-card .st span.hi{background:rgba(255,209,102,.15);color:#fff}
+.duel-card.hit{transform:translateX(-6px) rotate(-2deg);filter:brightness(1.6) saturate(0)}.duel-card.b.hit{transform:translateX(6px) rotate(2deg)}
+.duel-card.winner{box-shadow:0 0 30px var(--r-color);transform:scale(1.04)}
+.vs{align-self:center;font-weight:900;font-size:22px;color:var(--gold);text-shadow:0 0 12px #ff8a5c}
+.log{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--mute);max-height:120px;overflow-y:auto}.log .lg{background:var(--bg2);border-radius:8px;padding:6px 8px;animation:pop .3s both}
+.duel-screen .actions{margin-top:auto;display:flex;flex-direction:column;gap:8px}
+/* 타이틀: 콘텐츠가 길어지면 줄어들지 않고 스크롤 */
+.screen.title{justify-content:flex-start;overflow-y:auto;padding-top:calc(var(--safe-t) + 28px);gap:2px}
+.screen.title>*{flex-shrink:0}
+.screen.title .logo-img{width:72px;height:72px;margin-top:8px}
+.screen.title .stat-strip{margin:14px 0 8px}

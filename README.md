@@ -18,11 +18,11 @@ AI는 100% 브라우저 안에서만 돌아갑니다. 사진은 어디로도 전
 
 <br/>
 
-| 타이틀 | 튜토리얼 | 퍼펙트 포획 → 변이체 | 도감 |
+| 타이틀 · 목표 사다리 · 사건 | 스크래치 발견 | 추억 대결 | 추억 앨범 · 진화 |
 |:--:|:--:|:--:|:--:|
-| <img src="docs/screens/v2-01-title.png" width="180"/> | <img src="docs/screens/v2-02-tutorial.png" width="180"/> | <img src="docs/screens/v2-04-perfect.png" width="180"/> | <img src="docs/screens/v2-06-codex.png" width="180"/> |
-| **오늘의 의뢰** | **프로필 · 업적** | **AR 스캔 HUD** | **발견 카드** |
-| <img src="docs/screens/v2-07-quests.png" width="180"/> | <img src="docs/screens/v2-08-profile.png" width="180"/> | <img src="docs/screens/v2-05-scan-ar.png" width="180"/> | <img src="docs/screens/v2-03-reveal.png" width="180"/> |
+| <img src="docs/screens/v3-06-title.png" width="180"/> | <img src="docs/screens/v3-01-scratch.png" width="180"/> | <img src="docs/screens/v3-02-duel.png" width="180"/> | <img src="docs/screens/v3-03-album-detail.png" width="180"/> |
+| **퍼펙트 → 변이체** | **도감** | **별가루 상점** | **탐험가 광장** |
+| <img src="docs/screens/v2-04-perfect.png" width="180"/> | <img src="docs/screens/v2-06-codex.png" width="180"/> | <img src="docs/screens/v3-04-shop.png" width="180"/> | <img src="docs/screens/v3-05-collectors.png" width="180"/> |
 
 </div>
 
@@ -50,16 +50,7 @@ AI는 100% 브라우저 안에서만 돌아갑니다. 사진은 어디로도 전
 
 ## 🎮 어떻게 노나요?
 
-```mermaid
-flowchart LR
-    A["📷 1. 스캔<br/>물건을 화면 가운데에"] --> B["⏳ 2. 공명<br/>가만히 들고 게이지가 차길 기다림"]
-    B --> C["✨ 3. 발견<br/>진짜 이름 · 희귀도 · 설정 공개"]
-    C --> D["📖 4. 수집<br/>도감 등록 / 중복이면 별가루"]
-    D --> E["🏅 5. 성장<br/>챕터 완성 · 랭크 업 · 스토리 해금"]
-    E -.->|다음 원더를 찾아서| A
-    style C fill:#2a1a3a,stroke:#d29bff,color:#fff
-    style E fill:#3a2a1a,stroke:#ffd166,color:#fff
-```
+<p align="center"><img src="docs/diagrams/core-loop.svg" alt="코어 루프" width="900"/></p>
 
 1. **스캔 시작**을 누르고 카메라 권한을 허용합니다.
 2. 컵, 노트북, 의자… 아무 물건이든 화면 가운데에 두세요. 물체에 **브래킷과 오라**가 생기고 **공명 링**이 차오릅니다.
@@ -84,14 +75,12 @@ flowchart LR
 
 ### 희귀도 — "얼마나 자주 마주치는가"로 배분
 
-```mermaid
-pie showData
-    title 80종 원더의 희귀도 분포
-    "⭐ 일반 (책상·부엌 일상품)" : 24
-    "⭐⭐ 희귀 (시계·자전거·반려동물)" : 26
-    "⭐⭐⭐ 영웅 (피자·소화전·기차)" : 20
-    "⭐⭐⭐⭐ 전설 (비행기·기린·서핑보드)" : 10
-```
+| 희귀도 | 수 | 예시 | 어디서 |
+|:--:|:--:|---|---|
+| ⭐ 일반 | 24 | 컵·노트북·의자·병 | 책상·부엌·집 |
+| ⭐⭐ 희귀 | 26 | 시계·자전거·고양이·바나나 | 거리·반려동물·과일 |
+| ⭐⭐⭐ 영웅 | 20 | 피자·소화전·기차·연 | 외출·놀이 |
+| ⭐⭐⭐⭐ 전설 | 10 | 비행기·기린·서핑보드·스키 | 여행·동물원·바다 |
 
 ### 보상표
 
@@ -133,12 +122,57 @@ pie showData
 
 ---
 
+## 💫 경제 순환 — 별가루는 어디서 오고 어디로 가나
+
+<p align="center"><img src="docs/diagrams/economy.svg" alt="경제 순환" width="900"/></p>
+
+| 사용처 | 가격 | 효과 |
+|---|:--:|---|
+| ⚡ 공명 부스트 | 80 | 다음 공명 2배 속도 (최대 3개 보유) |
+| ✨ 프리즘 토큰 | 320 | 다음 포획 변이체 확정 (3번째 의뢰·황금 정령·보물상자로도 획득) |
+| 🔁 의뢰 새로고침 | 60 | 미완료 의뢰 1개 교체 |
+| 🖼️ 카드 프레임 | 150 / 300 / 600 | 오로라 · 잔불 · 공허 — 카드·앨범·콜라주에 적용 |
+
+**보물상자**: 5 · 10 · 20 · 40 · 60 · 80종 수집마다 별가루·프리즘·XP. **목표 사다리**: 타이틀에 가장 가까운 성취 4개와 보상을 항상 보여줍니다.
+
+## 📸 추억 — 찍고 끝나는 사진이 아니다
+
+<p align="center"><img src="docs/diagrams/memory-evolution.svg" alt="추억 진화" width="900"/></p>
+
+| 기능 | 설명 |
+|---|---|
+| **앨범** | 포획마다 사진(640px·≈50KB)과 **포획 클립**(540p·5초·사운드 포함·≈700KB)이 IndexedDB에 저장. 상한 160MB, 즐겨찾기 아닌 오래된 것부터 정리 |
+| **진화** | 🌱씨앗 → 🌿새싹 → 🌸만개 → ⭐별. 캡션·필터·회상·공유·재방문·7일 숙성이 포인트. 단계마다 별가루·XP |
+| **회상** | 하루 한 번 타이틀에 "N일 전의 추억"이 떠오릅니다. 열어보면 자라고 별가루 +10 |
+| **다듬기** | 캡션 60자 · 빛 필터 5종(노을·새벽·기억·꿈결) · 프레임 |
+| **대결** | 두 추억이 신비·타이밍·성장 3라운드로 싸웁니다. 그림자 상대는 내 추억의 "다른 세계 버전". 승리 별가루 + 양쪽 모두 성장 |
+| **공유** | 카드 PNG · 클립 파일 · 9장 콜라주 · 🎁 **선물 코드**(서버 없음: 친구는 별가루·친구 추억·힌트를 받음) |
+
+## 🌐 소셜 — 혼자가 아닌 수집
+
+| 단계 | 동작 | 필요한 것 |
+|---|---|---|
+| 지금 | 선물 코드로 원더 보여주기, 카드·클립·콜라주 공유 | 없음 |
+| 클라우드 켜면 | **Google 로그인** → 추억이 내 계정에 저장, 기기 간 이어하기, **탐험가 광장**에서 다른 컬렉터의 추억 둘러보기 | Firebase 키 5개 ([docs/CLOUD_SETUP.md](docs/CLOUD_SETUP.md)) |
+
+## 🔮 루페 — 따라다니는 안내자
+
+| 역할 | 예 |
+|---|---|
+| **조언** (상태를 읽고 우선순위로 고름) | "프리즘 토큰이 2개 있어, 희귀한 게 보이면 장착하자" · "보물상자까지 2종!" · "밤이네, 램프 하나만 켜 줘" · "점심시간엔 부엌 원더가 잘 보여" |
+| **사건** (하루 1개, 날짜 시드) | ⚡ 원더 폭풍(챕터 별가루 2배) · 정령 대이동(정령 2배) · 맑은 렌즈(공명 +50%) · 루페의 부탁(특정 원더 찍어오기) · 그림자 도전장(대결 승리 보상) |
+| **동행** | 스캔 화면 우하단 아바타를 탭하면 지금 상황의 팁, 빨간 점은 새 사건 |
+
 ## 🎆 연출
 
 | 순간 | 연출 |
 |---|---|
 | 공명 중 | 희귀도 색 브래킷, 빛나는 링, 게이지에 따라 빨라지는 틱 사운드, 스캔 라인 |
-| 발견 (모든 등급) | 화면 플래시 → 카드 3D 플립 → 스탬프(NEW! / ×n) → 파티클 |
+| 발견 (모든 등급) | 화면 플래시 → 카드 3D 플립 → 스탬프(NEW! / ×n) → 파티클 → **스크래치**로 세계관 이름·실제 라벨 긁어서 확인 |
+| 영웅 이상 서스펜스 | 드럼롤 + 맥동하는 오브 + "?" → 1.4초 뒤 공개 |
+| 콤보 | 퍼펙트/그레이트 연속 시 "🔥 N COMBO" + 상승 톤 |
+| 보물상자 | 마일스톤 도달 시 상자 열림 + 별 파티클 |
+| 대결 | 아레나 진동 → 라운드별 피격 흔들림·HP 감소 → 승자 발광 |
 | 영웅 이상 | 글리치 + 화면 흔들림 + 슬로모션 진입 |
 | 전설 · 변이체 | 회전 후광(rays) + 별 모양 파티클 비 + 저음 드론 사운드 + 햅틱 |
 | 랭크 업 / 챕터 완성 | 토스트 + 추가 파티클 + 스토리 카드 |
@@ -149,31 +183,21 @@ pie showData
 
 ## 🧠 구조 — 전부 브라우저 안에서
 
-```mermaid
-flowchart TB
-    subgraph 기기["📱 사용자 기기 (서버 없음)"]
-        CAM["카메라 / 사진 파일"] --> DET["TensorFlow.js<br/>COCO-SSD lite_mobilenet_v2"]
-        DET -->|"라벨 + 신뢰도 + 박스"| RES["공명 게이지<br/>balance.js"]
-        RES -->|"게이지 100%"| DIS["discover()<br/>state.js"]
-        DIS --> LS[("localStorage<br/>도감 · XP · 별가루")]
-        DIS --> UI["Reveal 화면<br/>fx.js · card.js"]
-        WON["wonders.js<br/>80종 이름·설정·희귀도"] --> DIS
-    end
-    VER["Vercel (정적 파일만 제공)"] -.->|"HTML/JS/CSS"| 기기
-    style 기기 fill:#0b0f1a,stroke:#6ee7ff,color:#fff
-```
+<p align="center"><img src="docs/diagrams/architecture.svg" alt="구조" width="900"/></p>
 
 - **개인정보**: 카메라 프레임은 기기 밖으로 나가지 않습니다. 저장되는 것은 도감 진행 상황(로컬)뿐입니다.
 - **오프라인**: 모델(약 5MB)이 한 번 로드되면 인식은 네트워크 없이 동작합니다.
 
 ```
 src/
-├─ data/      wonders.js(80종) · chapters.js(6챕터)
-├─ game/      balance.js(수치) · state.js(저장/보상) · capture.js(타이밍 링) · quests.js(의뢰·스트릭) · achievements.js · notes.js(관찰 노트) · narrative.js
-├─ scanner/   detector.js(TF.js) · camera.js · gyro.js(DeviceOrientation)
-├─ ar/        overlay.js(브래킷·오라·태그·링) · spirits.js(자이로 앵커 정령)
-├─ ui/        shell.js(라우터·HUD·토스트) · fx.js · card.js · screens/(title·scan·reveal·codex·meta)
-└─ main.js    부트(스트릭·의뢰·업적 초기화)
+├─ data/      wonders.js(80종) · chapters.js(6챕터) · worlds/(세계관 레지스트리)
+├─ game/      balance.js · state.js(v3) · capture.js · quests.js · achievements.js · notes.js · narrative.js
+│             economy.js(상점·보물상자·목표·선물코드·콤보) · media.js(앨범·압축) · memories.js(진화·회상) · duel.js · companion.js(조언·사건)
+├─ scanner/   detector.js · camera.js · gyro.js · recorder.js(클립 + 사운드 믹스)
+├─ ar/        overlay.js · spirits.js
+├─ cloud/     provider.js(어댑터) · firebase.js(동적 import, 키 없으면 번들 제외)
+├─ ui/        shell.js · fx.js · card.js · scratch.js · screens/(title·scan·reveal·codex·album·quests·shop·profile·collectors·duel)
+└─ main.js
 public/img/   lupe.svg(마스코트) · logo.svg · ch/*.svg(챕터 엠블럼) — 손으로 그린 벡터
 ```
 
@@ -192,7 +216,7 @@ vercel --prod      # 정적 배포
 |---|---|
 | 라이브 | https://wonderscanner.vercel.app |
 | 스택 | Vite 7 · Vanilla JS · TensorFlow.js 4 · COCO-SSD · canvas-confetti · Web Audio · DeviceOrientation |
-| 데이터 | localStorage 단일 키 `wonder-scanner:v1` |
+| 데이터 | localStorage `wonder-scanner:v1` (스키마 v3) + IndexedDB `wonder-album` · 선택: Firebase |
 | 지원 | iOS Safari / Android Chrome (카메라), 데스크톱 브라우저 (사진 업로드) |
 
 ---
@@ -209,7 +233,9 @@ vercel --prod      # 정적 배포
 ## 📚 문서
 
 - [`HISTORY.md`](HISTORY.md) — 스프린트 1(4시간 MVP) + 스프린트 2(AR·콘텐츠·폴리싱) 기록
-- [`docs/game-feel-contract.json`](docs/game-feel-contract.json) — 포획 순간의 게임 필 계약 (응답 체인 · 접근성 · 검증)
+- [`docs/PRD.md`](docs/PRD.md) — 제품 요구사항 (페르소나 · 기능표 · 지표 · 세계관 확장 · 로드맵)
+- [`docs/CLOUD_SETUP.md`](docs/CLOUD_SETUP.md) — Google 로그인 · 사용자별 저장 · 광장 켜는 법
+- [`docs/game-feel-contract.json`](docs/game-feel-contract.json) — 포획 순간의 게임 필 계약
 - 원안: Gemini 브레인스토밍 "AI 매직 렌즈: 일상의 놀라운 재발견" (아이디어 3번)을 게임 요소·밸런스·서사·코어루프·연출 중심으로 확장
 
-<div align="center"><sub>Made in one 4-hour sprint · 2026-09-23</sub></div>
+<div align="center"><sub>Sprint 1 (4h MVP) → Sprint 5 (AR · 추억 · 소셜 · NPC) · 2026-09-23</sub></div>

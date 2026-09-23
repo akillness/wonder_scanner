@@ -16,8 +16,9 @@ const fresh = () => ({
   streak: { last: null, days: 0 },
   quests: { date: null, items: [] },
   achievements: [],
-  stats: { perfects: 0, greats: 0, misses: 0, spirits: 0, golden: 0, variants: 0, legendary: 0 },
-  settings: { sound: true, reduceMotion: false, autoCapture: false, haptics: true },
+  stats: { perfects: 0, greats: 0, misses: 0, spirits: 0, golden: 0, variants: 0, legendary: 0, bestCombo: 0, giftsSent: 0, giftsGot: 0, clips: 0 },
+  settings: { sound: true, reduceMotion: false, autoCapture: false, haptics: true, recordClips: true },
+  name: '', frames: ['default'], activeFrame: 'default', milestones: [], combo: 0, giftsReceived: [], hints: [], lastRecallDate: null, lastDuelWinDate: null, event: null, world: 'prime', cloud: { uid: null, public: true },
 });
 
 export const state = load();
@@ -27,9 +28,10 @@ function load() {
   try {
     const s = JSON.parse(localStorage.getItem(KEY) || '{}');
     const out = { ...d, ...s };
-    for (const k of ['streak', 'quests', 'stats', 'settings']) out[k] = { ...d[k], ...(s[k] || {}) };
+    for (const k of ['streak', 'quests', 'stats', 'settings', 'cloud']) out[k] = { ...d[k], ...(s[k] || {}) };
     if (typeof s.sound === 'boolean' && s.settings === undefined) out.settings.sound = s.sound; // v1 → v2
-    out.v = 2;
+    for (const k of ['frames', 'milestones', 'giftsReceived', 'hints']) if (!Array.isArray(out[k])) out[k] = d[k];
+    out.v = 3;
     return out;
   } catch { return d; }
 }

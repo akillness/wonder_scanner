@@ -31,7 +31,7 @@ export function nudgeHtml() {
   return `<div class="nudge"><img src="/img/ch/${c.chapter.id}.svg" alt="" /><div><b>${esc(c.chapter.title)}</b> ${c.remain}개만 더!<small>${esc(next)}</small></div></div>`;
 }
 export function tabsHtml(active) {
-  const t = [['scan', '📷', '스캔'], ['codex', '📖', '도감'], ['quests', '📋', '의뢰'], ['profile', '🧭', '프로필']];
+  const t = [['scan', '📷', '스캔'], ['codex', '📖', '도감'], ['album', '📸', '앨범'], ['quests', '📋', '의뢰'], ['profile', '🧭', '프로필']];
   return `<nav class="tabs-nav">${t.map(([k, i, l]) => `<button class="tab-btn ${k === active ? 'on' : ''}" data-go="${k}"><span>${i}</span>${l}</button>`).join('')}</nav>`;
 }
 export function bindTabs(root = app) { $$('[data-go]', root).forEach(b => b.onclick = () => go(b.dataset.go)); }
@@ -43,3 +43,8 @@ export function toast(html, ms = 3200, cls = '') {
   setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 400); }, ms);
 }
 export const grade = { PERFECT: '🎯', GREAT: '⭐', GOOD: '○', AUTO: '○' };
+
+export function goalsHtml(goals) {
+  if (!goals.length) return '';
+  return `<div class="goals">${goals.map(g => `<div class="goal"><span class="gi">${g.img ? `<img src="${g.img}" alt=""/>` : g.icon}</span><div class="grow"><b>${esc(g.text)}</b><div class="progress sm"><i style="width:${Math.round(g.pct * 100)}%"></i></div><small>${esc(g.remain)} 남음 · 보상 ${esc(g.reward)}</small></div></div>`).join('')}</div>`;
+}

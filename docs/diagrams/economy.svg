@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 300" width="900" height="300" font-family="-apple-system,Segoe UI,Pretendard,sans-serif" font-size="12">
+  <defs><marker id="e" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#ffd166"/></marker><marker id="f" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#6ee7ff"/></marker></defs>
+  <rect width="900" height="300" rx="20" fill="#0b0f1a"/>
+  <text x="450" y="32" text-anchor="middle" fill="#e8ecf5" font-size="18" font-weight="800">경제 순환 — 별가루가 들어오는 곳과 나가는 곳</text>
+  <g fill="#e8ecf5" text-anchor="middle">
+    <text x="150" y="70" fill="#7cf59a" font-weight="700">획득 (Source)</text>
+    <rect x="40" y="84" width="220" height="30" rx="8" fill="#121a2b" stroke="#7cf59a"/><text x="150" y="104">발견 · 중복 (희귀도 × 등급 × 스트릭)</text>
+    <rect x="40" y="122" width="220" height="30" rx="8" fill="#121a2b" stroke="#7cf59a"/><text x="150" y="142">정령 포획 · 황금 정령</text>
+    <rect x="40" y="160" width="220" height="30" rx="8" fill="#121a2b" stroke="#7cf59a"/><text x="150" y="180">오늘의 의뢰 · 보물상자 · 챕터</text>
+    <rect x="40" y="198" width="220" height="30" rx="8" fill="#121a2b" stroke="#7cf59a"/><text x="150" y="218">추억 진화 · 회상 · 선물 받기</text>
+    <circle cx="450" cy="160" r="62" fill="#1a2338" stroke="#ffd166" stroke-width="3"/><text x="450" y="152" font-size="26">✨</text><text x="450" y="178" font-weight="800" fill="#ffd166">별가루</text>
+    <text x="750" y="70" fill="#ff8a8a" font-weight="700">사용 (Sink)</text>
+    <rect x="640" y="84" width="220" height="30" rx="8" fill="#121a2b" stroke="#ff8a8a"/><text x="750" y="104">⚡ 공명 부스트 80</text>
+    <rect x="640" y="122" width="220" height="30" rx="8" fill="#121a2b" stroke="#ff8a8a"/><text x="750" y="142">✨ 프리즘 토큰 320 (변이체 확정)</text>
+    <rect x="640" y="160" width="220" height="30" rx="8" fill="#121a2b" stroke="#ff8a8a"/><text x="750" y="180">🔁 의뢰 새로고침 60</text>
+    <rect x="640" y="198" width="220" height="30" rx="8" fill="#121a2b" stroke="#ff8a8a"/><text x="750" y="218">🖼️ 카드 프레임 150 / 300 / 600</text>
+  </g>
+  <g stroke="#7cf59a" stroke-width="1.6" fill="none" marker-end="url(#f)"><path d="M260 99 C330 99 330 150 386 150"/><path d="M260 137 C330 137 330 155 386 155"/><path d="M260 175 C330 175 330 165 386 165"/><path d="M260 213 C330 213 330 170 386 170"/></g>
+  <g stroke="#ffd166" stroke-width="1.6" fill="none" marker-end="url(#e)"><path d="M514 150 C570 150 570 99 638 99"/><path d="M514 155 C570 155 570 137 638 137"/><path d="M514 165 C570 165 570 175 638 175"/><path d="M514 170 C570 170 570 213 638 213"/></g>
+  <text x="450" y="262" text-anchor="middle" fill="#8b95ad" font-size="11">프리즘 토큰과 부스트는 다음 포획의 기대값을 올려 다시 "획득"으로 돌아간다 → 순환</text>
+  <text x="450" y="282" text-anchor="middle" fill="#8b95ad" font-size="11">모든 가격·보상은 src/game/balance.js · economy.js 한 곳에서 조정</text>
+</svg>
