@@ -3,7 +3,7 @@
 export const OSM_ENDPOINT = 'https://overpass-api.de/api/interpreter';
 
 // OSM 태그 → Google 식 유형 키 (spots.js SPOT_RULES 가 같은 키를 읽는다)
-const OSM_TYPE = {
+export const OSM_TYPE = {
   'amenity=cafe': 'cafe', 'amenity=restaurant': 'restaurant', 'amenity=fast_food': 'restaurant', 'amenity=food_court': 'food_court',
   'amenity=library': 'library', 'amenity=bus_station': 'bus_station',
   'leisure=park': 'park', 'leisure=playground': 'playground', 'leisure=dog_park': 'dog_park',

@@ -60,8 +60,9 @@ export function nudgeHtml() {
   const next = c.missing.slice(0, 3).map(l => `${glyph(WONDERS[l].emoji, 'sm')} ${esc(l)}`).join(' · ');
   return `<div class="nudge"><img src="/img/ch/${c.chapter.id}.svg" alt="" /><div><b>${esc(c.chapter.title)}</b> ${c.remain}개만 더!<small>${next}</small></div></div>`;
 }
+// 탭 순서 (GAMEPLAY_V7 6.8): 카메라 · 앨범 · 도감 · 의뢰 · 프로필. 라우트 id 'scan' 은 그대로 (DESIGN 9.6).
 export function tabsHtml(active) {
-  const t = [['scan', 'camera', '스캔'], ['codex', 'codex', '도감'], ['album', 'album', '앨범'], ['quests', 'quest', '의뢰'], ['profile', 'profile', '프로필']];
+  const t = [['scan', 'camera', '카메라'], ['album', 'album', '앨범'], ['codex', 'codex', '도감'], ['quests', 'quest', '의뢰'], ['profile', 'profile', '프로필']];
   return `<nav class="tabs-nav" aria-label="주요 화면">${t.map(([k, i, l]) => `<button class="tab-btn ${k === active ? 'on' : ''}" data-go="${k}" ${k === active ? 'aria-current="page"' : ''}><span>${icon(i, { size: 22 })}</span>${l}</button>`).join('')}</nav>`;
 }
 export function bindTabs(root = app) { $$('[data-go]', root).forEach(b => b.onclick = () => go(b.dataset.go)); }

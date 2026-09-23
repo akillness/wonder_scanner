@@ -1,24 +1,33 @@
-import { register, go, app, $, esc, toast, icon, glyph } from '../shell.js';
+import { register, go, app, $, esc, icon, momentName, momentMark } from '../shell.js';
 import { WONDERS, RARITY } from '../../data/wonders.js';
 import { state, save, todayKey } from '../../game/state.js';
 import { getMoment, listMoments } from '../../game/media.js';
-import { statsOf, shadowOf, simulate, rewardDuel } from '../../game/duel.js';
+import { shadowOf, simulate, rewardDuel } from '../../game/duel.js';
 import { touchMoment, STAGES } from '../../game/memories.js';
 import { onDuelWin } from '../../game/companion.js';
 import * as fx from '../fx.js';
+
+// v7: kind 'photo'/'video' 추억은 label 이 null 일 수 있다 — 원더가 아니면 '스냅'(Iron 잉크) 로 대결한다. 스탯은 game/duel.js 가 이미 rarity 1 로 폴백.
+const SNAP = Object.freeze({ name: '스냅', emoji: null, rarity: 1 });
+const wonderOf = (m) => WONDERS[m?.label] ?? SNAP;
+const inkOf = (w) => RARITY[w?.rarity]?.color ?? RARITY[1].color;
+const nameOf = (m, w) => m?.shadow ? `그림자 ${w.name}` : (w === SNAP ? momentName(m) : w.name);
+const urlOf = (blob) => { try { return blob ? URL.createObjectURL(blob) : ''; } catch { return ''; } };
 
 /** 대결 화면: myId vs (otherId | 'shadow') */
 register('duel', async (myId, otherId = 'shadow') => {
   const a = await getMoment(myId); if (!a) return go('album');
   let b = otherId === 'shadow' ? shadowOf(a) : await getMoment(otherId);
   if (!b) { const ms = (await listMoments()).filter(m => m.id !== myId); b = ms.length ? ms[Math.floor(Math.random() * ms.length)] : shadowOf(a); }
-  const wa = WONDERS[a.label], wb = WONDERS[b.label], ua = URL.createObjectURL(a.photo), ub = b.photo ? URL.createObjectURL(b.photo) : ua;
-  const sim = simulate(a, b), rm = state.settings.reduceMotion;
-  const card = (m, w, u, side, s) => `<div class="duel-card ${side} ${m.shadow ? 'shadow' : ''} ${m.variant ? 'variant' : ''}" style="--r-color:${RARITY[w.rarity].color}"><div class="hp"><i id="hp-${side}" style="width:100%"></i></div><img src="${u}" alt=""/><b>${m.shadow ? `${icon('profile')} ` : ''}${glyph(w.emoji)} ${esc(m.shadow ? m.name : w.name)}</b><small>${icon(STAGES[m.stage || 0].icon)} ${m.grade}${m.variant ? ` ${icon('prism')}` : ''}</small><div class="st">${['신비', '타이밍', '성장'].map(k => `<span>${k} <b>${s[k]}</b></span>`).join('')}</div></div>`;
+  const wa = wonderOf(a), wb = wonderOf(b), ua = urlOf(a.photo || a.thumb), ub = urlOf(b.photo || b.thumb) || ua;
+  const na = nameOf(a, wa), nb = nameOf(b, wb);
+  const sim = simulate(a, b), rm = state.settings?.reduceMotion;
+  const stageIcon = (m) => icon((STAGES[m.stage || 0] ?? STAGES[0]).icon);
+  const card = (m, w, u, side, s, nm) => `<div class="duel-card ${side} ${m.shadow ? 'shadow' : ''} ${m.variant ? 'variant' : ''}" style="--r-color:${inkOf(w)}"><div class="hp"><i id="hp-${side}" style="width:100%"></i></div><img src="${u}" alt=""/><b>${m.shadow ? `${icon('profile')} ` : ''}${momentMark(m)} ${esc(nm)}</b><small>${stageIcon(m)} ${esc(m.grade || 'AUTO')}${m.variant ? ` ${icon('prism')}` : ''}</small><div class="st">${['신비', '타이밍', '성장'].map(k => `<span>${k} <b>${s[k]}</b></span>`).join('')}</div></div>`;
   app.innerHTML = `
   <section class="screen duel-screen">
     <header><button class="btn icon ghost" id="back" title="뒤로">${icon('back')}</button><h2>추억 대결</h2><span class="pill mono" id="round">READY</span></header>
-    <div class="arena">${card(a, wa, ua, 'a', sim.sa)}<div class="vs">VS</div>${card(b, wb, ub, 'b', sim.sb)}</div>
+    <div class="arena">${card(a, wa, ua, 'a', sim.sa, na)}<div class="vs">VS</div>${card(b, wb, ub, 'b', sim.sb, nb)}</div>
     <div class="log" id="log"></div>
     <div class="actions" id="acts"><button class="btn primary big" id="fight">${icon('duel')} 대결 시작</button></div>
   </section>`;
@@ -33,7 +42,7 @@ register('duel', async (myId, otherId = 'shadow') => {
       const loser = r.winner === 'a' ? 'b' : 'a'; const el = $(`.duel-card.${loser}`);
       if (!rm) { el.classList.add('hit'); fx.shake(el); } fx.thud(); fx.vibrate([40]);
       $(`#hp-${loser}`).style.width = `${loser === 'a' ? r.hpA : r.hpB}%`;
-      $('#log').insertAdjacentHTML('afterbegin', `<div class="lg"><b>R${i + 1} ${r.key}</b> ${r.va} vs ${r.vb} → ${r.winner === 'a' ? esc(wa.name) : esc(b.shadow ? b.name : wb.name)} 승 · -${r.dmg}</div>`);
+      $('#log').insertAdjacentHTML('afterbegin', `<div class="lg"><b>R${i + 1} ${r.key}</b> ${r.va} vs ${r.vb} → ${esc(r.winner === 'a' ? na : nb)} 승 · -${r.dmg}</div>`);
       await wait(900); el.classList.remove('hit');
     }
     const won = sim.winner === 'a'; $('#round').innerHTML = won ? `${icon('crown')} WIN` : `${icon('miss')} LOSE`;
@@ -46,6 +55,6 @@ register('duel', async (myId, otherId = 'shadow') => {
     $('#again').onclick = () => go('duel', myId, 'shadow'); $('#toAlbum').onclick = () => go('album');
     if (won) { state.lastDuelWinDate = todayKey(); save(); }
   };
-  return () => { URL.revokeObjectURL(ua); if (ub !== ua) URL.revokeObjectURL(ub); };
+  return () => { if (ua) URL.revokeObjectURL(ua); if (ub && ub !== ua) URL.revokeObjectURL(ub); };
 });
 const wait = (ms) => new Promise(r => setTimeout(r, ms));

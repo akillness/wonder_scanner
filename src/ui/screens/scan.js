@@ -63,6 +63,7 @@ register('scan', () => {
   const video = $('video'), overlay = $('canvas.overlay'), still = $('img.still'), lupe = $('#lupe'), status = $('#status'), statusText = $('#statusText'), hud2 = $('#hud2');
   const S = { alive: true, mode: 'scan', source: video, target: null, fixedTarget: null, lock: null, gauge: 0, lastT: performance.now(), raf: 0, lastLupe: 0, center: null, capTarget: null, lostSince: 0, gradeAnim: null, armPrism: false, floats: [] };
   const tracker = createTracker(), spirits = createSpirits(), capture = createCapture(), recorder = createRecorder(); let lastBeat = 0, recBadge = null;
+  const FT = new Float32Array(120); let fi = 0; // 프레임 시간 링 버퍼(성능 QA용)
   let gaze = null, manualRec = false, eyeImpact = null, gazeInject; const eye = createEyeGauge(BALANCE.eye); let eyeState = { fill: 0, point: null, present: false, target: null, jitter: 0 };
   startGyro();
   const setLupe = (t) => { if (lupe) lupe.textContent = t; S.lastLupe = performance.now(); };
@@ -75,7 +76,7 @@ register('scan', () => {
   function eyeText(t) { const el = $('#eyeText'); if (el) el.textContent = t; }
   async function syncEye() {
     const hud = $('#eyeHud'); if (hud) hud.classList.toggle('off', state.settings.eyeGauge === false);
-    if (!eyeWanted()) { gaze?.close(); gaze = null; eye.reset(); eyeText(state.settings.eyeGauge === false ? '시선 OFF' : '전면 카메라에서 시선 추적이 켜져요'); return; }
+    if (!eyeWanted()) { gaze?.close(); gaze = null; if (gazeInject === undefined) eye.reset(); eyeText(state.settings.eyeGauge === false ? '시선 OFF' : '전면 카메라에서 시선 추적이 켜져요'); return; }
     if (gaze) return; gaze = createGaze({ headGain: BALANCE.eye.headGain });
     try { await gaze.load(eyeText); eyeText(state.eyeCal ? '시선 ON' : '시선 ON · 탭해서 보정'); } catch { eyeText('시선 모델 로드 실패'); gaze = null; }
   }
@@ -94,7 +95,14 @@ register('scan', () => {
   const toggleRec = () => { if (S.source !== video) return toast('영상 촬영은 카메라 모드에서 돼요', 1800); if (!recorder.supported) return setLupe('이 브라우저는 영상 녹화를 지원하지 않아.');
     if (recorder.recording) { manualRec = false; $('#shutter').classList.remove('on'); recorder.stop().then(async clip => { $('#rec')?.classList.add('hidden'); if (!clip) return; const lbl = S.lock ?? S.target?.label; if (!lbl) { toast('원더를 비춘 상태의 클립만 저장돼요', 2000); return; } const photo = snapshot(video, null); await addMoment({ label: lbl, grade: 'AUTO', variant: false, frame: state.activeFrame, photoDataUrl: photo, clip, clipType: clip.type }); state.stats.clips += 1; save(); toast(`${icon('film')} 자유 클립을 앨범에 저장했어요`, 2200); }); }
     else { recorder.manual = true; if (recorder.start(video, overlay)) { manualRec = true; $('#shutter').classList.add('on'); $('#rec')?.classList.remove('hidden'); setLupe('촬영 중… 다시 누르면 정지 (최대 20초).'); } } };
-  const doSnap = () => { const lbl = S.lock ?? S.target?.label ?? S.fixedTarget?.label; if (!lbl) return setLupe('원더를 비춘 채로 스냅하자.'); const photo = snapshot(S.source, S.source === video ? (S.target?.bbox ?? null) : null); fx.flash(); fx.blip(); addMoment({ label: lbl, grade: 'AUTO', variant: false, frame: state.activeFrame, photoDataUrl: photo }).then(() => toast(`${icon('camera')} 스냅 저장 → 앨범`, 1800)); };
+  // 셔터 탭 = 스냅: 원더가 없어도 찍힌다(카메라 퍼스트, GAMEPLAY_V7 §6.3). 원더가 잠겨 있으면 라벨만 태그(도감 등록·보상 없음)
+  const doSnap = () => {
+    if (S.source === video && !cameraAlive()) return setLupe('카메라가 아직 준비되지 않았어. 사진 버튼으로 스캔할 수도 있어.');
+    const lbl = S.lock ?? S.target?.label ?? S.fixedTarget?.label ?? null;
+    const photo = snapshot(S.source, S.source === video && lbl ? (S.target?.bbox ?? null) : null);
+    fx.flash(); fx.blip(); if (typeof fx.shutter === 'function') fx.shutter();
+    addMoment({ kind: 'photo', label: lbl, grade: 'AUTO', variant: false, frame: state.activeFrame, photoDataUrl: photo }).then(() => toast(`${icon('camera')} ${lbl ? '스냅 저장 → 앨범' : '사진 저장 → 앨범'}`, 1800)).catch(() => toast('저장에 실패했어요', 1800));
+  };
   { let hold = null, held = false; const sh = $('#shutter');
     sh.onpointerdown = () => { held = false; hold = setTimeout(() => { held = true; fx.vibrate([30]); toggleRec(); }, 500); };
     sh.onpointerup = sh.onpointerleave = sh.onpointercancel = (e) => { clearTimeout(hold); if (e.type === 'pointerup' && !held) { if (recorder.recording) toggleRec(); else doSnap(); } held = e.type === 'pointerup' ? false : held; }; }
@@ -164,13 +172,13 @@ register('scan', () => {
   }
   async function detectLoop() {
     while (S.alive) {
-      if (document.visibilityState === 'visible' && S.source === video && video.readyState >= 2 && !S.fixedTarget) { try { const d = await detectTarget(video); if (location.search.includes('debug')) window.__lastDet = d ? `${d.label}:${d.score.toFixed(2)}` : null; S.target = stabilize(d); } catch (e) { if (location.search.includes('debug')) window.__lastDet = 'ERR ' + e.message; S.target = null; } }
+      if (document.visibilityState === 'visible' && S.source === video && video.readyState >= 2 && !S.fixedTarget) { try { const d = await detectTarget(video, S.target?.label ?? S.lock ?? null); if (location.search.includes('debug')) window.__lastDet = d ? `${d.label}:${d.score.toFixed(2)}` : null; S.target = stabilize(d); } catch (e) { if (location.search.includes('debug')) window.__lastDet = 'ERR ' + e.message; S.target = null; } }
       await new Promise(r => setTimeout(r, 40));
     }
   }
   function drawLoop(t) {
     if (!S.alive) return;
-    const dt = Math.min(0.1, (t - S.lastT) / 1000); S.lastT = t;
+    const dt = Math.min(0.1, (t - S.lastT) / 1000); S.lastT = t; FT[fi = (fi + 1) % FT.length] = dt * 1000;
     const cw = overlay.clientWidth, ch = overlay.clientHeight; if (overlay.width !== cw || overlay.height !== ch) { overlay.width = cw; overlay.height = ch; }
     const x = overlay.getContext('2d'); x.clearRect(0, 0, cw, ch); drawFrame(x, cw, ch, t);
     const tf = coverTransform(S.source, cw, ch), rm = state.settings.reduceMotion, boosted = state.boost > 0;
@@ -204,7 +212,7 @@ register('scan', () => {
     S.floats = S.floats.filter(f => t - f.t0 < 900);
     for (const f of S.floats) { const p = (t - f.t0) / 900; x.globalAlpha = 1 - p; x.font = FLOAT_FONT; x.textAlign = 'center'; x.fillStyle = f.color; x.fillText(f.text, f.x, f.y - 20 - p * 50); x.globalAlpha = 1; }
     { const smp = gazeInject !== undefined ? gazeInject : (gaze?.ready && eyeWanted() ? gaze.sample(video, t) : null);
-      const active = gazeInject !== undefined || (!!gaze && eyeWanted());
+      const active = state.settings.eyeGauge !== false && (gazeInject !== undefined || (!!gaze && eyeWanted()));
       if (active) { const box = S.mode === 'capture' && S.center && tracker.box ? (() => { const [bx, by, bw, bh] = tracker.box; return [bx * tf.s + tf.ox, by * tf.s + tf.oy, bw * tf.s, bh * tf.s]; })() : null;
         eyeState = eye.update({ now: t, dt, sample: smp, cal: state.eyeCal, cw, ch, targetBox: box, mode: S.mode, spirits: spirits.list.filter(sp => !sp.popped && sp.alpha > 0.3).map(sp => ({ id: sp.id, x: sp.x, y: sp.y, golden: sp.golden })), enabled: true });
         if (eyeState.fired) eyeFire(eyeState.fired, t);
@@ -248,7 +256,7 @@ register('scan', () => {
     let momentId = null; try { const m = await addMoment({ label: tgt.label, grade, variant: isVariant, frame: state.activeFrame, photoDataUrl: photo, clip, clipType: clip?.type ?? null }); momentId = m.id; } catch {}
     go('reveal', { ...result, photo, questsDone, achs, usedToken, combo, milestones, clip, momentId, errand });
   }
-  if (location.search.includes('debug')) window.__scan = { S, capture, spirits, ring: () => capture.tick(performance.now()), injectGaze: (smp) => { gazeInject = smp; }, eye: () => eyeState, calibrate: () => calibrate(), injectDetection: (d) => { S.fixedTarget = d; }, setGauge: (v) => { S.gauge = v; } };
+  if (location.search.includes('debug')) window.__scan = { S, capture, spirits, ring: () => capture.tick(performance.now()), injectGaze: (smp) => { gazeInject = smp; }, eye: () => eyeState, calibrate: () => calibrate(), injectDetection: (d) => { S.fixedTarget = d; }, setGauge: (v) => { S.gauge = v; }, eyeStats: () => eye.stats(), eyeCfg: BALANCE.eye, lastDet: () => window.__lastDet, frameStats: () => { const a = [...FT].filter(v => v > 0).sort((p, q) => p - q); return a.length ? { n: a.length, avgMs: +(a.reduce((p, q) => p + q, 0) / a.length).toFixed(2), p95Ms: +a[Math.floor(a.length * 0.95) - 1 < 0 ? 0 : Math.floor(a.length * 0.95) - 1].toFixed(2), maxMs: +a[a.length - 1].toFixed(2) } : null; } };
   const onVis = async () => {
     if (!S.alive) return;
     if (document.visibilityState === 'hidden') { if (recorder.recording) { recorder.cancel(); $('#rec')?.classList.add('hidden'); } if (S.mode === 'capture') { capture.stop(); S.mode = 'scan'; S.gauge = 0.5; } return; }

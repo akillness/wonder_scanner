@@ -74,7 +74,7 @@ vercel --prod
 
 ## 5. Google Places API 키 (주변 촬영지 · 기믹)
 
-"주변 촬영지" 화면(`spots`)은 키가 있으면 **Google Places API (New) Nearby Search**, 없으면 **OpenStreetMap Overpass** 폴백, 둘 다 실패하면 "위치 없이도 게임은 그대로" 카드를 보여 줍니다. 키가 없어도 게임은 전부 동작합니다.
+"주변 촬영지" 화면(`spots`)은 키가 있으면 **Google Places API (New) Nearby Search**, 없으면 **OpenStreetMap Nominatim(경계 상자 검색, 1초 간격) → Overpass** 폴백, 둘 다 실패하면 "위치 없이도 게임은 그대로" 카드를 보여 줍니다. 키가 없어도 게임은 전부 동작합니다.
 
 ### 발급 (약 5분)
 

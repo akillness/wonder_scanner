@@ -2,7 +2,7 @@
 import { app, $, $$, esc, toast, icon, glyph } from './shell.js';
 import { state, save } from '../game/state.js';
 import { SKILLS, SHAPES, EMOJI_PALETTE, HIDDEN_PALETTE, ownsSkill, ownedSkills, toneCss, applyWarp, drawShape, drawEmoji, drawGlow, bakeEdit } from '../game/skills.js';
-import { getMoment, updateMoment } from '../game/media.js';
+import { getMoment, updateMoment, compressImage, MEDIA } from '../game/media.js';
 import { touchMoment } from '../game/memories.js';
 import * as fx from './fx.js';
 
@@ -50,9 +50,11 @@ export function openEditor(momentId, onDone = () => {}) {
     $('#edClose', el).onclick = close;
     $('#edSave', el).onclick = async (e) => { e.target.disabled = true; e.target.textContent = '굽는 중…';
       const used = [edit.tone && 'tone', edit.warp && 'warp', edit.shapes.length && 'shape', edit.emojis.length && 'emoji', edit.glow && 'glow', (edit.hidden || edit.cover) && 'hidden'].filter(Boolean);
-      const baked = await bakeEdit(m.photoOrig, edit); const { compressImage } = await import('../game/media.js'); const thumb = await compressImage(URL.createObjectURL(baked), 160, 0.6);
+      const baked = await bakeEdit(m.photoOrig, edit); const thumb = (await compressImage(baked, MEDIA?.thumbMaxPx ?? 160, MEDIA?.thumbQuality ?? 0.6)) ?? baked;
       const skills = [...new Set([...(m.skills || []), ...used])];
-      const r = await touchMoment(m.id, { photo: baked, thumb, photoOrig: m.photoOrig, skills, hidden: edit.hidden ?? m.hidden ?? null, cover: edit.cover, bytes: baked.size + thumb.size + (m.clip?.size ?? 0) });
+      // GAMEPLAY_V7 6.6: 저장 시 edited:true, 원본(photoOrig)은 보존. 영상(kind 'video')은 포스터도 구운 프레임으로 맞춘다
+      const bytes = baked.size + thumb.size + (m.clip?.size ?? 0) + (m.alts || []).reduce((a, b) => a + (b?.size ?? 0), 0) + (m.photoOrig && m.photoOrig !== baked ? m.photoOrig.size : 0);
+      const r = await touchMoment(m.id, { photo: baked, thumb, photoOrig: m.photoOrig, skills, hidden: edit.hidden ?? m.hidden ?? null, cover: edit.cover, edited: true, ...(m.kind === 'video' ? { poster: baked } : {}), bytes });
       state.stats.edits = (state.stats.edits || 0) + used.length; save();
       close(); fx.chest(); if (r?.leveled) toast(`${icon('seed')} 스킬로 다듬어 「${icon(r.leveled.icon)} ${esc(r.leveled.name)}」로 자랐어요! ${icon('dust')}+${r.leveled.reward.dust}`, 3200, 'quest'); else toast(`${icon('lens')} 스킬 ${used.length}종 적용 · 저장`, 1800); onDone(r?.m); };
     function close() { el.remove(); URL.revokeObjectURL(img.src); }

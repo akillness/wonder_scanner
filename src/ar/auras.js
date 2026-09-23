@@ -21,7 +21,8 @@ export const DEFAULT_AURA_BY_CHAPTER = { desk: 'orbit', kitchen: 'ember', home: 
 export const VARIANT_AURA = 'prism';
 export const POOL_MAX = 48;
 /** 연출 타이밍(ms). BALANCE 가 아니라 연출 상수. */
-export const AURA_TIMING = { fadeInMs: 160, pulseMs: 300, contractMs: 300, freezeMs: 90, scatterMs: 250, cancelMs: 400, staleMs: 400 };
+/** spotlightMs · spotlightAlpha 는 staging.js STAGING 의 값과 같다 (§2 포획 링 등장: 80ms 동안 bbox 밖 0.4) — 여기서 CSS 를 끌고 오지 않으려고 복제 */
+export const AURA_TIMING = { fadeInMs: 160, pulseMs: 300, contractMs: 300, freezeMs: 90, scatterMs: 250, cancelMs: 400, staleMs: 400, spotlightMs: 80, spotlightAlpha: 0.4 };
 
 const nowMs = () => (typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now());
 
@@ -197,19 +198,30 @@ export function createAura(id) {
 }
 
 // ── 추적 명암 (§4.1): ① 바깥 어둠(even-odd 1회) ② 안쪽 빛(라디얼 1회). draw call 2, 파티클 0, blur 0.
-let shadeSeenAt = -1e9, shadeStartAt = 0, shadeChargedAt = -1e9, shadePrevGauge = 0;
+let shadeSeenAt = -1e9, shadeStartAt = 0, shadeChargedAt = -1e9, shadePrevGauge = 0, shadeMode = 'scan', shadeModeAt = -1e9;
 function rrPath(x, X, Y, W, H, r) { x.moveTo(X + r, Y); x.arcTo(X + W, Y, X + W, Y + H, r); x.arcTo(X + W, Y + H, X, Y + H, r); x.arcTo(X, Y + H, X, Y, r); x.arcTo(X, Y, X + W, Y, r); x.closePath(); }
-/** box = 화면 좌표 [X,Y,W,H]. tracking 페이드인 160ms, gauge 1 도달 시 안쪽 빛 1회 맥동 300ms(모션 줄이기면 정적). */
-export function drawTrackingShade(x, cw, ch, box, gauge = 0, reduceMotion = false) {
+/**
+ * box = 화면 좌표 [X,Y,W,H]. tracking 페이드인 160ms, gauge 1 도달 시 안쪽 빛 1회 맥동 300ms(모션 줄이기면 정적).
+ * opts.mode 'scan' | 'capture' | 'grade' — capture/grade 면 §2 스포트라이트와 합쳐진다: 바깥 어둠 0.10+g·0.15 → 0.4 로 80ms 램프, pad 6→8 · r 14→22.
+ *   이때 호출자는 drawSpotlight 를 따로 그리지 않는다 (이중 even-odd 채움 · 반경 충돌 방지).
+ * opts.now  = 프레임 시각 (overlay 가 sil/aura 에 주는 것과 같은 시계 — 헤드리스 QA 의 주입 시간도 따른다). 생략 시 performance.now().
+ */
+export function drawTrackingShade(x, cw, ch, box, gauge = 0, reduceMotion = false, { mode = 'scan', now } = {}) {
   if (!box) return;
-  const t = nowMs(); if (t - shadeSeenAt > 200) shadeStartAt = t; shadeSeenAt = t;
+  const t = now ?? nowMs();
+  if (t - shadeSeenAt > 200) { shadeStartAt = t; shadeMode = 'scan'; shadeModeAt = -1e9; } shadeSeenAt = t;
   const g = clamp(gauge || 0, 0, 1);
   if (g >= 0.999 && shadePrevGauge < 0.999) shadeChargedAt = t; shadePrevGauge = g;
+  const m = mode || 'scan'; if (m !== shadeMode) { shadeMode = m; shadeModeAt = t; }
+  const spot = m === 'capture' || m === 'grade';
   const fadeIn = reduceMotion ? 1 : Math.min(1, (t - shadeStartAt) / AURA_TIMING.fadeInMs);
-  const X = box[0], Y = box[1], W = box[2], H = box[3], pad = 6;
+  // capture: 바깥 어둠을 spotlightAlpha(0.4) 로 80ms 램프 (모션 줄이기면 즉시) — 위상 진입 시각 기준
+  const k = spot ? (reduceMotion ? 1 : Math.min(1, (t - shadeModeAt) / AURA_TIMING.spotlightMs)) : 0;
+  const base = 0.10 + g * 0.15, outer = base + (AURA_TIMING.spotlightAlpha - base) * k;
+  const X = box[0], Y = box[1], W = box[2], H = box[3], pad = 6 + 2 * k, PW = W + pad * 2, PH = H + pad * 2, rad = Math.min(14 + 8 * k, PW / 2, PH / 2);
   x.save();
-  x.beginPath(); x.rect(0, 0, cw, ch); rrPath(x, X - pad, Y - pad, W + pad * 2, H + pad * 2, 14);
-  x.fillStyle = INK0; x.globalAlpha = (0.10 + g * 0.15) * fadeIn; x.fill('evenodd');
+  x.beginPath(); x.rect(0, 0, cw, ch); rrPath(x, X - pad, Y - pad, PW, PH, rad);
+  x.fillStyle = INK0; x.globalAlpha = outer * Math.max(fadeIn, k); x.fill('evenodd');
   const pt = (t - shadeChargedAt) / AURA_TIMING.pulseMs;
   const pulse = !reduceMotion && pt >= 0 && pt < 1 ? 1 + Math.sin(pt * Math.PI) * 0.25 : 1;
   const cx = X + W / 2, cy = Y + H / 2, R = Math.max(24, Math.max(W, H) * (0.55 + g * 0.35) * pulse);

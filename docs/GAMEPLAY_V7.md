@@ -234,14 +234,15 @@ BALANCE.eye = { holdMs: 900, spiritHoldMs: 600, decayPerS: 1.5, gazeGain: 1.4, h
 
 ### 7.1 원칙
 - **옵트인**: 위치는 플레이어가 "주변 촬영지 찾기"를 탭할 때만 `navigator.geolocation` 으로 요청한다. 설정 `settings.location`(기본 `false`) 이 켜져야 자동 새로고침(타이틀 진입 시 1시간 캐시)을 한다.
-- **키 게이팅**: `import.meta.env.VITE_GOOGLE_MAPS_KEY` 가 있으면 Google Places API(New) Nearby Search, 없으면 OpenStreetMap Overpass 폴백, 둘 다 실패하면 "위치 없이도 게임은 그대로" 카드. 키는 HTTP 리퍼러 제한(`wonderscanner.vercel.app/*`, `localhost:*`)을 걸어 쓴다(`docs/CLOUD_SETUP.md` 에 절차).
+- **키 게이팅**: `import.meta.env.VITE_GOOGLE_MAPS_KEY` 가 있으면 Google Places API(New) Nearby Search, 없으면 OpenStreetMap **Nominatim**(경계 상자 검색) 폴백, 그다음 Overpass, 모두 실패하면 "위치 없이도 게임은 그대로" 카드. 키는 HTTP 리퍼러 제한(`wonderscanner.vercel.app/*`, `localhost:*`)을 걸어 쓴다(`docs/CLOUD_SETUP.md` 에 절차).
 - **저장 최소화**: `state.geo = { at, lat, lng, spots }` — 좌표는 소수점 3자리(≈100m)로 반올림, 1시간 뒤 만료. 서버 전송 없음(클라우드 어댑터에도 올리지 않는다).
 - **프레임 밖으로 나가지 않는 원칙 유지**: 카메라 프레임은 여전히 기기 밖으로 나가지 않는다. 위치만 Places 에 보낸다.
 
 ### 7.2 모듈
 | 파일 | 역할 |
 |---|---|
-| `src/geo/provider.js` | `nearby({lat,lng,radius=800})` → `Spot[]`; `google` → `osm` → `[]` 순서로 폴백. `Spot = { id, name, types:[...], lat, lng, dist_m, bearing_deg, mapsUrl }` |
+| `src/geo/provider.js` | `nearby({lat,lng,radius=800})` → `Spot[]`; `google` → `nominatim` → `overpass` → `[]` 순서로 폴백, 반경×1.6 밖은 제외. `Spot = { id, name, types:[...], lat, lng, dist_m, bearing_deg, mapsUrl }` |
+| `src/geo/nominatim.js` | 키 없는 1차 폴백. 경계 상자(`bounded=1&viewbox`) 검색을 카테고리(cafe·park·station·restaurant·library·playground·supermarket·bakery)별로 **1초 간격 순차** 호출, 14건이면 조기 종료, 전체 8초 데드라인. 2026-09-23 실측: 서울시청 반경 800m 에서 20곳 / 2.7초. (Overpass 공개 미러는 406·429·타임아웃이 잦아 최후 폴백으로 강등) |
 | `src/geo/google.js` | Places API (New) `POST https://places.googleapis.com/v1/places:searchNearby`, 헤더 `X-Goog-Api-Key`, `X-Goog-FieldMask: places.id,places.displayName,places.types,places.location`, `includedTypes` 는 7.3 매핑의 키 목록, `maxResultCount 20`, `languageCode 'ko'` |
 | `src/geo/osm.js` | Overpass `https://overpass-api.de/api/interpreter` 에 `amenity/leisure/shop/tourism` 노드 쿼리(반경 800m, 타임아웃 8s), 결과 20개 상한 |
 | `src/game/spots.js` | 장소 유형 → 챕터·원더·기믹 매핑(7.3), `recommend(spots)` → `{ spots: 상위 5, gimmick }`, 거리·방위 계산(하버사인), `mapsUrl` = `https://www.google.com/maps/search/?api=1&query=<lat>,<lng>` (키 불필요) |

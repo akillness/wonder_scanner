@@ -199,13 +199,39 @@ export function drawSpotlight(x, cw, ch, box, alpha, tf) {
   x.fill('evenodd'); x.globalAlpha = 1;
 }
 
-/** 프리즈 프레임: 마지막 비디오 프레임을 오버레이 캔버스에 cover 변환으로 고정 (90ms 동안 매 프레임 호출). 성공 시 true */
-export function freezeFrame(x, source, tf, cw, ch) {
+// ── 프리즈 프레임 (§2 PERFECT ①): 등급 확정 시점(t0)에 소스 한 장을 풀링 캔버스에 잡아 두고, 90ms 동안 그 캔버스를 블릿한다.
+//    <video> 는 오버레이 아래에서 계속 재생되므로 매 프레임 drawImage(video) 로는 아무것도 고정되지 않는다 — 캡처 1회(할당은 최초 1회), 블릿 N회.
+let FROZEN = null, frozenAt = -1e9;
+const FREEZE_STALE_MS = 250;                                    // freezeMs(90) + 여유 — 이보다 오래된 캡처는 지난 연출로 본다
+const srcSize = (s) => [s?.videoWidth || s?.naturalWidth || s?.width || 0, s?.videoHeight || s?.naturalHeight || s?.height || 0];
+/** 소스(비디오/이미지/캔버스)의 현재 프레임을 1회 캡처 (등급 이벤트 t0 에서 호출). 성공 시 true */
+export function captureFreeze(source, now = performance.now()) {
   try {
-    const sw = source?.videoWidth || source?.naturalWidth || source?.width || 0, sh = source?.videoHeight || source?.naturalHeight || source?.height || 0;
-    if (!sw || !sh || !tf) return false;
+    const [sw, sh] = srcSize(source); if (!sw || !sh) return false;
+    FROZEN ??= document.createElement('canvas');
+    if (FROZEN.width !== sw || FROZEN.height !== sh) { FROZEN.width = sw; FROZEN.height = sh; }
+    FROZEN.getContext('2d').drawImage(source, 0, 0); frozenAt = now; return true;
+  } catch { return false; }
+}
+/** 잡아 둔 프레임이 아직 이번 연출 것인지 (≤ 250ms) */
+export const hasFrozen = (now = performance.now()) => !!FROZEN && now - frozenAt <= FREEZE_STALE_MS;
+/** 프리즈 창이 끝났을 때 — 다음 freezeFrame 첫 호출이 새로 캡처하도록 */
+export function releaseFreeze() { frozenAt = -1e9; }
+/**
+ * 프리즈 프레임: captureFreeze 로 잡아 둔 마지막 프레임을 오버레이 캔버스에 cover 변환으로 블릿 (90ms 동안 매 프레임 호출). 성공 시 true
+ *  - 캡처가 없거나 지난 것이면 첫 호출에서 `source` 를 1회 캡처하고, 이후 호출은 살아 있는 비디오가 아니라 고정된 캔버스를 그린다.
+ *  - 호환: freezeFrame(x, tf, cw, ch) 형태(소스 생략)도 받는다 — 그때는 captureFreeze 가 먼저 불려 있어야 한다.
+ *  - now(선택, 마지막 인자) = 프레임 시각. captureFreeze 에 준 시계와 같아야 한다 (주입 시간 QA). 생략 시 performance.now()
+ */
+export function freezeFrame(x, source, tf, cw, ch, now) {
+  if (source && typeof source === 'object' && typeof source.s === 'number' && !('videoWidth' in source) && !('naturalWidth' in source) && typeof source.getContext !== 'function') { now = ch; ch = cw; cw = tf; tf = source; source = null; }
+  try {
+    if (!tf) return false;
+    cw = cw ?? x.canvas?.width ?? 0; ch = ch ?? x.canvas?.height ?? 0;
+    const t = now ?? performance.now();
+    if (!hasFrozen(t) && !(source && captureFreeze(source, t))) return false;
     x.save(); x.beginPath(); x.rect(0, 0, cw, ch); x.clip();
-    x.drawImage(source, tf.ox, tf.oy, sw * tf.s, sh * tf.s);
+    x.drawImage(FROZEN, tf.ox, tf.oy, FROZEN.width * tf.s, FROZEN.height * tf.s);
     x.restore(); return true;
   } catch { return false; }
 }
@@ -247,7 +273,14 @@ export function drawSpeedLines(x, center, grade, t) {
   x.stroke(); x.globalAlpha = 1; x.lineCap = 'butt';
 }
 
-/** MISS: 실루엣이 `from`(보통 화면 중심) 반대 방향으로 60px 튀어 나가며 잔상 3장(모션 스트릭) 남기고 fade (300ms, Ember). 비네트는 CSS(#vig) */
+/** MISS 비네트 (§2): 화면 가장자리 Ember 120ms — `.vignette` 요소(scan.js #vig)에 .miss 를 토글한다 (staging.css). styles.css 의 .vignette.on(전설 황동 심장박동)과 별개. 모션 줄이기면 생략 → false */
+export function missVignette(el, reduceMotion = false) {
+  if (!el || rm(reduceMotion)) return false;
+  el.classList.remove('miss'); void el.offsetWidth; el.classList.add('miss');
+  setTimeout(() => el.classList.remove('miss'), 140); return true;
+}
+
+/** MISS: 실루엣이 `from`(보통 화면 중심) 반대 방향으로 60px 튀어 나가며 잔상 3장(모션 스트릭) 남기고 fade (300ms, Ember). 가장자리 비네트는 missVignette(el) — createStaging().miss 가 함께 부른다 */
 export function drawMissFlee(x, box, from, t, tf) {
   if (!box) return;
   const p = clamp01(t), e = easeOut(p), b = toScreen(box, tf); const X = b[0], Y = b[1], W = b[2], H = b[3];
@@ -295,6 +328,94 @@ export function drawEyeImpact(x, pt, t, color) {
     x.lineCap = 'butt';
   }
   x.globalAlpha = 1;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// §2 오케스트레이션 — createStaging(): scan.js 는 이벤트 지점에서 stg.lock / gauge / capture / grade / miss / spirit 만 부르고,
+// 프레임마다 drawTarget 뒤에 stg.draw 를 한 번 부른다. 타임라인(120ms 잠금 · 300ms 펄스 링 · 80ms 스포트라이트 램프 ·
+// 90ms 프리즈 → 펀치 → 200ms 스피드라인 · 300ms MISS 스트릭 + 120ms 비네트 · 250ms 정령 팝)은 여기서 STAGING 상수로만 돈다.
+// ═══════════════════════════════════════════════════════════════════════════
+/**
+ * createStaging({ el, vig, quiet } = {})
+ *  el     .overlay-wrap (줌 펀치 대상). grade() 의 4번째 인자로 매번 줘도 된다
+ *  vig    .vignette 요소 (MISS Ember 비네트). miss() 의 4번째 인자로 줘도 된다
+ *  quiet  boolean | () => boolean — state.settings.reduceMotion 등. prefers-reduced-motion · :root.reduce-motion 은 자동으로 OR 된다
+ * 이벤트 (now = 프레임 시각 ms, box = 소스 좌표 [x,y,w,h] — sil.draw 에 주는 것과 같은 박스):
+ *  lock(box, now)                        잠금 — 브래킷 수렴 120ms
+ *  track(box)                            매 프레임 최신 bbox (gauge/capture 에 box 를 주면 생략 가능)
+ *  gauge(g, now, box?)                   공명값 — 50%·100% 를 넘는 순간 펄스 링 300ms
+ *  capture(now, box?)                    포획 링 등장 — 스포트라이트 0→.4 (80ms), grade/miss/release 까지 유지
+ *  grade(gr, center, now, el?, source?)  등급 확정 — MISS 가 아니면 프리즈 90ms(source 를 그 자리에서 1회 캡처) + 줌 펀치 + 스피드라인 200ms → Promise(펀치 종료).
+ *                                        center = drawTarget 반환값 { cx, cy, r }. 'MISS' 면 miss() 로 위임
+ *  miss(box?, from?, now, vig?)          달아남 — 스트릭 300ms + Ember 비네트 120ms. box 생략 시 마지막 track 박스, from 생략 시 화면 중심
+ *  spirit(pt, golden, now)               정령 포획 팝 250ms (pt = 화면 좌표 { x, y })
+ *  release()                             상실·화면 이탈: 스포트라이트·잠금 해제 (진행 중 연출은 자연 소멸)
+ *  reset()                               모든 타임라인 즉시 종료
+ *  draw(x, cw, ch, now, tf, opts?)       프레임당 1회 (drawTarget 뒤). opts = boolean(quiet) | { quiet, shade, source }
+ *                                        shade: drawTarget 에 shade:true 를 준 경우 true — 스포트라이트는 auras.drawTrackingShade(mode:'capture') 가 그리므로 여기서는 생략
+ *                                        source: grade() 에 source 를 안 줬을 때 프리즈 첫 프레임에서 캡처할 소스
+ *  isActive(now?) / get active           진행 중 연출이 하나라도 있으면 true (QA)
+ *  snapshot()                            { ev, grade, spot, box } (QA · 복사본)
+ * 모션 줄이기: 프리즈·펀치·스피드라인·스트릭·비네트·잠금 수렴·펄스·정령 팝 OFF, 스포트라이트(정적 상태 표시)는 유지 (§2).
+ */
+export function createStaging({ el = null, vig = null, quiet = false } = {}) {
+  const S = STAGING;
+  const ev = { lock: -1, pulse: -1, spot: -1, grade: -1, miss: -1, spirit: -1 };
+  const box = [0, 0, 0, 0]; let hasBox = false;
+  const missBox = [0, 0, 0, 0], missFrom = { x: 0, y: 0 }; let hasFrom = false;
+  const center = { cx: 0, cy: 0, r: 0 }, pulseC = { cx: 0, cy: 0, r: 0 }, spiritPt = { x: 0, y: 0 };
+  let grade = 'GOOD', lastG = 0, spotOn = false, golden = false;
+  const isQuiet = (o) => rm(typeof quiet === 'function' ? quiet() : quiet) || rm(o);
+  const setBox = (b, out = box) => { if (!b || b.length < 4) return false; out[0] = b[0]; out[1] = b[1]; out[2] = b[2]; out[3] = b[3]; return true; };
+  const within = (at, ms, now) => at >= 0 && now - at < ms;
+  const api = {
+    lock(b, now = performance.now()) { if (setBox(b)) hasBox = true; ev.lock = now; lastG = 0; },
+    track(b) { if (setBox(b)) hasBox = true; },
+    gauge(g, now = performance.now(), b) { if (b && setBox(b)) hasBox = true; const v = clamp01(g || 0); if ((lastG < 0.5 && v >= 0.5) || (lastG < 1 && v >= 1)) ev.pulse = now; lastG = v; },
+    capture(now = performance.now(), b) { if (b && setBox(b)) hasBox = true; if (!spotOn) { spotOn = true; ev.spot = now; } },
+    grade(gr, c, now = performance.now(), wrap = el, source = null) {
+      grade = gr || 'GOOD'; spotOn = false; ev.spot = -1;
+      if (c) { center.cx = c.cx ?? c.x ?? center.cx; center.cy = c.cy ?? c.y ?? center.cy; center.r = c.r ?? center.r; }
+      if (grade === 'MISS') { api.miss(null, null, now); return Promise.resolve(false); }
+      ev.grade = now;
+      if (source) captureFreeze(source, now);
+      return punch(wrap, { grade, cx: center.cx, cy: center.cy, reduceMotion: isQuiet() });
+    },
+    miss(b, from, now = performance.now(), vigEl = vig) {
+      if (!setBox(b, missBox) && !(hasBox && setBox(box, missBox))) return false;
+      hasFrom = !!from; if (from) { missFrom.x = from.x ?? from.cx ?? 0; missFrom.y = from.y ?? from.cy ?? 0; }
+      spotOn = false; ev.spot = -1; ev.miss = now; missVignette(vigEl, isQuiet()); return true;
+    },
+    spirit(pt, g = false, now = performance.now()) { if (!pt) return; spiritPt.x = pt.x ?? pt.cx ?? 0; spiritPt.y = pt.y ?? pt.cy ?? 0; golden = !!g; ev.spirit = now; },
+    release() { spotOn = false; ev.spot = -1; ev.lock = -1; lastG = 0; },
+    reset() { for (const k in ev) ev[k] = -1; spotOn = false; hasBox = false; hasFrom = false; lastG = 0; releaseFreeze(); },
+    isActive(now = performance.now()) { return spotOn || within(ev.lock, S.lockOnMs, now) || within(ev.pulse, S.pulseMs, now) || within(ev.grade, S.freezeMs + S.linesMs, now) || within(ev.miss, S.missMs, now) || within(ev.spirit, S.spiritMs, now); },
+    get active() { return api.isActive(); },
+    snapshot() { return { ev: { ...ev }, grade, spot: spotOn, box: hasBox ? [...box] : null }; },
+    /** 프레임당 1회 — 각 타임라인을 STAGING 지속시간으로 정규화해 기본 draw* 에 넘긴다. 할당 0 */
+    draw(x, cw, ch, now = performance.now(), tf, o) {
+      const q = isQuiet(typeof o === 'boolean' ? o : o?.quiet), shade = !!(o && typeof o === 'object' && o.shade), source = o && typeof o === 'object' ? o.source : null;
+      // 스포트라이트 — 정적 상태 표시라 모션 줄이기에서도 유지(램프만 생략). shade 가 켜져 있으면 명암이 대신 그린다
+      if (spotOn && hasBox && !shade) drawSpotlight(x, cw, ch, box, S.spotlightAlpha * (q ? 1 : clamp01((now - ev.spot) / S.spotlightMs)), tf);
+      if (q) return;
+      // 잠금 브래킷 수렴 120ms
+      if (hasBox && within(ev.lock, S.lockOnMs, now)) drawLockOn(x, cw, ch, box, (now - ev.lock) / S.lockOnMs, tf);
+      // 펄스 링 300ms — bbox 중심, 반지름은 overlay 의 공명 링과 같은 규칙
+      if (hasBox && within(ev.pulse, S.pulseMs, now)) { const b = toScreen(box, tf); pulseC.cx = b[0] + b[2] / 2; pulseC.cy = b[1] + b[3] / 2; pulseC.r = Math.max(30, Math.min(b[2], b[3]) * 0.32); drawPulseRing(x, pulseC, (now - ev.pulse) / S.pulseMs); }
+      // 등급: 프리즈 90ms → 스피드라인 200ms (펀치는 grade() 에서 이미 출발)
+      if (ev.grade >= 0) {
+        const e = now - ev.grade;
+        if (e < S.freezeMs) freezeFrame(x, source, tf, cw, ch, now);
+        else if (e < S.freezeMs + S.linesMs) drawSpeedLines(x, center, grade, (e - S.freezeMs) / S.linesMs);
+        else { ev.grade = -1; releaseFreeze(); }
+      }
+      // MISS 스트릭 300ms
+      if (within(ev.miss, S.missMs, now)) drawMissFlee(x, missBox, hasFrom ? missFrom : null, (now - ev.miss) / S.missMs, tf);
+      // 정령 팝 250ms
+      if (within(ev.spirit, S.spiritMs, now)) drawSpiritPop(x, spiritPt, (now - ev.spirit) / S.spiritMs, golden);
+    },
+  };
+  return api;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

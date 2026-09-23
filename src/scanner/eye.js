@@ -1,31 +1,76 @@
 // 아이 게이지: 순수 상태 머신 (DOM 없음). docs/GAMEPLAY_V7.md §5
 // update(...) → { fill, point:{x,y}|null, present, target:null|{type,id}, fired:null|{type,id,grade}, jitter }
 export function createEyeGauge(E) {
-  let pt = null, ctr = null, fill = 0, target = null, jitter = 0, lastPt = null, rearmUntil = 0;
+  // 추가 파라미터(없으면 기본값): 깜빡임 유예·이탈 유예·히스테리시스·One Euro 필터
+  const P = { blinkGraceMs: 300, switchGraceMs: 150, exitPad: 0.35, spiritExitMul: 1.3, filter: { minCutoff: 0.6, beta: 0.007, dCutoff: 1.0 }, ...E };
+  const fx = oneEuro(P.filter), fy = oneEuro(P.filter);
+  let pt = null, ctr = null, fill = 0, target = null, jitter = 0, rearmUntil = 0, lastGoodT = 0, offSince = 0, held = 0, blinks = 0, samples = 0, wasGood = false;
+  const hitTest = (p, targetBox, mode, spirits) => {
+    let hit = null;
+    if (mode === 'capture' && targetBox) {
+      const [X, Y, W, H] = targetBox, pad = target?.type === 'wonder' ? P.exitPad : P.boxPad; // 유지 중엔 넓게(히스테리시스)
+      const px = Math.max(W * pad, P.minHitPx - W / 2), py = Math.max(H * pad, P.minHitPx - H / 2);
+      if (p.x >= X - px && p.x <= X + W + px && p.y >= Y - py && p.y <= Y + H + py) hit = { type: 'wonder', id: 'wonder' };
+    }
+    if (!hit) {
+      let best = null, bd = Infinity;
+      for (const s of spirits) { const d = Math.hypot(s.x - p.x, s.y - p.y), r = target?.type === 'spirit' && target.id === s.id ? P.spiritRadiusPx * P.spiritExitMul : P.spiritRadiusPx; if (d <= r && d < bd) { bd = d; best = s; } }
+      if (best) hit = { type: 'spirit', id: best.id };
+    }
+    return hit;
+  };
   return {
-    reset() { pt = null; ctr = null; fill = 0; target = null; jitter = 0; lastPt = null; },
+    reset() { pt = null; ctr = null; fill = 0; target = null; jitter = 0; offSince = 0; lastGoodT = 0; fx.reset(); fy.reset(); },
+    /** 인식률 통계(세션): 샘플 수, 유효 샘플 수, 깜빡임 유예 횟수 */
+    stats() { return { samples, held, blinks, presentRate: samples ? held / samples : 0 }; },
     update({ now, dt, sample, cal, cw, ch, targetBox, mode, spirits = [], enabled = true }) {
-      const present = !!(enabled && sample && sample.present && sample.open >= E.openMin);
+      samples++;
+      const good = !!(enabled && sample && sample.present && sample.open >= P.openMin);
       let fired = null;
-      if (!present) { fill = Math.max(0, fill - E.decayPerS * dt); if (fill === 0) target = null; lastPt = null; ctr = null; return { fill, point: null, present: false, target, fired, jitter }; }
-      const c = cal ?? { gx: 0, gy: 0 };
-      const rx = cw / 2 + (sample.gx - c.gx) * E.gazeGain * (cw / 2), ry = ch / 2 + (sample.gy - c.gy) * E.gazeGain * (ch / 2);
-      const k = Math.min(1, E.smoothK * dt); pt = pt ? { x: pt.x + (rx - pt.x) * k, y: pt.y + (ry - pt.y) * k } : { x: rx, y: ry };
-      pt.x = Math.max(0, Math.min(cw, pt.x)); pt.y = Math.max(0, Math.min(ch, pt.y));
-      const kc = Math.min(1, 2 * dt); ctr = ctr ? { x: ctr.x + (rx - ctr.x) * kc, y: ctr.y + (ry - ctr.y) * kc } : { x: rx, y: ry };
-      if (lastPt) { const dev = Math.hypot(rx - ctr.x, ry - ctr.y); jitter += (dev - jitter) * Math.min(1, E.jitterEmaK * dt); } lastPt = { ...pt }; // 흔들림 = 원시 시선이 느린 중심에서 벗어난 거리의 EMA
-      // 대상 판정: 포획 링 활성 시 원더 박스 우선, 아니면 정령
-      let hit = null;
-      if (mode === 'capture' && targetBox) { const [X, Y, W, H] = targetBox; const px = Math.max(W * E.boxPad, E.minHitPx - W / 2), py = Math.max(H * E.boxPad, E.minHitPx - H / 2); if (pt.x >= X - px && pt.x <= X + W + px && pt.y >= Y - py && pt.y <= Y + H + py) hit = { type: 'wonder', id: 'wonder' }; }
-      if (!hit) { const sp = spirits.filter(s => Math.hypot(s.x - pt.x, s.y - pt.y) <= E.spiritRadiusPx).sort((a, b) => Math.hypot(a.x - pt.x, a.y - pt.y) - Math.hypot(b.x - pt.x, b.y - pt.y))[0]; if (sp) hit = { type: 'spirit', id: sp.id }; }
-      if (now < rearmUntil) hit = null;
-      if (!hit || !target || hit.type !== target.type || hit.id !== target.id) { target = hit; fill = hit ? 0 : Math.max(0, fill - E.decayPerS * dt); if (hit) { jitter = 0; ctr = { x: rx, y: ry }; } }
-      else {
-        const hold = target.type === 'wonder' ? E.holdMs : E.spiritHoldMs; fill = Math.min(1, fill + (dt * 1000) / hold);
-        if (fill >= 1) { const grade = target.type === 'wonder' ? (jitter <= E.steady.PERFECT ? 'PERFECT' : jitter <= E.steady.GREAT ? 'GREAT' : 'GOOD') : null; fired = { type: target.type, id: target.id, grade }; fill = 0; target = null; rearmUntil = now + E.rearmMs; }
+      if (!good) {
+        // 깜빡임·순간 유실 유예: 마지막 조준점과 게이지를 그대로 유지 (감쇠 없음)
+        if (pt && lastGoodT && now - lastGoodT <= P.blinkGraceMs && enabled) { if (wasGood) blinks++; wasGood = false; return { fill, point: { ...pt }, present: true, target, fired, jitter, blink: true }; }
+        wasGood = false;
+        fill = Math.max(0, fill - P.decayPerS * dt); if (fill === 0) target = null; pt = null; ctr = null; offSince = 0; fx.reset(); fy.reset();
+        return { fill, point: null, present: false, target, fired, jitter, blink: false };
       }
-      return { fill, point: { ...pt }, present: true, target, fired, jitter };
+      held++; lastGoodT = now; wasGood = true;
+      const c = cal ?? { gx: 0, gy: 0 };
+      const rx = cw / 2 + (sample.gx - c.gx) * P.gazeGain * (cw / 2), ry = ch / 2 + (sample.gy - c.gy) * P.gazeGain * (ch / 2);
+      const sdt = Math.max(1 / 240, dt);
+      pt = { x: Math.max(0, Math.min(cw, fx.filter(rx, sdt))), y: Math.max(0, Math.min(ch, fy.filter(ry, sdt))) };
+      const kc = Math.min(1, 2 * dt); ctr = ctr ? { x: ctr.x + (rx - ctr.x) * kc, y: ctr.y + (ry - ctr.y) * kc } : { x: rx, y: ry };
+      const dev = Math.hypot(rx - ctr.x, ry - ctr.y); if (!offSince) jitter += (dev - jitter) * Math.min(1, P.jitterEmaK * dt); // 흔들림 = 원시 시선이 느린 중심에서 벗어난 거리의 EMA (이탈 유예 중엔 집계 제외)
+      let hit = now < rearmUntil ? null : hitTest(pt, targetBox, mode, spirits);
+      const same = hit && target && hit.type === target.type && hit.id === target.id;
+      if (same) {
+        offSince = 0;
+        const hold = target.type === 'wonder' ? P.holdMs : P.spiritHoldMs; fill = Math.min(1, fill + (dt * 1000) / hold);
+        if (fill >= 1) { const grade = target.type === 'wonder' ? (jitter <= P.steady.PERFECT ? 'PERFECT' : jitter <= P.steady.GREAT ? 'GREAT' : 'GOOD') : null; fired = { type: target.type, id: target.id, grade }; fill = 0; target = null; rearmUntil = now + P.rearmMs; }
+      } else if (target) {
+        // 이탈 유예: 잠깐 벗어난 것(단속운동)은 무시하고 게이지 동결
+        offSince ||= now;
+        if (now - offSince > P.switchGraceMs) { target = hit; offSince = 0; if (hit) { fill = 0; jitter = 0; ctr = { x: rx, y: ry }; } else fill = Math.max(0, fill - P.decayPerS * dt); }
+      } else {
+        target = hit; if (hit) { fill = 0; jitter = 0; ctr = { x: rx, y: ry }; offSince = 0; } else fill = Math.max(0, fill - P.decayPerS * dt);
+      }
+      return { fill, point: { ...pt }, present: true, target, fired, jitter, blink: false };
     },
+  };
+}
+
+/** One Euro 필터: 정지 시 떨림 억제, 빠른 이동 시 지연 최소화 (Casiez et al. 2012) */
+export function oneEuro({ minCutoff = 1.0, beta = 0.0, dCutoff = 1.0 } = {}) {
+  let xPrev = null, dxPrev = 0;
+  const alpha = (cutoff, dt) => { const tau = 1 / (2 * Math.PI * cutoff); return 1 / (1 + tau / dt); };
+  return {
+    filter(x, dt) {
+      if (xPrev === null) { xPrev = x; dxPrev = 0; return x; }
+      const dx = (x - xPrev) / dt, ad = alpha(dCutoff, dt), dxHat = ad * dx + (1 - ad) * dxPrev;
+      const a = alpha(minCutoff + beta * Math.abs(dxHat), dt), xHat = a * x + (1 - a) * xPrev;
+      xPrev = xHat; dxPrev = dxHat; return xHat;
+    },
+    reset() { xPrev = null; dxPrev = 0; },
   };
 }
 

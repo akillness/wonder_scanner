@@ -11,7 +11,7 @@ function untilMidnight() { const n = new Date(), m = new Date(n); m.setHours(24,
 // skills.js 의 icon 필드는 여전히 이모지 → 화면 측에서 아이콘 이름으로 매핑 (UI 크롬 이모지 금지)
 const SKILL_ICON = { emoji: 'image', tone: 'sun', shape: 'frame', warp: 'lens', hidden: 'scope', glow: 'dust' };
 const ACTION_ICON = { tap: 'target', grab: 'fragment', record: 'rec', token: 'prism', snap: 'camera', point: 'arrow-right', inhale: 'fragment' };
-const SETTING_ICON = { sound: 'rec', haptics: 'boost', reduceMotion: 'moon', autoCapture: 'target', recordClips: 'film', eyeGauge: 'eye' };
+const SETTING_ICON = { sound: 'rec', haptics: 'boost', reduceMotion: 'moon', autoCapture: 'target', recordClips: 'film', eyeGauge: 'eye', shutterSound: 'camera', bestPhoto: 'star', recordOverlay: 'film' };
 const QN = ['①', '②', '③'];
 
 register('quests', () => {
@@ -41,7 +41,10 @@ register('profile', (openSettings = false) => {
     ['reduceMotion', '모션 줄이기', '흔들림·글리치·플래시·후광을 끄고 안정된 표시로 대체'],
     ['autoCapture', '자동 포획', '타이밍 링을 건너뛰고 공명이 차면 바로 포획 (등급 보너스 없음)'],
     ['recordClips', '포획 클립 녹화', '공명 60%부터 발견까지 사운드 포함 짧은 영상을 앨범에 저장 (540p, 5초 ≈ 700KB)'],
-    ['eyeGauge', '아이 게이지 (시선 추적)', '전면 카메라에서 눈으로 보는 곳에 조준점이 생기고, 원더·정령을 바라보고 있으면 포획 (얼굴 모델은 첫 사용 시 다운로드)'],
+    ['eyeGauge', '아이 게이지 (시선 추적)', '전면 카메라에서 눈으로 보는 곳에 조준점이 생기고, 원더·정령을 바라보고 있으면 포획 (얼굴 모델은 첫 사용 시 다운로드)'],,
+    ['shutterSound', '셔터음', '셔터 탭·스냅 때 2단 클릭음'],
+    ['bestPhoto', '베스트 포토', '셔터를 누르면 최근 0.4초 프레임 중 가장 선명한 컷을 고른다 (끄면 누른 순간 프레임)'],
+    ['recordOverlay', '오버레이 합성 녹화', '길게 눌러 녹화할 때 실루엣·HUD 를 영상에 함께 굽는다 (끄면 원본 카메라 영상만)']
   ];
   app.innerHTML = `
   <section class="screen meta">

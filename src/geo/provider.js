@@ -1,8 +1,10 @@
-// 위치 제공자 (GAMEPLAY_V7 §7.1–7.2): nearby() = google → osm → []. 키 게이팅은 VITE_GOOGLE_MAPS_KEY.
+// 위치 제공자 (GAMEPLAY_V7 §7.1–7.2): nearby() = google → nominatim → overpass → []. 키 게이팅은 VITE_GOOGLE_MAPS_KEY.
+// 2026-09-23 실측: Overpass 공개 미러는 406/429/타임아웃이 잦아 Nominatim(경계 상자 검색, 1req/s)을 1차 무료 폴백으로 둔다.
 // 카메라 프레임은 기기 밖으로 나가지 않는다 — 여기서 보내는 것은 좌표(소수점 3자리 ≈ 100m)뿐.
 // 이 모듈은 game/ 을 import 하지 않는다 (spots.js 가 이쪽을 import 한다).
 import { googleNearby } from './google.js';
 import { osmNearby } from './osm.js';
+import { nominatimNearby } from './nominatim.js';
 
 export const COORD_DECIMALS = 3;
 export const round3 = (v) => Math.round(Number(v) * 10 ** COORD_DECIMALS) / 10 ** COORD_DECIMALS;
@@ -53,11 +55,12 @@ export async function nearby({ lat, lng, radius = 800, timeoutMs = 8000, fetchIm
   const key = googleKey();
   let spots = [];
   if (key) { try { spots = await googleNearby({ lat, lng, radius, key, timeoutMs, fetchImpl }); } catch { spots = []; } }
-  if (!spots.length) { try { spots = await osmNearby({ lat, lng, radius, timeoutMs, fetchImpl }); } catch { spots = []; } }
-  return decorate(spots, { lat, lng });
+  if (!spots.length) { try { spots = await nominatimNearby({ lat, lng, radius, timeoutMs, fetchImpl }); } catch { spots = []; } }
+  if (!spots.length) { try { spots = await osmNearby({ lat, lng, radius, timeoutMs: Math.min(timeoutMs, 6000), fetchImpl }); } catch { spots = []; } }
+  return decorate(spots, { lat, lng }).filter(s => s.dist_m <= radius * 1.6);
 }
 /** 지금 쓰일 제공자 이름 (표시용) */
-export const providerName = () => (hasGoogleKey() ? 'Google' : 'OSM');
+export const providerName = () => (hasGoogleKey() ? 'Google' : 'OSM (Nominatim)');
 
 /**
  * 옵트인 위치 요청 — 탭에서만 호출. 좌표는 소수점 3자리로 반올림 (precise: 저장하지 않는 1회 판정용 원좌표).

@@ -7,6 +7,9 @@ export const GRADE_INK = { PERFECT: '#E2B45A', GREAT: '#6DB5A0', GOOD: '#EDE6D6'
 export const gradeInk = (grade, fallback = '#EDE6D6') => GRADE_INK[grade] ?? fallback;
 // DESIGN.md §4.10 AR 오버레이 잉크
 const BONE = '#EDE6D6', BRASS = '#E2B45A', PENCIL = '#8F8A7C';
+// DESIGN 6: 모션 줄이기는 state.settings.reduceMotion(호출자 플래그 · :root.reduce-motion) 과 OS prefers-reduced-motion 둘 다 존중한다
+const RM_MQ = typeof matchMedia === 'function' ? matchMedia('(prefers-reduced-motion: reduce)') : null;
+const quietNow = (flag) => !!flag || !!(RM_MQ && RM_MQ.matches) || (typeof document !== 'undefined' && document.documentElement.classList.contains('reduce-motion'));
 const FONT_MONO = '500 12px "IBM Plex Mono", monospace', FONT_BODY = '600 15px "IBM Plex Sans KR", sans-serif', FONT_GRADE = '700 28px Fraunces, "Gowun Batang", serif';
 
 /** bbox 스무딩(AR 흔들림 억제) */
@@ -60,16 +63,18 @@ function progressTag(label, name, owned, conf, res, mode, boosted) {
  *   sil   → createSilhouette() 인스턴스. 있으면 sil.draw 가 평범한 브래킷을 대체 (각인 윤곽 = 진행 바)
  *   mode  → 'scan' | 'capture' | 'grade'. 'capture' 면 태그가 `탭!`, 윤곽은 실선
  *   aura  → createAura(id) 인스턴스. 있으면 aura.draw 가 내장 오라 파티클을 대체
- *   shade → true 면 auras.drawTrackingShade 를 가장 먼저 그린다 (바깥 어둠 + 안쪽 빛)
+ *   shade → true 면 auras.drawTrackingShade 를 가장 먼저 그린다 (바깥 어둠 + 안쪽 빛). mode 가 capture/grade 면 명암이 §2 스포트라이트(0.4) 까지 스스로 램프하므로 호출자는 drawSpotlight 를 따로 그리지 않는다
+ *   reduceMotion → 호출자 플래그에 prefers-reduced-motion · :root.reduce-motion 을 OR 해서 아우라·명암·태그 바운스·내장 파티클 모두에 적용한다
  */
 export function drawTarget(x, { box, label, score, gauge, cooldownMs, owned, now, dt, reduceMotion, boosted, sil = null, mode, aura = null, shade = false }, tf) {
+  reduceMotion = quietNow(reduceMotion);
   const [bx, by, bw, bh] = box; const X = bx * tf.s + tf.ox, Y = by * tf.s + tf.oy, W = bw * tf.s, H = bh * tf.s;
   const w = WONDERS[label], rar = RARITY[w?.rarity] ?? RARITY[1]; const col = cooldownMs != null ? PENCIL : w ? rar.color : 'rgba(237,230,214,.6)'; // 모르는 라벨 = Bone 60% (§1.2)
   const cx = X + W / 2, cy = Y + H / 2, r = Math.max(30, Math.min(W, H) * 0.32);
   const g = gauge < 0 ? 0 : gauge > 1 ? 1 : gauge, m = mode ?? 'scan';
   SCR_BOX[0] = X; SCR_BOX[1] = Y; SCR_BOX[2] = W; SCR_BOX[3] = H;
   // ⓪ 추적 명암 (§4.1) — 실루엣 아래, 가장 먼저. auras.js 가 아직 없거나 export 가 없으면 조용히 생략
-  if (shade && typeof auras.drawTrackingShade === 'function') { try { auras.drawTrackingShade(x, x.canvas.width, x.canvas.height, SCR_BOX, g, reduceMotion); } catch { /* 표시 전용 */ } x.globalAlpha = 1; }
+  if (shade && typeof auras.drawTrackingShade === 'function') { try { auras.drawTrackingShade(x, x.canvas.width, x.canvas.height, SCR_BOX, g, reduceMotion, { mode: m, now }); } catch { /* 표시 전용 */ } x.globalAlpha = 1; }
   // ① 각인 윤곽(실루엣) 또는 기존 타겟 박스: 희귀도 잉크 1.5px 외곽선 + 코너 틱 (글로우 없음)
   if (sil && typeof sil.draw === 'function') sil.draw(x, { box, gauge: g, color: col, now, mode: m, reduceMotion, tf });
   else {

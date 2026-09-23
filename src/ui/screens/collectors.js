@@ -1,8 +1,8 @@
-import { register, go, app, $, $$, esc, tabsHtml, bindTabs, toast, icon, glyph } from '../shell.js';
-import { WONDERS, RARITY } from '../../data/wonders.js';
+import { register, go, app, $, $$, esc, tabsHtml, bindTabs, toast, icon, momentName, momentMark } from '../shell.js';
+import { WONDERS } from '../../data/wonders.js';
 import { state, save, rank, ownedCount } from '../../game/state.js';
 import { cloud, cloudEnabled } from '../../cloud/provider.js';
-import { listMoments } from '../../game/media.js';
+import { listMoments, updateMoment } from '../../game/media.js';
 import { STAGES } from '../../game/memories.js';
 import * as fx from '../fx.js';
 
@@ -37,8 +37,8 @@ register('collectors', async (uid = null) => {
   async function renderOne(u) {
     const ms = await cloud.collectorMoments(u, 30).catch(() => []); const cs = (await cloud.listCollectors(50).catch(() => [])).find(c => c.uid === u) ?? { name: '탐험가' };
     app.innerHTML = `<section class="screen meta"><header><button class="btn icon ghost" id="back" title="뒤로">${icon('back')}</button><h2>${esc(cs.name || '탐험가')}</h2><span class="pill mono">${cs.codexCount || 0}/80</span></header>
-      <div class="album-grid">${ms.map((m, i) => { const w = WONDERS[m.label]; return `<div class="mom stagger ${m.variant ? 'variant' : ''}" style="--i:${i}"><img src="${esc(m.photoUrl)}" alt="" loading="lazy"/><span class="tag">${w ? glyph(w.emoji) : ''} ${icon(STAGES[m.stage || 0].icon)}${m.clipUrl ? icon('film') : ''}</span></div>`; }).join('') || '<div class="empty">공개된 추억이 없어요</div>'}</div>
-      ${ms.filter(m => m.caption).slice(0, 5).map(m => `<div class="note">${icon('quill')} ${esc(WONDERS[m.label]?.name ?? m.label)} — ${esc(m.caption)}</div>`).join('')}
+      <div class="album-grid">${ms.map((m, i) => { const st = STAGES[m.stage || 0] ?? STAGES[0]; return `<div class="mom stagger ${m.variant ? 'variant' : ''}" style="--i:${i}" title="${esc(momentName(m))}"><img src="${esc(m.photoUrl || '')}" alt="" loading="lazy"/><span class="tag">${momentMark(m)} ${icon(st.icon)}${m.clipUrl && WONDERS[m.label] ? icon('film') : ''}</span></div>`; }).join('') || '<div class="empty">공개된 추억이 없어요</div>'}</div>
+      ${ms.filter(m => m.caption).slice(0, 5).map(m => `<div class="note">${icon('quill')} ${esc(momentName(m))} — ${esc(m.caption)}</div>`).join('')}
       ${tabsHtml('profile')}</section>`;
     $('#back').onclick = () => go('collectors'); bindTabs();
   }
@@ -47,6 +47,6 @@ export function profile() { const r = rank(); return { name: state.name || '탐�
 export async function syncAll() {
   if (!cloudEnabled || !(await cloud.user())) return;
   const ms = await listMoments(); let n = 0;
-  for (const m of ms) { if (m.cloud) continue; try { const r = await cloud.syncMoment(m); if (r) { m.cloud = r; const { updateMoment } = await import('../../game/media.js'); await updateMoment(m); n++; } } catch {} }
+  for (const m of ms) { if (m.cloud) continue; try { const r = await cloud.syncMoment(m); if (r) { m.cloud = r; await updateMoment(m); n++; } } catch {} }
   const me = await cloud.user(); await cloud.publishProfile({ ...profile(), photo: me?.photo ?? null }); await cloud.saveState(state); return n;
 }

@@ -106,4 +106,8 @@ export function computeReward({ rarity, isNew, isVariant, grade = 'GOOD', streak
 
 // 아이 게이지(시선 추적) — docs/GAMEPLAY_V7.md §5.2
 BALANCE.eye = { holdMs: 900, spiritHoldMs: 600, decayPerS: 1.5, gazeGain: 1.4, headGain: 0.6, smoothK: 8,
-  openMin: 0.5, boxPad: 0.2, minHitPx: 44, spiritRadiusPx: 60, steady: { PERFECT: 8, GREAT: 18 }, jitterEmaK: 6, rearmMs: 400 };
+  openMin: 0.5, boxPad: 0.2, minHitPx: 44, spiritRadiusPx: 60, steady: { PERFECT: 8, GREAT: 18 }, jitterEmaK: 6, rearmMs: 400,
+  // 인식률·정밀도 (v8.2): 깜빡임 유예(게이지 동결), 이탈 유예(단속운동 무시), 유지 중 넓은 판정(히스테리시스), One Euro 필터
+  blinkGraceMs: 300, switchGraceMs: 150, exitPad: 0.35, spiritExitMul: 1.3, filter: { minCutoff: 0.6, beta: 0.007, dCutoff: 1.0 } };
+// 감지 연속성 (v8.2): 새 잠금은 minConfidence, 이미 잠긴 라벨의 유지에는 (minConfidence − weakDelta) 까지 허용. 중앙 가중치는 "의도한 물체" 선택용
+BALANCE.detect = { weakDelta: 0.15, centerWeight: 0.15 };

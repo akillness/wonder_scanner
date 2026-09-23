@@ -19,10 +19,10 @@ export function createGaze({ headGain = 0.6 } = {}) {
       })().catch(e => { status = 'error'; onStatus('시선 모델 로드 실패'); loading = null; throw e; });
       return loading;
     },
-    /** 66ms(15Hz)마다 추론, 그 사이에는 마지막 샘플 재사용 */
+    /** 50ms(20Hz)마다 추론, 그 사이에는 마지막 샘플 재사용 (One Euro 필터가 60Hz 로 보간) */
     sample(video, now) {
       if (!fl || video.readyState < 2) return null;
-      if (now - lastT < 66) return last; lastT = now;
+      if (now - lastT < 50) return last; lastT = now;
       try {
         const r = fl.detectForVideo(video, now); const bs = r.faceBlendshapes?.[0]?.categories;
         if (!bs) return (last = { gx: 0, gy: 0, open: 0, present: false, yaw: 0, pitch: 0 });

@@ -86,7 +86,7 @@
 .mom.selected img{opacity:.75}
 .select-mode .album-grid{padding-bottom:calc(var(--safe-b) + 90px)}
 .select-bar{position:fixed;left:0;right:0;bottom:0;max-width:480px;margin:0 auto;z-index:7;display:flex;gap:8px;align-items:center;padding:10px 12px calc(var(--safe-b) + 10px);background:rgba(22,29,43,.94);border-top:1px solid var(--line);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);animation:v7up var(--t-base) var(--ease-out) both}
-.select-bar .btn{flex:1;min-height:48px}
+.select-bar .btn{flex:1;min-height:48px;min-width:0;white-space:nowrap;padding:0 8px;font-size:13px;gap:4px}
 .select-bar .count{font-family:var(--font-mono);font-size:12px;color:var(--brass-2);letter-spacing:.06em;white-space:nowrap;padding:0 4px}
 @keyframes v7up{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
 
@@ -113,6 +113,8 @@
 .modal:has(>.share-sheet){align-items:flex-end;padding:0}
 
 /* ── 8. thumb row (6.8 title, last 3 shots) + film badge (6.6 grid) ─ */
+/* title CTA (카메라 열기) stays in the bottom thumb zone even when goals + event + spot card push the flow past 844px */
+.screen.title .actions{position:sticky;bottom:calc(-1 * var(--safe-b,0px));padding-bottom:calc(var(--safe-b,0px) + 6px);background:linear-gradient(transparent,var(--ink-0) 35%);z-index:2}
 .thumb-row{display:flex;gap:8px;align-items:center;width:100%;margin:8px 0}
 .thumb-row>button,.thumb-row>a{position:relative;flex:0 0 64px;width:64px;height:64px;padding:0;border-radius:var(--rad-sm);overflow:hidden;background:var(--ink-1);border:1px solid var(--line);color:var(--mute);display:grid;place-items:center;touch-action:manipulation;transition:transform var(--t-fast) var(--ease-out)}
 .thumb-row>button:active,.thumb-row>a:active{transform:scale(.96)}
@@ -142,6 +144,8 @@
 .aura-chip[data-aura=orbit]{--ac:var(--bone)}
 .aura-chip[data-aura=ink]{--ac:var(--r1)}
 .aura-chip[data-aura=prism]{--ac:var(--prism)}
+/* inline icons inside a shop card's price line or equip pill stay text-sized (styles.css .shop-item .ic is the 26px hero icon) */
+.shop-item .price .ic,.shop-item .pill .ic{width:14px;height:14px;margin:0;font-size:inherit}
 /* 32px canvas loop preview (shop cards / chips) */
 .aura-prev{display:block;width:32px;height:32px;border-radius:50%;background:var(--ink-0);border:1px solid var(--line-2);flex:none}
 .aura-chip .aura-prev{width:24px;height:24px}
@@ -155,14 +159,18 @@
 .spot-card .sp-emblem{width:40px;height:40px;flex:none;display:grid;place-items:center;border-radius:50%;background:var(--ink-0);border:1px solid var(--line-2);color:var(--brass-2)}
 .spot-card .sp-emblem img,.spot-card .sp-emblem .ic{width:24px;height:24px}
 .spot-card .sp-title{flex:1;min-width:0}
-.spot-card .sp-name,.spot-card h3{margin:0;font-family:var(--font-display-ko);font-size:16px;font-weight:700;line-height:1.3;color:var(--bone);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.spot-card .sp-meta{display:flex;gap:6px;align-items:center;font-family:var(--font-mono);font-size:11px;font-weight:500;letter-spacing:.06em;color:var(--mute);white-space:nowrap;font-variant-numeric:tabular-nums}
+.spot-card .sp-name,.spot-card h3{display:block;margin:0;padding:0;border:0;font-family:var(--font-display-ko);font-size:16px;font-weight:700;line-height:1.3;color:var(--bone);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.spot-card .sp-meta{display:flex;gap:6px;align-items:center;min-width:0;overflow:hidden;font-family:var(--font-mono);font-size:11px;font-weight:500;letter-spacing:.06em;color:var(--mute);white-space:nowrap;font-variant-numeric:tabular-nums}
+.spot-card .sp-meta>span{min-width:0;overflow:hidden;text-overflow:ellipsis}
 .spot-card .sp-meta .ic{width:12px;height:12px;color:var(--brass-2)}
 .spot-card .sp-wonders{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:var(--fs-sm);color:var(--bone-2)}
 .spot-card .sp-wonders .glyph{width:28px;height:28px;font-size:16px}
 .spot-card .sp-wonders small{color:var(--mute);font-size:11px}
 .spot-card .sp-actions{display:flex;gap:8px;margin-top:2px}
 .spot-card .sp-actions .btn{flex:1;min-height:44px;font-size:14px}
+/* header: title stays on one line; the source pill (OSM · 방금) is capped and clips */
+.screen.spots>header h2{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.screen.spots>header .pill{flex:none;max-width:38%;overflow:hidden;text-overflow:ellipsis}
 /* one-row teaser for the title screen (7.2 진입점) */
 .spot-card.compact{flex-direction:row;align-items:center;gap:10px;padding:10px 12px}
 .spot-card.compact .sp-head{flex:1}

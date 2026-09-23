@@ -12,6 +12,8 @@ import * as fx from '../fx.js';
 
 const PIN = hasIcon('pin') ? 'pin' : 'globe';
 const WALK = hasIcon('walk') ? 'walk' : 'profile';
+// 헤더 상태 칩은 짧은 이름만 (`OSM (Nominatim) · 방금` 211px 가 h2 를 5줄로 밀었다) — 전체 이름은 title 속성에
+const srcShort = (name) => /google/i.test(name) ? 'Google' : /osm|nominatim|overpass/i.test(name) ? 'OSM' : String(name || '');
 const ago = (at) => { const m = Math.max(0, Math.round((Date.now() - at) / 60000)); return m < 1 ? '방금' : `${m}분 전`; };
 const openMaps = (url) => { try { const w = window.open(url, '_blank', 'noopener,noreferrer'); if (w) w.opener = null; } catch {} };
 const wonderChips = (labels) => (labels || []).filter(l => WONDERS[l]).map(l => `<span class="wonder-chip" title="${esc(WONDERS[l].name)}">${glyph(WONDERS[l].emoji, 'sm')} ${esc(l)}</span>`).join('');
@@ -51,7 +53,7 @@ register('spots', () => {
   const shell = () => {
     app.innerHTML = `
     <section class="screen meta spots">
-      <header><button class="btn icon ghost" id="back" title="뒤로" aria-label="뒤로">${icon('back')}</button><h2>주변 촬영지</h2><span class="pill mono" id="src">${icon(PIN)} ${esc(providerName())}</span><button class="btn icon ghost" id="refresh" title="다시 찾기" aria-label="다시 찾기">${icon('repeat')}</button></header>
+      <header><button class="btn icon ghost" id="back" title="뒤로" aria-label="뒤로">${icon('back')}</button><h2>주변 촬영지</h2><span class="pill mono" id="src" title="${esc(providerName())}">${icon(PIN)} ${esc(srcShort(providerName()))}</span><button class="btn icon ghost" id="refresh" title="다시 찾기" aria-label="다시 찾기">${icon('repeat')}</button></header>
       <div id="gim">${gimmickHtml()}</div>
       <div id="body"></div>
       <small class="mono spot-privacy" style="display:block;color:var(--mute);font-size:11px;margin:10px 0 4px">${icon('lock', { size: 12 })} 좌표(100m 단위)만 지도에 보내고, 카메라 프레임은 기기 밖으로 나가지 않아요</small>
@@ -77,8 +79,8 @@ register('spots', () => {
 
   const view = (html) => { const b = $('#body'); if (b) { b.innerHTML = html; bindBody(); } };
   const listHtml = (r) => {
-    const src = r.source === 'google' ? 'Google' : r.source === 'osm' ? 'OSM' : providerName();
-    const s = $('#src'); if (s) s.innerHTML = `${icon(PIN)} ${esc(src)}${r.at ? ` · ${ago(r.at)}` : ''}`;
+    const full = r.source === 'google' ? 'Google Places' : r.source === 'osm' ? 'OSM (Nominatim)' : providerName();
+    const s = $('#src'); if (s) { s.title = full; s.innerHTML = `${icon(PIN)} ${esc(srcShort(full))}${r.at ? ` · ${ago(r.at)}` : ''}`; }
     return `<div class="spot-list">${r.spots.map((sp, i) => cardHtml(sp, i)).join('')}</div>`;
   };
   const show = (r) => {
