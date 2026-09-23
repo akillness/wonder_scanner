@@ -2,12 +2,12 @@
 import { state, save, rank } from './state.js';
 
 export const SKILLS = [
-  { id: 'emoji',  icon: '😄', name: '이모티콘',  desc: '사진 위에 이모지를 붙인다',            unlockLevel: 1, price: 0 },
-  { id: 'tone',   icon: '🎨', name: '톤보정',    desc: '밝기·대비·채도·온도 슬라이더',        unlockLevel: 2, price: 120 },
-  { id: 'shape',  icon: '🔷', name: '쉐입',      desc: '스포트라이트·말풍선·별 버스트·폴라로이드', unlockLevel: 3, price: 180 },
-  { id: 'warp',   icon: '🌀', name: '왜곡',      desc: '볼록·오목·소용돌이 렌즈',             unlockLevel: 4, price: 240 },
-  { id: 'hidden', icon: '🫥', name: '숨은사진',  desc: '작은 이모지를 숨기거나 사진을 가려 찾게 한다', unlockLevel: 5, price: 300 },
-  { id: 'glow',   icon: '✨', name: '광채',      desc: '비네트 + 반짝이 입자',                unlockLevel: 6, price: 200 },
+  { id: 'emoji',  icon: 'image', name: '이모티콘',  desc: '사진 위에 이모지를 붙인다',            unlockLevel: 1, price: 0 },
+  { id: 'tone',   icon: 'sun', name: '톤보정',    desc: '밝기·대비·채도·온도 슬라이더',        unlockLevel: 2, price: 120 },
+  { id: 'shape',  icon: 'frame', name: '쉐입',      desc: '스포트라이트·말풍선·별 버스트·폴라로이드', unlockLevel: 3, price: 180 },
+  { id: 'warp',   icon: 'lens', name: '왜곡',      desc: '볼록·오목·소용돌이 렌즈',             unlockLevel: 4, price: 240 },
+  { id: 'hidden', icon: 'scope', name: '숨은사진',  desc: '작은 이모지를 숨기거나 사진을 가려 찾게 한다', unlockLevel: 5, price: 300 },
+  { id: 'glow',   icon: 'dust', name: '광채',      desc: '비네트 + 반짝이 입자',                unlockLevel: 6, price: 200 },
 ];
 export const ownsSkill = (id) => { const s = SKILLS.find(s => s.id === id); return !!s && (rank().level >= s.unlockLevel || (state.skills || []).includes(id)); };
 export const ownedSkills = () => SKILLS.filter(s => ownsSkill(s.id));
@@ -35,23 +35,23 @@ export function applyWarp(ctx, w, h, { mode = 'bulge', strength = 0.5, cx = 0.5,
   }
   ctx.putImageData(out, 0, 0);
 }
-export function drawEmoji(ctx, w, h, { emoji, x, y, size = 0.18, rot = 0 }) { ctx.save(); ctx.translate(x * w, y * h); ctx.rotate(rot); ctx.font = `${Math.round(size * w)}px system-ui`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(emoji, 0, 0); ctx.restore(); }
+export function drawEmoji(ctx, w, h, { emoji, x, y, size = 0.18, rot = 0 }) { ctx.save(); ctx.translate(x * w, y * h); ctx.rotate(rot); ctx.font = `${Math.round(size * w)}px "IBM Plex Sans KR", sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(emoji, 0, 0); ctx.restore(); }
 export const SHAPES = [
   { id: 'spot', name: '스포트라이트' }, { id: 'bubble', name: '말풍선' }, { id: 'burst', name: '별 버스트' }, { id: 'polaroid', name: '폴라로이드' }, { id: 'rainbow', name: '무지개 테두리' },
 ];
-export function drawShape(ctx, w, h, { id, x = 0.5, y = 0.5, text = '', color = '#ffd166' }) {
+export function drawShape(ctx, w, h, { id, x = 0.5, y = 0.5, text = '', color = '#E2B45A' }) {
   ctx.save();
-  if (id === 'spot') { const g = ctx.createRadialGradient(x * w, y * h, w * 0.12, x * w, y * h, w * 0.6); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,.75)'); ctx.fillStyle = g; ctx.fillRect(0, 0, w, h); }
-  else if (id === 'bubble') { const bw = w * 0.6, bh = h * 0.16, bx = Math.min(Math.max(x * w - bw / 2, 8), w - bw - 8), by = Math.max(8, y * h - bh - h * 0.08); ctx.fillStyle = '#fff'; rr(ctx, bx, by, bw, bh, 18); ctx.fill(); ctx.beginPath(); ctx.moveTo(x * w - 12, by + bh); ctx.lineTo(x * w, by + bh + 22); ctx.lineTo(x * w + 12, by + bh); ctx.fill(); ctx.fillStyle = '#0b0f1a'; ctx.font = `700 ${Math.round(bh * 0.36)}px system-ui`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText((text || '!!').slice(0, 18), bx + bw / 2, by + bh / 2); }
-  else if (id === 'burst') { ctx.translate(x * w, y * h); for (let i = 0; i < 12; i++) { ctx.rotate(Math.PI / 6); ctx.fillStyle = i % 2 ? color : '#fff'; ctx.beginPath(); ctx.moveTo(0, -w * 0.06); ctx.lineTo(w * 0.02, -w * 0.02); ctx.lineTo(0, w * 0.35); ctx.lineTo(-w * 0.02, -w * 0.02); ctx.closePath(); ctx.globalAlpha = 0.85; ctx.fill(); } }
-  else if (id === 'polaroid') { ctx.fillStyle = '#f7f3ea'; ctx.fillRect(0, 0, w, h * 0.06); ctx.fillRect(0, h * 0.86, w, h * 0.14); ctx.fillRect(0, 0, w * 0.06, h); ctx.fillRect(w * 0.94, 0, w * 0.06, h); ctx.fillStyle = '#333'; ctx.font = `italic ${Math.round(h * 0.045)}px system-ui`; ctx.textAlign = 'center'; ctx.fillText((text || 'wonder').slice(0, 24), w / 2, h * 0.945); }
-  else if (id === 'rainbow') { const g = ctx.createLinearGradient(0, 0, w, h); ['#ff6ea8', '#ffd166', '#7cf59a', '#6ee7ff', '#a78bfa'].forEach((c, i) => g.addColorStop(i / 4, c)); ctx.strokeStyle = g; ctx.lineWidth = w * 0.035; rr(ctx, ctx.lineWidth / 2, ctx.lineWidth / 2, w - ctx.lineWidth, h - ctx.lineWidth, w * 0.06); ctx.stroke(); }
+  if (id === 'spot') { const g = ctx.createRadialGradient(x * w, y * h, w * 0.12, x * w, y * h, w * 0.6); g.addColorStop(0, 'rgba(15,20,30,0)'); g.addColorStop(1, 'rgba(15,20,30,.75)'); ctx.fillStyle = g; ctx.fillRect(0, 0, w, h); }
+  else if (id === 'bubble') { const bw = w * 0.6, bh = h * 0.16, bx = Math.min(Math.max(x * w - bw / 2, 8), w - bw - 8), by = Math.max(8, y * h - bh - h * 0.08); ctx.fillStyle = '#EDE6D6'; rr(ctx, bx, by, bw, bh, 18); ctx.fill(); ctx.beginPath(); ctx.moveTo(x * w - 12, by + bh); ctx.lineTo(x * w, by + bh + 22); ctx.lineTo(x * w + 12, by + bh); ctx.fill(); ctx.fillStyle = '#0F141E'; ctx.font = `700 ${Math.round(bh * 0.36)}px "IBM Plex Sans KR", sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText((text || '!!').slice(0, 18), bx + bw / 2, by + bh / 2); }
+  else if (id === 'burst') { ctx.translate(x * w, y * h); for (let i = 0; i < 12; i++) { ctx.rotate(Math.PI / 6); ctx.fillStyle = i % 2 ? color : '#EDE6D6'; ctx.beginPath(); ctx.moveTo(0, -w * 0.06); ctx.lineTo(w * 0.02, -w * 0.02); ctx.lineTo(0, w * 0.35); ctx.lineTo(-w * 0.02, -w * 0.02); ctx.closePath(); ctx.globalAlpha = 0.85; ctx.fill(); } }
+  else if (id === 'polaroid') { ctx.fillStyle = '#EDE6D6'; ctx.fillRect(0, 0, w, h * 0.06); ctx.fillRect(0, h * 0.86, w, h * 0.14); ctx.fillRect(0, 0, w * 0.06, h); ctx.fillRect(w * 0.94, 0, w * 0.06, h); ctx.fillStyle = '#0F141E'; ctx.font = `italic ${Math.round(h * 0.045)}px "IBM Plex Sans KR", sans-serif`; ctx.textAlign = 'center'; ctx.fillText((text || 'wonder').slice(0, 24), w / 2, h * 0.945); }
+  else if (id === 'rainbow') { const g = ctx.createLinearGradient(0, 0, w, h); ['#E39BC0', '#E2B45A', '#6DB5A0', '#9FA8B4', '#A493D9'].forEach((c, i) => g.addColorStop(i / 4, c)); ctx.strokeStyle = g; ctx.lineWidth = w * 0.035; rr(ctx, ctx.lineWidth / 2, ctx.lineWidth / 2, w - ctx.lineWidth, h - ctx.lineWidth, w * 0.06); ctx.stroke(); }
   ctx.restore();
 }
 export function drawGlow(ctx, w, h, { vignette = 0.6, sparkles = 40, seed = 7 }) {
-  const g = ctx.createRadialGradient(w / 2, h / 2, w * 0.3, w / 2, h / 2, w * 0.75); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, `rgba(20,10,40,${vignette})`); ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+  const g = ctx.createRadialGradient(w / 2, h / 2, w * 0.3, w / 2, h / 2, w * 0.75); g.addColorStop(0, 'rgba(15,20,30,0)'); g.addColorStop(1, `rgba(15,20,30,${vignette})`); ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
   let s = seed; const r = () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
-  for (let i = 0; i < sparkles; i++) { const x = r() * w, y = r() * h, sz = 1 + r() * 3.5; ctx.fillStyle = `rgba(255,255,255,${0.35 + r() * 0.6})`; ctx.beginPath(); ctx.moveTo(x, y - sz * 2); ctx.lineTo(x + sz * 0.5, y); ctx.lineTo(x, y + sz * 2); ctx.lineTo(x - sz * 0.5, y); ctx.closePath(); ctx.fill(); ctx.fillRect(x - sz * 2, y - 0.5, sz * 4, 1); }
+  for (let i = 0; i < sparkles; i++) { const x = r() * w, y = r() * h, sz = 1 + r() * 3.5; ctx.fillStyle = `rgba(237,230,214,${0.35 + r() * 0.6})`; ctx.beginPath(); ctx.moveTo(x, y - sz * 2); ctx.lineTo(x + sz * 0.5, y); ctx.lineTo(x, y + sz * 2); ctx.lineTo(x - sz * 0.5, y); ctx.closePath(); ctx.fill(); ctx.fillRect(x - sz * 2, y - 0.5, sz * 4, 1); }
 }
 /** 편집 파라미터를 사진에 굽는다 → Blob. edit = { tone, warp, shapes[], emojis[], glow, hidden } */
 export async function bakeEdit(photoBlob, edit, maxPx = 640) {
@@ -68,4 +68,6 @@ export async function bakeEdit(photoBlob, edit, maxPx = 640) {
   return new Promise(r => c.toBlob(r, 'image/jpeg', 0.8));
 }
 function rr(x, X, Y, W, H, r) { x.beginPath(); x.moveTo(X + r, Y); x.arcTo(X + W, Y, X + W, Y + H, r); x.arcTo(X + W, Y + H, X, Y + H, r); x.arcTo(X, Y + H, X, Y, r); x.arcTo(X, Y, X + W, Y, r); x.closePath(); }
+// 스티커 팔레트 = 사진 위에 굽는 게임 콘텐츠(원더 글리프와 같은 예외, DESIGN.md 4.11). UI 크롬이 아니며 편집기에서는 .glyph 렌즈 접시 안에서만 보여 준다.
 export const EMOJI_PALETTE = ['😄', '😍', '🤩', '😎', '🥳', '😱', '👀', '❤️', '🔥', '⭐', '✨', '💫', '🎉', '👑', '🌈', '🍀', '🔭', '🫧', '💎', '🐾'];
+export const HIDDEN_PALETTE = ['🔭', '🐾', '💎', '👀', '🍀', '🫧'];

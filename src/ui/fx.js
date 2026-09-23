@@ -4,7 +4,7 @@ import { state } from '../game/state.js';
 
 // ── 파티클
 export function burst(rarity, isVariant = false) {
-  const colors = isVariant ? ['#ff8ad4', '#8affd4', '#ffe08a', '#ffffff'] : [RARITY[rarity].color, '#ffffff'];
+  const colors = isVariant ? ['#E39BC0', '#6DB5A0', '#E2B45A', '#EDE6D6'] : [RARITY[rarity].color, '#EDE6D6'];
   if (state.settings.reduceMotion) return;
   const base = { origin: { y: 0.55 }, colors, zIndex: 50, disableForReducedMotion: true };
   confetti({ ...base, particleCount: 40 + rarity * 30, spread: 60 + rarity * 15, startVelocity: 35 + rarity * 8 });

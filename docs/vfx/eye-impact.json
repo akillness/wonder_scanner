@@ -1,0 +1,83 @@
+{
+  "name": "eye-impact",
+  "description": "Wonder Scanner: confirmation burst when the gaze-driven eye gauge (Lupe's eye follows the player's gaze point from FaceLandmarker) opens fully and an action fires (wonder capture or spirit catch). Canvas 2D overlay + 2 DOM class toggles, mobile 60Hz.",
+  "duration_ms": 1260,
+  "phases": [
+    {
+      "id": "dwell",
+      "start_ms": 0,
+      "end_ms": 900,
+      "note": "iris ring fills with eye().fill while the gaze point rests on the target (900ms wonder / 600ms spirit); decays 1.5/s when the gaze leaves or the face is lost"
+    },
+    {
+      "id": "blink",
+      "start_ms": 900,
+      "end_ms": 1080,
+      "note": "eyelids close and reopen (180ms); two shockwave rings (second +60ms), 12 radial sparks, HUD eye badge spring, brass edge flash, haptic [20,40,60], comboTone"
+    },
+    {
+      "id": "settle",
+      "start_ms": 1080,
+      "end_ms": 1260,
+      "note": "sparks decelerate and fade; badge returns to scale 1; flash gone; 400ms rearm before the same target can fire again"
+    }
+  ],
+  "layers": [
+    {
+      "id": "iris-ring",
+      "type": "stroke-arc",
+      "max_particles": 0,
+      "draw_calls": 1,
+      "space": "reticle"
+    },
+    {
+      "id": "eyelid-blink",
+      "type": "fill-path",
+      "max_particles": 0,
+      "draw_calls": 1,
+      "space": "reticle"
+    },
+    {
+      "id": "shockwave-rings",
+      "type": "stroke-ring",
+      "max_particles": 2,
+      "draw_calls": 1,
+      "space": "reticle"
+    },
+    {
+      "id": "sparks",
+      "type": "pooled-particles",
+      "max_particles": 12,
+      "draw_calls": 1,
+      "space": "reticle"
+    },
+    {
+      "id": "hud-badge",
+      "type": "dom-class",
+      "max_particles": 0,
+      "draw_calls": 1,
+      "space": "screen"
+    },
+    {
+      "id": "edge-flash",
+      "type": "dom-class",
+      "max_particles": 0,
+      "draw_calls": 1,
+      "space": "screen"
+    }
+  ],
+  "budgets": {
+    "max_particles": 16,
+    "max_draw_calls": 8,
+    "max_overdraw": 2,
+    "max_blur_radius": 0
+  },
+  "audio_hooks": [
+    "comboTone(3) at blink",
+    "vibrate [20,40,60] at blink"
+  ],
+  "reduced_motion": {
+    "enabled": true,
+    "behavior": "remove eyelid blink, shockwave rings, sparks and edge flash; keep the iris ring fill as the progress signal, the badge text/weight change, haptic and tone"
+  }
+}

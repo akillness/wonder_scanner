@@ -1,12 +1,12 @@
 import { state, save, todayKey } from './state.js';
 import { listMoments, getMoment, updateMoment } from './media.js';
 
-// 추억 진화: 씨앗 → 새싹 → 만개 → 별. 다듬기(캡션·필터), 회상, 공유, 재방문, 시간이 성장 포인트가 된다.
+// 추억 진화: 씨앗 → 새싹 → 만개 → 별. icon 은 src/ui/icons.js 아이콘 이름. 다듬기(캡션·필터), 회상, 공유, 재방문, 시간이 성장 포인트가 된다.
 export const STAGES = [
-  { id: 0, icon: '🌱', name: '씨앗', min: 0, reward: null },
-  { id: 1, icon: '🌿', name: '새싹', min: 1, reward: { dust: 20, xp: 10 } },
-  { id: 2, icon: '🌸', name: '만개', min: 3, reward: { dust: 40, xp: 25 } },
-  { id: 3, icon: '⭐', name: '별',   min: 5, reward: { dust: 80, xp: 60 } },
+  { id: 0, icon: 'seed',   name: '씨앗', min: 0, reward: null },
+  { id: 1, icon: 'sprout', name: '새싹', min: 1, reward: { dust: 20, xp: 10 } },
+  { id: 2, icon: 'bloom',  name: '만개', min: 3, reward: { dust: 40, xp: 25 } },
+  { id: 3, icon: 'star',   name: '별',   min: 5, reward: { dust: 80, xp: 60 } },
 ];
 export const FILTERS = [
   { id: 'none', name: '원본', css: 'none' },

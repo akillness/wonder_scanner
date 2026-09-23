@@ -316,3 +316,23 @@ export const glyph = (emoji, cls = '') => `<span class="glyph ${cls}">${emoji}</
 - 한국어 카피(문장)는 유지. 이모지만 뺀다. 루페의 말투도 유지.
 - 라우트 이름(`title scan reveal codex quests profile album shop collectors duel`)과 `data-go` 규약.
 - `?debug` 시 `window.__ws = { state, go }` 훅 (QA 는 여기에 `WONDERS, RARITY` 를 덧붙일 수 있다).
+
+---
+
+## 10. 모바일 게임 스타일 원칙 (Mobile-first, game not website)
+
+이 제품은 브라우저에서 돌지만 **모바일 게임**이다. 웹사이트의 문법을 쓰지 않는다.
+
+| 원칙 | 규칙 |
+|---|---|
+| **해상도** | 기준 390×844 세로. 지원 폭 360–430px. QA 스크린샷과 판단은 모두 이 뷰포트에서 한다. 가로 모드는 "세로로 돌려 주세요" 플레이트 1장만 보여 준다 |
+| **데스크톱** | 앱을 늘리지 않는다. 화면 폭이 520px 이상이면 `#app` 을 430px 폭 "폰 셸"(잉크 배경 + hairline 테두리, 높이 `100dvh`)로 가운데 고정하고 바깥은 `--ink-0` 로 채운다 |
+| **엄지 영역** | 주 행동(스캔 시작, 포획, 계속 스캔, 받기)은 항상 화면 하단 35% 안에 둔다. 상단은 정보(HUD), 하단은 행동 |
+| **HUD** | 스캔 화면 상단 스트립 = 게임 HUD (Lv·XP 바, 도감 수, 별가루, 의뢰). 항상 보이고 safe-area 를 피한다. 카드 위 텍스트가 아니라 칩(pill) 언어를 쓴다 |
+| **터치** | 모든 탭은 시각 피드백(`:active` scale .97 또는 translateY 1px) + blip + 햅틱(설정 시). 호버 전용 상태 금지. 길게 누르기·드래그(스크래치)는 `touch-action: none` 으로 스크롤과 분리 |
+| **크기** | 본문 15px 이상, 메타 11px 이상. 버튼 44px 이상, 주 CTA 52–56px. 탭바 아이콘 22px |
+| **화면 문법** | 타이틀 = 시작 화면(워드마크 + 카메라 열기), 스캔 = **카메라**(셔터 바 + 뷰파인더 + HUD; 게임 레이어는 자동), 발견 = 결과 화면(도장·보상·베스트 포토·다음 행동), 앨범 = 갤러리(꺼내기·수정·공유), 도감 = 수집 격자, 상점·의뢰·프로필 = 메뉴 시트. 화면 전환 280ms |
+| **금지** | 햄버거 메뉴, 브레드크럼, 사이드 내비, 텍스트 링크, 호버 툴팁 단독, 쿠키 배너, 푸터 |
+| **PWA** | `index.html` 에 `mobile-web-app-capable`, `apple-mobile-web-app-capable`, `apple-mobile-web-app-status-bar-style=black-translucent`, `viewport-fit=cover`. 홈 화면 아이콘 = `logo.svg` |
+
+세부 게임플레이 연출·추적 실루엣·제스처 QA 사양은 [docs/GAMEPLAY_V7.md](docs/GAMEPLAY_V7.md) 를 따른다.

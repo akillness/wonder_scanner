@@ -95,11 +95,12 @@ export const WONDERS = {
   'surfboard':     { emoji:'🏄', rarity:4, chapter:'play',    name:'바다와 협상하는 판',      lore:'파도와 잠시 동맹을 맺게 해 주는 유일한 도구.' },
 };
 
+// 희귀도 잉크 (DESIGN.md 2.4): stars 는 딩뱃 ✦ (이모지 아님), sigils 는 시길 개수, glow 알파 ≤ .35
 export const RARITY = {
-  1: { key:'common',    label:'일반', stars:'⭐',       color:'#8fd3ff', glow:'rgba(143,211,255,.6)' },
-  2: { key:'rare',      label:'희귀', stars:'⭐⭐',     color:'#7cf59a', glow:'rgba(124,245,154,.6)' },
-  3: { key:'epic',      label:'영웅', stars:'⭐⭐⭐',   color:'#d29bff', glow:'rgba(210,155,255,.7)' },
-  4: { key:'legendary', label:'전설', stars:'⭐⭐⭐⭐', color:'#ffd166', glow:'rgba(255,209,102,.8)' },
+  1: { key:'common',    label:'일반', stars:'✦'.repeat(1), sigils:1, color:'#9FA8B4', glow:'rgba(159,168,180,.3)' },
+  2: { key:'rare',      label:'희귀', stars:'✦'.repeat(2), sigils:2, color:'#6DB5A0', glow:'rgba(109,181,160,.3)' },
+  3: { key:'epic',      label:'영웅', stars:'✦'.repeat(3), sigils:3, color:'#A493D9', glow:'rgba(164,147,217,.3)' },
+  4: { key:'legendary', label:'전설', stars:'✦'.repeat(4), sigils:4, color:'#E2B45A', glow:'rgba(226,180,90,.35)' },
 };
 
 export const ALL_LABELS = Object.keys(WONDERS);

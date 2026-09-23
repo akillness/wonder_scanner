@@ -4,18 +4,18 @@ import { CHAPTERS } from '../data/chapters.js';
 import { ACHIEVEMENTS } from './achievements.js';
 import { BALANCE } from './balance.js';
 
-// ── 별가루 상점 (별가루의 사용처 = 경제 순환)
+// ── 별가루 상점 (별가루의 사용처 = 경제 순환) — icon 은 src/ui/icons.js 아이콘 이름, FRAMES 색은 DESIGN.md 9.3
 export const FRAMES = [
   { id: 'default', name: '기본 프레임', price: 0, colors: null },
-  { id: 'aurora', name: '오로라 프레임', price: 150, colors: ['#6ee7ff', '#a78bfa', '#7cf59a'] },
-  { id: 'ember', name: '잔불 프레임', price: 300, colors: ['#ffd166', '#ff8a5c', '#ff6ea8'] },
-  { id: 'void', name: '공허 프레임', price: 600, colors: ['#ffffff', '#3b2a8a', '#0b0f1a'] },
+  { id: 'aurora', name: '오로라 프레임', price: 150, colors: ['#6DB5A0', '#A493D9', '#E2B45A'] },
+  { id: 'ember', name: '잔불 프레임', price: 300, colors: ['#E2B45A', '#C9713F', '#D2706A'] },
+  { id: 'void', name: '공허 프레임', price: 600, colors: ['#EDE6D6', '#273244', '#0F141E'] },
 ];
 export const SHOP = [
-  { id: 'boost', icon: '⚡', name: '공명 부스트', desc: '다음 공명 2배 속도', price: 80, buy: () => { if (state.boost >= BALANCE.spirits.maxBoost) return '부스트가 이미 최대예요'; state.boost += 1; } },
-  { id: 'prism', icon: '✨', name: '프리즘 토큰', desc: '다음 포획 변이체 확정', price: 320, buy: () => { state.prismTokens += 1; } },
-  { id: 'reroll', icon: '🔁', name: '의뢰 새로고침', desc: '미완료 의뢰 1개를 다른 의뢰로', price: 60, buy: () => { const q = state.quests.items.find(q => !q.done); if (!q) return '새로고칠 의뢰가 없어요'; q.type = q.type === 'spirits' ? 'scanAny' : 'spirits'; q.goal = q.type === 'spirits' ? 8 : 5; q.params.goal = q.goal; q.progress = 0; } },
-  ...FRAMES.filter(f => f.price).map(f => ({ id: `frame:${f.id}`, icon: '🖼️', name: f.name, desc: '카드·앨범 프레임 스킨', price: f.price, once: true, buy: () => { state.frames.push(f.id); state.activeFrame = f.id; } })),
+  { id: 'boost', icon: 'boost', name: '공명 부스트', desc: '다음 공명 2배 속도', price: 80, buy: () => { if (state.boost >= BALANCE.spirits.maxBoost) return '부스트가 이미 최대예요'; state.boost += 1; } },
+  { id: 'prism', icon: 'prism', name: '프리즘 토큰', desc: '다음 포획 변이체 확정', price: 320, buy: () => { state.prismTokens += 1; } },
+  { id: 'reroll', icon: 'repeat', name: '의뢰 새로고침', desc: '미완료 의뢰 1개를 다른 의뢰로', price: 60, buy: () => { const q = state.quests.items.find(q => !q.done); if (!q) return '새로고칠 의뢰가 없어요'; q.type = q.type === 'spirits' ? 'scanAny' : 'spirits'; q.goal = q.type === 'spirits' ? 8 : 5; q.params.goal = q.goal; q.progress = 0; } },
+  ...FRAMES.filter(f => f.price).map(f => ({ id: `frame:${f.id}`, icon: 'frame', name: f.name, desc: '카드·앨범 프레임 스킨', price: f.price, once: true, buy: () => { state.frames.push(f.id); state.activeFrame = f.id; } })),
 ];
 export function buy(id) {
   const item = SHOP.find(i => i.id === id); if (!item) return { ok: false, msg: '없는 상품' };
@@ -45,10 +45,10 @@ export function nextMilestone() { return MILESTONES.find(m => !state.milestones.
 // ── 다음 목표 사다리 (가장 가까운 성취 4개 + 보상 미리보기)
 export function goals() {
   const g = [], r = rank(), c = closestChapter(), nm = nextMilestone();
-  if (r.next) g.push({ icon: '🏅', text: `다음 랭크 「${r.next.title}」`, remain: `${r.next.xp - state.xp} XP`, pct: r.progress, reward: '칭호' });
+  if (r.next) g.push({ icon: 'medal', text: `다음 랭크 「${r.next.title}」`, remain: `${r.next.xp - state.xp} XP`, pct: r.progress, reward: '칭호' });
   if (c.missing.length) g.push({ icon: c.chapter.icon, text: `${c.chapter.title} 완성`, remain: `${c.remain}개`, pct: c.have / c.total, reward: `+${BALANCE.reward.chapterBonusXp} XP · 스토리`, img: `/img/ch/${c.chapter.id}.svg` });
-  if (nm) g.push({ icon: '🎁', text: `보물상자 「${nm.title}」`, remain: `${nm.at - ownedCount()}종`, pct: ownedCount() / nm.at, reward: `✨${nm.reward.dust}${nm.reward.prism ? ` · 프리즘 ${nm.reward.prism}` : ''}` });
-  const q = state.quests.items.filter(q => !q.done)[0]; if (q) g.push({ icon: '📋', text: '오늘의 의뢰', remain: `${q.goal - q.progress}`, pct: q.progress / q.goal, reward: `+${q.reward.xp} XP` });
+  if (nm) g.push({ icon: 'gift', text: `보물상자 「${nm.title}」`, remain: `${nm.at - ownedCount()}종`, pct: ownedCount() / nm.at, reward: `별가루 ${nm.reward.dust}${nm.reward.prism ? ` · 프리즘 ${nm.reward.prism}` : ''}` });
+  const q = state.quests.items.filter(q => !q.done)[0]; if (q) g.push({ icon: 'quest', text: '오늘의 의뢰', remain: `${q.goal - q.progress}`, pct: q.progress / q.goal, reward: `+${q.reward.xp} XP` });
   const a = ACHIEVEMENTS.find(a => !state.achievements.includes(a.id) && ['spirit20', 'perfect10', 'ten', 'forty'].includes(a.id));
   if (a) { const cur = a.id === 'spirit20' ? state.stats.spirits : a.id === 'perfect10' ? state.stats.perfects : ownedCount(); const goal = a.id === 'spirit20' ? 20 : a.id === 'perfect10' ? 10 : a.id === 'ten' ? 10 : 40; g.push({ icon: a.icon, text: `업적 「${a.title}」`, remain: `${Math.max(0, goal - cur)}`, pct: Math.min(1, cur / goal), reward: '배지' }); }
   return g.slice(0, 4);

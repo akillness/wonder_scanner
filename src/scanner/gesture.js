@@ -15,8 +15,9 @@ export function createGestureTracker({ face = false } = {}) {
       loading = (async () => {
         const mp = await import('@mediapipe/tasks-vision');
         vision = await mp.FilesetResolver.forVisionTasks(CDN);
-        rec = await mp.GestureRecognizer.createFromOptions(vision, { baseOptions: { modelAssetPath: GESTURE_MODEL, delegate: 'GPU' }, runningMode: 'VIDEO', numHands: 1 });
-        if (face) { try { fl = await mp.FaceLandmarker.createFromOptions(vision, { baseOptions: { modelAssetPath: FACE_MODEL, delegate: 'GPU' }, runningMode: 'VIDEO', numFaces: 1, outputFaceBlendshapes: true }); } catch { fl = null; } }
+        const mk = async (Cls, path, extra) => { try { return await Cls.createFromOptions(vision, { baseOptions: { modelAssetPath: path, delegate: 'GPU' }, runningMode: 'VIDEO', ...extra }); } catch { return Cls.createFromOptions(vision, { baseOptions: { modelAssetPath: path, delegate: 'CPU' }, runningMode: 'VIDEO', ...extra }); } };
+        rec = await mk(mp.GestureRecognizer, GESTURE_MODEL, { numHands: 1 });
+        if (face) { try { fl = await mk(mp.FaceLandmarker, FACE_MODEL, { numFaces: 1, outputFaceBlendshapes: true }); } catch { fl = null; } }
         ready = true; status = 'ready'; onStatus(face && fl ? '손·얼굴 제스처 준비' : '손 제스처 준비');
       })().catch(e => { status = 'error'; onStatus('제스처 모델 로드 실패'); throw e; });
       return loading;
@@ -48,16 +49,16 @@ export function createGestureTracker({ face = false } = {}) {
   };
 }
 export const GESTURE_MAP = [
-  { g: 'Victory',     icon: '✌️', action: 'tap',    label: '포획 탭' },
-  { g: 'Closed_Fist', icon: '✊', action: 'grab',   label: '손끝 근처 정령 포획' },
-  { g: 'Open_Palm',   icon: '🖐', action: 'record', label: '영상 촬영 시작/정지' },
-  { g: 'Thumb_Up',    icon: '👍', action: 'token',  label: '프리즘 토큰 장착' },
-  { g: 'ILoveYou',    icon: '🤟', action: 'snap',   label: '스냅 (사진 즉시 저장)' },
-  { g: 'Pointing_Up', icon: '☝️', action: 'point',  label: '손끝 포인터' },
+  { g: 'Victory',     icon: 'target', action: 'tap',    label: '포획 탭' },
+  { g: 'Closed_Fist', icon: 'fragment', action: 'grab',   label: '손끝 근처 정령 포획' },
+  { g: 'Open_Palm',   icon: 'rec', action: 'record', label: '영상 촬영 시작/정지' },
+  { g: 'Thumb_Up',    icon: 'prism', action: 'token',  label: '프리즘 토큰 장착' },
+  { g: 'ILoveYou',    icon: 'camera', action: 'snap',   label: '스냅 (사진 즉시 저장)' },
+  { g: 'Pointing_Up', icon: 'arrow-right', action: 'point',  label: '손끝 포인터' },
 ];
 export const FACE_MAP = [
-  { f: 'doubleBlink', icon: '😉', action: 'tap',   label: '두 번 깜빡 = 포획 탭' },
-  { f: 'jawOpen',     icon: '😮', action: 'inhale', label: '입 벌리기 = 정령 흡입' },
-  { f: 'browUp',      icon: '🤨', action: 'token', label: '눈썹 올리기 = 토큰 장착' },
-  { f: 'smile',       icon: '😄', action: 'snap',  label: '미소 = 스냅' },
+  { f: 'doubleBlink', icon: 'target', action: 'tap',   label: '두 번 깜빡 = 포획 탭' },
+  { f: 'jawOpen',     icon: 'fragment', action: 'inhale', label: '입 벌리기 = 정령 흡입' },
+  { f: 'browUp',      icon: 'prism', action: 'token', label: '눈썹 올리기 = 토큰 장착' },
+  { f: 'smile',       icon: 'camera', action: 'snap',  label: '미소 = 스냅' },
 ];

@@ -1,1 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#6ee7ff"/><stop offset="1" stop-color="#7cf59a"/></linearGradient></defs><path d="M32 8l18 20-18 20-18-20z" fill="none" stroke="url(#g)" stroke-width="4" stroke-linejoin="round"/><path d="M32 48c-4 6-2 10 4 10s4-8-2-6" fill="none" stroke="#ffd166" stroke-width="3" stroke-linecap="round"/><circle cx="32" cy="28" r="4" fill="#fff"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Chapter: play — kite with a curling string -->
+  <g fill="none" stroke="#E2B45A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M32 6l18 20-18 24-18-24z"/>
+    <path d="M32 6v44M14 26h36"/>
+    <path d="M32 50c-2 4-8 2-8 6s6 2 2 5"/>
+  </g>
+  <circle cx="24" cy="56" r="3" fill="#6DB5A0"/>
+</svg>

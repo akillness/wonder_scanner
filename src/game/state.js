@@ -26,7 +26,8 @@ export const state = load();
 function load() {
   const d = fresh();
   try {
-    const s = JSON.parse(localStorage.getItem(KEY) || '{}');
+    let raw = '{}'; try { raw = localStorage.getItem(KEY) || '{}'; } catch {}
+    const s = JSON.parse(raw);
     const out = { ...d, ...s };
     for (const k of ['streak', 'quests', 'stats', 'settings', 'cloud']) out[k] = { ...d[k], ...(s[k] || {}) };
     if (typeof s.sound === 'boolean' && s.settings === undefined) out.settings.sound = s.sound; // v1 → v2
@@ -35,7 +36,8 @@ function load() {
     return out;
   } catch { return d; }
 }
-export function save() { localStorage.setItem(KEY, JSON.stringify(state)); }
+let saveWarned = false;
+export function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { if (!saveWarned) { saveWarned = true; console.warn('save failed (private mode or quota):', e?.name); window.dispatchEvent(new CustomEvent('ws:save-failed')); } } }
 export function resetAll() { Object.assign(state, fresh()); save(); }
 
 export const todayKey = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;

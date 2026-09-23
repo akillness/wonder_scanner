@@ -1,1 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#ffb86e"/><stop offset="1" stop-color="#ff6ea8"/></linearGradient></defs><path d="M14 30h36l-4 22H18z" fill="none" stroke="url(#g)" stroke-width="4" stroke-linejoin="round"/><path d="M22 30c0-8 4-12 10-12s10 4 10 12" fill="none" stroke="url(#g)" stroke-width="4"/><path d="M28 12c0 4 8 4 8 0" stroke="#ffd166" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="32" cy="42" r="3" fill="#fff"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Chapter: kitchen — alchemist's pot with three bubbles -->
+  <g fill="none" stroke="#E2B45A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M16 30v14a8 8 0 0 0 8 8h16a8 8 0 0 0 8-8V30"/>
+    <path d="M10 30h44"/>
+    <circle cx="26" cy="20" r="4"/>
+    <circle cx="36" cy="11" r="3"/>
+  </g>
+  <circle cx="40" cy="21" r="3" fill="#6DB5A0"/>
+</svg>

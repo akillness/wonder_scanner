@@ -17,10 +17,10 @@ export const BALANCE = {
     good: 0.17,                 // ≤ → GOOD, 그 밖은 MISS
     missGaugeReset: 0.35,       // MISS 시 공명 게이지 복귀값
     grades: {
-      PERFECT: { dust: 2.0, xp: 1.5, variantMul: 3.0, label: '퍼펙트!', color: '#ffd166' },
-      GREAT:   { dust: 1.5, xp: 1.2, variantMul: 1.6, label: '그레이트', color: '#7cf59a' },
-      GOOD:    { dust: 1.0, xp: 1.0, variantMul: 1.0, label: '굿', color: '#8fd3ff' },
-      AUTO:    { dust: 1.0, xp: 1.0, variantMul: 1.0, label: '포획', color: '#8fd3ff' },
+      PERFECT: { dust: 2.0, xp: 1.5, variantMul: 3.0, label: '퍼펙트!', color: '#E2B45A' },
+      GREAT:   { dust: 1.5, xp: 1.2, variantMul: 1.6, label: '그레이트', color: '#6DB5A0' },
+      GOOD:    { dust: 1.0, xp: 1.0, variantMul: 1.0, label: '굿', color: '#EDE6D6' },
+      AUTO:    { dust: 1.0, xp: 1.0, variantMul: 1.0, label: '포획', color: '#EDE6D6' },
     },
   },
   variant: { baseChance: 0.04, confidenceBonus: 0.06, stardustMultiplier: 3 },

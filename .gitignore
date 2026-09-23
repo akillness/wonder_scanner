@@ -7,3 +7,4 @@ dist/
 .qa/
 .vercel
 graphify-out/
+.claude/

@@ -47,13 +47,14 @@ export function createSpirits() {
         if (s.alpha <= 0) continue;
         const scale = s.popped ? 1 + (1 - s.alpha) * 1.6 : 1, r = s.r * scale;
         x.save(); x.globalAlpha = s.alpha;
-        const col = s.golden ? '#ffd166' : '#8fe3ff';
-        const g = x.createRadialGradient(s.x, s.y, 0, s.x, s.y, r * 2.2); g.addColorStop(0, col); g.addColorStop(0.35, col + 'aa'); g.addColorStop(1, 'transparent');
+        // 위습 잉크 (DESIGN.md §4.10): 일반 = 녹청(Verdigris), 황금 = 황동(Brass). 보라 없음
+        const ink = (a) => s.golden ? `rgba(226,180,90,${a})` : `rgba(109,181,160,${a})`;
+        const g = x.createRadialGradient(s.x, s.y, 0, s.x, s.y, r * 2.2); g.addColorStop(0, ink(1)); g.addColorStop(0.35, ink(.67)); g.addColorStop(1, ink(0));
         x.fillStyle = g; x.beginPath(); x.arc(s.x, s.y, r * 2.2, 0, Math.PI * 2); x.fill();
-        x.fillStyle = '#fff'; x.beginPath(); x.arc(s.x, s.y, r * 0.45, 0, Math.PI * 2); x.fill();
+        x.fillStyle = '#EDE6D6'; x.beginPath(); x.arc(s.x, s.y, r * 0.45, 0, Math.PI * 2); x.fill();
         // 꼬리 파티클
-        for (let i = 0; i < 3; i++) { const a = performance.now() / 300 + i * 2.1 + s.phase; x.fillStyle = col; x.globalAlpha = s.alpha * 0.6; x.beginPath(); x.arc(s.x + Math.cos(a) * r * 1.5, s.y + Math.sin(a) * r * 1.5, 2.2, 0, Math.PI * 2); x.fill(); }
-        if (s.golden && !s.popped) { x.globalAlpha = s.alpha; x.font = '700 11px system-ui'; x.textAlign = 'center'; x.fillStyle = '#ffd166'; x.fillText('★ 황금 정령', s.x, s.y - r * 2.4); }
+        for (let i = 0; i < 3; i++) { const a = performance.now() / 300 + i * 2.1 + s.phase; x.fillStyle = ink(1); x.globalAlpha = s.alpha * 0.6; x.beginPath(); x.arc(s.x + Math.cos(a) * r * 1.5, s.y + Math.sin(a) * r * 1.5, 2.2, 0, Math.PI * 2); x.fill(); }
+        if (s.golden && !s.popped) { x.globalAlpha = s.alpha; x.font = '500 11px "IBM Plex Mono", monospace'; x.textAlign = 'center'; x.fillStyle = '#E2B45A'; x.fillText('황금 정령', s.x, s.y - r * 2.4); }
         x.restore();
       }
     },

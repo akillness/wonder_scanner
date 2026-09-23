@@ -8,15 +8,22 @@ export function hasCamera() {
 export async function startCamera(video, facingMode = facing) {
   stopCamera(video);
   facing = facingMode;
-  stream = await navigator.mediaDevices.getUserMedia({
-    video: { facingMode: { ideal: facingMode }, width: { ideal: 1280 }, height: { ideal: 720 } },
-    audio: false,
-  });
+  // 안드로이드 일부 기기는 해상도·facingMode 제약에서 OverconstrainedError → 점점 느슨하게 재시도
+  const tries = [
+    { video: { facingMode: { ideal: facingMode }, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false },
+    { video: { facingMode: { ideal: facingMode } }, audio: false },
+    { video: true, audio: false },
+  ];
+  let lastErr = null;
+  for (const c of tries) { try { stream = await navigator.mediaDevices.getUserMedia(c); break; } catch (e) { lastErr = e; if (e?.name === 'NotAllowedError' || e?.name === 'SecurityError') throw e; } }
+  if (!stream) throw lastErr ?? new Error('camera-unavailable');
+  video.setAttribute('playsinline', ''); video.setAttribute('muted', ''); video.muted = true;
   video.srcObject = stream;
-  await new Promise(res => { video.onloadedmetadata = () => res(); });
-  await video.play();
+  if (video.readyState < 1) await new Promise(res => { const t = setTimeout(res, 4000); video.onloadedmetadata = () => { clearTimeout(t); res(); }; });
+  try { await video.play(); } catch { /* iOS 저전력 모드: 다음 사용자 탭에서 재생 */ document.addEventListener('pointerdown', () => video.play().catch(() => {}), { once: true }); }
   return stream;
 }
+export function cameraAlive() { return !!stream && stream.getVideoTracks().some(t => t.readyState === 'live'); }
 
 export function stopCamera(video) {
   if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }

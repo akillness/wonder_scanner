@@ -1,1 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#7cf59a"/><stop offset="1" stop-color="#6ee7ff"/></linearGradient></defs><path d="M10 32L32 12l22 20" fill="none" stroke="url(#g)" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/><path d="M16 30v22h32V30" fill="none" stroke="url(#g)" stroke-width="4"/><rect x="27" y="38" width="10" height="14" rx="2" fill="#ffd166"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Chapter: home — a key whose tip glows like a lamp -->
+  <g fill="none" stroke="#E2B45A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="20" cy="42" r="9"/>
+    <path d="M26.4 35.6L46 16"/>
+    <path d="M43 19l6 6M37 25l4 4"/>
+    <path d="M50 10V4M56 16h6M54.5 11.5L59 7"/>
+  </g>
+  <circle cx="48" cy="14" r="3.5" fill="#6DB5A0"/>
+</svg>
