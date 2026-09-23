@@ -4,15 +4,14 @@ import { ensureDailyQuests, questText } from '../../game/quests.js';
 import { ACHIEVEMENTS } from '../../game/achievements.js';
 import { BALANCE, streakMultiplier } from '../../game/balance.js';
 import * as fx from '../fx.js';
-import { GESTURE_MAP, FACE_MAP } from '../../scanner/gesture.js';
 import { SKILLS, ownsSkill } from '../../game/skills.js';
 
 function untilMidnight() { const n = new Date(), m = new Date(n); m.setHours(24, 0, 0, 0); const s = Math.floor((m - n) / 1000); return `${Math.floor(s / 3600)}시간 ${Math.floor(s % 3600 / 60)}분`; }
 
-// skills.js / gesture.js 의 icon 필드는 여전히 이모지 → 화면 측에서 아이콘 이름으로 매핑 (UI 크롬 이모지 금지)
+// skills.js 의 icon 필드는 여전히 이모지 → 화면 측에서 아이콘 이름으로 매핑 (UI 크롬 이모지 금지)
 const SKILL_ICON = { emoji: 'image', tone: 'sun', shape: 'frame', warp: 'lens', hidden: 'scope', glow: 'dust' };
 const ACTION_ICON = { tap: 'target', grab: 'fragment', record: 'rec', token: 'prism', snap: 'camera', point: 'arrow-right', inhale: 'fragment' };
-const SETTING_ICON = { sound: 'rec', haptics: 'boost', reduceMotion: 'moon', autoCapture: 'target', recordClips: 'film', gestures: 'ar', faceControl: 'profile' };
+const SETTING_ICON = { sound: 'rec', haptics: 'boost', reduceMotion: 'moon', autoCapture: 'target', recordClips: 'film', eyeGauge: 'eye' };
 const QN = ['①', '②', '③'];
 
 register('quests', () => {
@@ -42,8 +41,7 @@ register('profile', (openSettings = false) => {
     ['reduceMotion', '모션 줄이기', '흔들림·글리치·플래시·후광을 끄고 안정된 표시로 대체'],
     ['autoCapture', '자동 포획', '타이밍 링을 건너뛰고 공명이 차면 바로 포획 (등급 보너스 없음)'],
     ['recordClips', '포획 클립 녹화', '공명 60%부터 발견까지 사운드 포함 짧은 영상을 앨범에 저장 (540p, 5초 ≈ 700KB)'],
-    ['gestures', '손 제스처', '카메라 모드에서 손 모양으로 포획·정령·토큰·촬영 (MediaPipe, 첫 사용 시 모델 다운로드)'],
-    ['faceControl', '얼굴 제어', '깜빡임·입·눈썹·미소로 조작 (전면 카메라 권장, 제스처 ON 필요)'],
+    ['eyeGauge', '아이 게이지 (시선 추적)', '전면 카메라에서 눈으로 보는 곳에 조준점이 생기고, 원더·정령을 바라보고 있으면 포획 (얼굴 모델은 첫 사용 시 다운로드)'],
   ];
   app.innerHTML = `
   <section class="screen meta">
@@ -58,8 +56,9 @@ register('profile', (openSettings = false) => {
     <div class="stats" style="grid-template-columns:repeat(3,1fr)">${stat(s.bestCombo || 0, 'flame', '최고 콤보')}${stat(s.giftsSent || 0, 'gift', '보낸 선물')}${stat(s.giftsGot || 0, 'gift', '받은 선물')}</div>
     <h3>${icon('lens')} 렌즈 스킬 <small class="mono">${SKILLS.filter(k => ownsSkill(k.id)).length}/${SKILLS.length}</small></h3>
     <div class="chips left">${SKILLS.map(k => `<span class="pill ${ownsSkill(k.id) ? 'on' : ''}">${icon(SKILL_ICON[k.id] ?? 'lens')} ${esc(k.name)}${ownsSkill(k.id) ? '' : ` ${icon('lock', { size: 12 })}Lv${k.unlockLevel}`}</span>`).join('')}</div>
-    <h3>${icon('ar')} 제스처 표</h3>
-    <div class="gest-table">${GESTURE_MAP.map(g => `<div><span>${icon(ACTION_ICON[g.action] ?? 'circle', { size: 22 })}</span><small>${esc(g.label)}</small></div>`).join('')}${FACE_MAP.map(f => `<div><span>${icon(ACTION_ICON[f.action] ?? 'circle', { size: 22 })}</span><small>${esc(f.label)}</small></div>`).join('')}</div>
+    <h3>${icon('eye')} 아이 게이지</h3>
+    <div class="gest-table"><div><span>${icon('target', { size: 22 })}</span><small>포획 링이 떴을 때 원더를 0.9초 바라보기 = 포획 (흔들림 8px 이하 퍼펙트 · 18px 이하 그레이트)</small></div><div><span>${icon('fragment', { size: 22 })}</span><small>정령을 0.6초 바라보기 = 정령 포획</small></div><div><span>${icon('flip', { size: 22 })}</span><small>전면 카메라에서만 켜져요 · 후면·사진은 탭</small></div><div><span>${icon('eye', { size: 22 })}</span><small>스캔 화면 눈 배지 탭 = 보정 · 길게 = 켜기/끄기</small></div></div>
+    <button class="btn ghost sm" id="eyeCalReset" style="margin-top:8px">시선 보정 초기화${state.eyeCal ? '' : ' (보정 없음)'}</button>
     <h3>${icon('medal')} 업적 <small class="mono">${state.achievements.length}/${ACHIEVEMENTS.length}</small></h3>
     <div class="ach-grid">${ACHIEVEMENTS.map((a, i) => { const on = state.achievements.includes(a.id); return `<div class="ach stagger ${on ? 'on' : ''}" style="--i:${i}" title="${esc(a.desc)}"><span>${icon(a.icon, { size: 26 })}</span><b>${esc(a.title)}</b><small>${esc(a.desc)}</small></div>`; }).join('')}</div>
     <h3 id="settings">${icon('gear')} 설정</h3>
@@ -72,6 +71,7 @@ register('profile', (openSettings = false) => {
   </section>`;
   $('#back').onclick = () => go('title'); bindTabs();
   $$('input[data-k]').forEach(i => i.onchange = () => { state.settings[i.dataset.k] = i.checked; save(); fx.blip(); syncReduceMotion(); });
+  $('#eyeCalReset') && ($('#eyeCalReset').onclick = () => { state.eyeCal = null; save(); fx.blip(); toast('시선 보정을 초기화했어요', 1600); });
   $('#reset').onclick = () => { if (confirm('도감·랭크·별가루·업적을 모두 지웁니다. 정말요?')) { resetAll(); syncReduceMotion(); go('title'); } };
   $('#shop').onclick = () => { fx.blip(); go('shop'); }; $('#album').onclick = () => { fx.blip(); go('album'); }; $('#plaza').onclick = () => { fx.blip(); go('collectors'); };
   $('#name').onchange = (e) => { state.name = e.target.value.trim(); save(); fx.blip(); };

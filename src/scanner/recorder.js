@@ -8,8 +8,15 @@ export function createRecorder() {
   return {
     get supported() { return !!type && typeof MediaRecorder !== 'undefined' && !!HTMLCanvasElement.prototype.captureStream; },
     get recording() { return !!rec && rec.state === 'recording'; },
-    start(source, overlay) {
+    start(source, overlay, { raw = false, maxMs = null } = {}) {
       if (!this.supported || rec) return false;
+      if (raw && source?.srcObject) { // 원본 카메라 스트림 그대로 녹화 (오버레이 없음)
+        try { rec = new MediaRecorder(source.srcObject, { mimeType: type, videoBitsPerSecond: MEDIA.clipKbps * 1000 }); } catch { rec = null; return false; }
+        chunks = []; result = null; startedAt = performance.now(); canvas = null; ctx = null;
+        rec.ondataavailable = e => { if (e.data?.size) chunks.push(e.data); };
+        rec.onstop = () => { result = chunks.length ? new Blob(chunks, { type }) : null; stopResolve?.(result); stopResolve = null; rec = null; };
+        rec.start(250); timer = setTimeout(() => this.stop(), maxMs ?? 5000); return true;
+      }
       const sw = source.videoWidth || source.naturalWidth || 640, sh = source.videoHeight || source.naturalHeight || 480;
       const s = MEDIA.clipWidth / sw; canvas = document.createElement('canvas'); canvas.width = Math.round(sw * s); canvas.height = Math.round(sh * s); ctx = canvas.getContext('2d');
       const stream = canvas.captureStream(MEDIA.clipFps);
@@ -19,7 +26,7 @@ export function createRecorder() {
       rec.ondataavailable = e => { if (e.data?.size) chunks.push(e.data); };
       rec.onstop = () => { result = chunks.length ? new Blob(chunks, { type }) : null; stopResolve?.(result); stopResolve = null; rec = null; };
       rec.start(250);
-      timer = setTimeout(() => this.stop(), this.manual ? 20000 : MEDIA.clipMaxMs);
+      timer = setTimeout(() => this.stop(), maxMs ?? (this.manual ? 20000 : MEDIA.clipMaxMs));
       this._src = source; this._ov = overlay; return true;
     },
     /** 매 프레임 호출: 소스 + 오버레이 합성 (cover 기준으로 오버레이를 소스 좌표에 맞춤) */

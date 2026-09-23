@@ -29,7 +29,7 @@ register('title', () => {
     ${lupeHtml('', 'lupe', 'wide')}
     <div class="chips">
       <span class="pill ${sd >= 2 ? 'fire' : ''}">${icon('flame')} ${sd}일 연속 ${sd >= 2 ? `· XP ×${streakMultiplier(sd).toFixed(1)}` : ''}</span>
-      <span class="pill ${q.done === q.total ? 'gold' : ''}">${icon('quest')} 오늘의 의뢰 ${q.done}/${q.total}</span>
+      <button class="pill ${q.done === q.total ? 'gold' : ''}" data-go="quests">${icon('quest')} 오늘의 의뢰 ${q.done}/${q.total} ›</button>
       ${state.prismTokens ? `<span class="pill prism">${icon('prism')} 프리즘 토큰 ${state.prismTokens}</span>` : ''}
     </div>
     <div id="recall"></div>
@@ -40,8 +40,6 @@ register('title', () => {
       <div class="row">
         <button class="btn ghost grow" data-go="codex">${icon('codex')} 도감 <small class="mono">${ownedCount()}/${totalCount()}</small></button>
         <button class="btn ghost grow" data-go="album">${icon('album')} 앨범</button>
-        <button class="btn ghost grow" data-go="quests">${icon('quest')} 의뢰</button>
-        <button class="btn ghost grow" data-go="shop">${icon('shop')} 상점</button>
       </div>
     </div>
     <div class="stat-strip mono"><span>Lv.<b>${r.level}</b> ${esc(r.title)}</span><span>별가루 <b>${state.dust}</b></span><span>스캔 <b>${state.scans}</b></span></div>

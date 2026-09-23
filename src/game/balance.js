@@ -103,3 +103,7 @@ export function computeReward({ rarity, isNew, isVariant, grade = 'GOOD', streak
   dust = Math.round(dust * G.dust);
   return { xp, dust };
 }
+
+// 아이 게이지(시선 추적) — docs/GAMEPLAY_V7.md §5.2
+BALANCE.eye = { holdMs: 900, spiritHoldMs: 600, decayPerS: 1.5, gazeGain: 1.4, headGain: 0.6, smoothK: 8,
+  openMin: 0.5, boxPad: 0.2, minHitPx: 44, spiritRadiusPx: 60, steady: { PERFECT: 8, GREAT: 18 }, jitterEmaK: 6, rearmMs: 400 };

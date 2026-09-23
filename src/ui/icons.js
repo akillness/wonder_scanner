@@ -68,6 +68,12 @@ export const ICONS = {
   sprout: '<path d="M12 21v-8"/><path d="M12 13c0-4 2.5-6.5 7-6.5 0 4.5-2.5 6.5-7 6.5z"/><path d="M12 16c0-3-2-5-5.5-5 0 3.5 2 5 5.5 5z"/>',
   bloom: '<circle cx="12" cy="12" r="2.2"/><path d="M12 9.5c-2.2-1.2-2.2-5.5 0-6.5 2.2 1 2.2 5.3 0 6.5z"/><path d="M12 9.5c-2.2-1.2-2.2-5.5 0-6.5 2.2 1 2.2 5.3 0 6.5z" transform="rotate(72 12 12)"/><path d="M12 9.5c-2.2-1.2-2.2-5.5 0-6.5 2.2 1 2.2 5.3 0 6.5z" transform="rotate(144 12 12)"/><path d="M12 9.5c-2.2-1.2-2.2-5.5 0-6.5 2.2 1 2.2 5.3 0 6.5z" transform="rotate(216 12 12)"/><path d="M12 9.5c-2.2-1.2-2.2-5.5 0-6.5 2.2 1 2.2 5.3 0 6.5z" transform="rotate(288 12 12)"/>',
   sigil: '<path d="M12 3l2.2 6.8L21 12l-6.8 2.2L12 21l-2.2-6.8L3 12l6.8-2.2z"/>',
+  eye: '<path d="M2.5 12s3.5-6.5 9.5-6.5S21.5 12 21.5 12s-3.5 6.5-9.5 6.5S2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3.2"/>',
+  pin: '<path d="M12 21s-6.5-6.2-6.5-11a6.5 6.5 0 0 1 13 0c0 4.8-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/>',
+  walk: '<circle cx="13" cy="4.5" r="1.8"/><path d="M11 21l2-6 3 3v3"/><path d="M13 15l-1-5 4 2 2 3"/><path d="M12 10l-3 2-1 4"/>',
+  shutter: '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="5"/>',
+  video: '<rect x="3" y="6.5" width="12" height="11" rx="2"/><path d="M15 10.5l6-3.5v10l-6-3.5z"/>',
+  export: '<path d="M12 3v12"/><path d="M7.5 7.5L12 3l4.5 4.5"/><path d="M5 13v6.5h14V13"/>',
   lens: '<circle cx="10.5" cy="10" r="6.5"/><path d="M7.5 8.2a3.6 3.6 0 0 1 2.2-2.4"/><path d="M15.1 14.6l.9 1"/><circle cx="17.1" cy="16.9" r="1.4"/><circle cx="19.7" cy="19.7" r="1.4"/>',
   key: '<circle cx="8" cy="15" r="4.5"/><path d="M11.2 11.8L20 3"/><path d="M17 6l3 3M14.5 8.5l2 2"/>',
 

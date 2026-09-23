@@ -17,8 +17,8 @@ const fresh = () => ({
   quests: { date: null, items: [] },
   achievements: [],
   stats: { perfects: 0, greats: 0, misses: 0, spirits: 0, golden: 0, variants: 0, legendary: 0, bestCombo: 0, giftsSent: 0, giftsGot: 0, clips: 0 },
-  settings: { sound: true, reduceMotion: false, autoCapture: false, haptics: true, recordClips: true, gestures: false, faceControl: false },
-  name: '', frames: ['default'], activeFrame: 'default', milestones: [], combo: 0, giftsReceived: [], hints: [], lastRecallDate: null, lastDuelWinDate: null, event: null, world: 'prime', skills: [], cloud: { uid: null, public: true },
+  settings: { sound: true, reduceMotion: false, autoCapture: false, haptics: true, recordClips: true, eyeGauge: true, recordOverlay: false, shutterSound: true, bestPhoto: true, location: false },
+  name: '', frames: ['default'], activeFrame: 'default', milestones: [], combo: 0, giftsReceived: [], hints: [], lastRecallDate: null, lastDuelWinDate: null, event: null, world: 'prime', skills: [], eyeCal: null, auraSkins: ['ember'], auraSkin: null, auraByLabel: {}, geo: null, cloud: { uid: null, public: true },
 });
 
 export const state = load();
@@ -31,7 +31,8 @@ function load() {
     const out = { ...d, ...s };
     for (const k of ['streak', 'quests', 'stats', 'settings', 'cloud']) out[k] = { ...d[k], ...(s[k] || {}) };
     if (typeof s.sound === 'boolean' && s.settings === undefined) out.settings.sound = s.sound; // v1 → v2
-    for (const k of ['frames', 'milestones', 'giftsReceived', 'hints', 'skills']) if (!Array.isArray(out[k])) out[k] = d[k];
+    for (const k of ['frames', 'milestones', 'giftsReceived', 'hints', 'skills', 'auraSkins']) if (!Array.isArray(out[k])) out[k] = d[k];
+    if (!out.auraByLabel || typeof out.auraByLabel !== 'object' || Array.isArray(out.auraByLabel)) out.auraByLabel = {};
     out.v = 3;
     return out;
   } catch { return d; }

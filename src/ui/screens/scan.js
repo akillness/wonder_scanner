@@ -16,14 +16,13 @@ import { createRecorder } from '../../scanner/recorder.js';
 import { addMoment, MEDIA } from '../../game/media.js';
 import { bumpCombo, claimMilestones } from '../../game/economy.js';
 import { advise, eventMod, onDiscoverEvent, markEventSeen, activeEvent } from '../../game/companion.js';
-import { createGestureTracker, GESTURE_MAP, FACE_MAP } from '../../scanner/gesture.js';
+import { createGaze } from '../../scanner/gaze.js';
+import { createEyeGauge, drawEyeReticle } from '../../scanner/eye.js';
+import { currentFacing } from '../../scanner/camera.js';
 
 let modelPromise = null;
 export const warmModel = () => (modelPromise ??= loadDetector());
 
-// 제스처/표정 액션 → 아이콘 이름 (제스처 HUD 표시 전용; 감지 로직과 무관)
-const GEST_ICON = { tap: 'target', grab: 'fragment', inhale: 'fragment', record: 'rec', token: 'prism', snap: 'camera', point: 'ar' };
-const gestIcon = (action) => icon(GEST_ICON[action] ?? 'ar', { size: 24 });
 // 플로팅 텍스트 잉크: 황금 정령 = 황동, 일반 정령 = 녹청
 const FLOAT_INK = { golden: '#E2B45A', normal: '#6DB5A0' };
 const FLOAT_FONT = '600 15px "IBM Plex Sans KR", sans-serif';
@@ -43,53 +42,71 @@ register('scan', () => {
     </div>
     <div class="vignette" id="vig"></div>
     <button class="companion" id="comp" title="루페에게 묻기"><img src="/img/lupe.svg" alt="루페"/><span class="dot"></span></button>
-    <div class="gest-hud hidden" id="gest"><span id="gestIcon">${gestIcon('')}</span><small id="gestText">제스처 대기</small></div>
+    <button class="eye-hud" id="eyeHud" title="아이 게이지 (탭: 보정 · 길게: 켜기/끄기)">${icon('eye', { size: 22 })}<small id="eyeText">시선</small></button><div class="eye-flash" id="eyeFlash"></div>
     <div class="status" id="status"><div class="spinner"></div><div id="statusText">렌즈를 여는 중…</div></div>
     <div class="bottom">
       ${lupeHtml('물건을 화면 가운데에 두고 가만히 있어 봐. 떠다니는 정령은 탭!')}
       <div class="controls">
-        <button class="btn icon ghost" id="back" title="타이틀">${icon('home', { label: '타이틀' })}</button>
-        <button class="btn icon ghost" id="flip" title="카메라 전환">${icon('flip', { label: '카메라 전환' })}</button>
-        <label class="btn icon ghost" title="사진으로 스캔">${icon('image', { label: '사진으로 스캔' })}<input type="file" accept="image/*" id="file" hidden></label>
-        <button class="btn icon ghost" id="codex" title="도감">${icon('codex', { label: '도감' })}</button>
+        <button class="btn icon ghost side" id="back" title="타이틀">${icon('home', { label: '타이틀' })}</button>
+        <label class="btn icon ghost side" title="사진으로 스캔">${icon('image', { label: '사진으로 스캔' })}<input type="file" accept="image/*" id="file" hidden></label>
+        <button class="shutter" id="shutter" title="탭: 스냅 · 길게: 영상" aria-label="셔터"><i></i></button>
+        <button class="btn icon ghost side" id="flip" title="카메라 전환">${icon('flip', { label: '카메라 전환' })}</button>
       </div>
+      <small class="shutter-hint">탭 = 스냅 · 길게 = 영상</small>
     </div>
     ${!state.tutorialSeen ? `<div class="tutorial" id="tut"><div class="steps"><h3>${icon('scope')} 렌즈 사용법</h3>
       <div class="step"><span>${icon('camera', { size: 24 })}</span><div>물건을 가운데에 두면 <b>공명 링</b>이 차오릅니다<small>신뢰도가 높을수록 빨리 찹니다</small></div></div>
       <div class="step"><span>${icon('target', { size: 24 })}</span><div>링이 다 차면 <b>줄어드는 링</b>이 나타납니다. 노란 선에 닿는 순간 <b>탭!</b><small>퍼펙트 = 변이체 확률 3배 · 별가루 2배</small></div></div>
       <div class="step"><span>${icon('fragment', { size: 24 })}</span><div>화면을 떠다니는 <b>정령</b>을 탭하면 조각을 얻습니다<small>폰을 돌려 주변을 둘러보세요 · 5개 = 공명 부스트</small></div></div>
-      <button class="btn primary" id="tutOk" style="margin-top:8px;width:100%">시작!</button></div></div>` : ''}
+      <button class="btn primary" id="tutOk" style="margin-top:8px;width:100%">시작!</button><small class="tut-note">시작을 누르면 카메라 권한 창이 떠요. <b>허용</b>을 눌러 주세요 — 권한 창이 떠 있는 동안에는 화면이 눌리지 않아요.</small></div></div>` : ''}
   </section>`;
   const video = $('video'), overlay = $('canvas.overlay'), still = $('img.still'), lupe = $('#lupe'), status = $('#status'), statusText = $('#statusText'), hud2 = $('#hud2');
   const S = { alive: true, mode: 'scan', source: video, target: null, fixedTarget: null, lock: null, gauge: 0, lastT: performance.now(), raf: 0, lastLupe: 0, center: null, capTarget: null, lostSince: 0, gradeAnim: null, armPrism: false, floats: [] };
   const tracker = createTracker(), spirits = createSpirits(), capture = createCapture(), recorder = createRecorder(); let lastBeat = 0, recBadge = null;
-  let gest = null, gestOut = null, manualRec = false, lastGestIcon = '';
+  let gaze = null, manualRec = false, eyeImpact = null, gazeInject; const eye = createEyeGauge(BALANCE.eye); let eyeState = { fill: 0, point: null, present: false, target: null, jitter: 0 };
   startGyro();
   const setLupe = (t) => { if (lupe) lupe.textContent = t; S.lastLupe = performance.now(); };
   // 루페 조언(아이콘 이름 + 문장): 아이콘은 icon() SVG, 문장은 이스케이프
   const setLupeTip = (tip) => { if (lupe) lupe.innerHTML = `${icon(tip.icon)} ${esc(tip.text)}`; S.lastLupe = performance.now(); };
-  const renderHud2 = () => { hud2.innerHTML = `<span class="pill">${icon('fragment')} ${state.fragments}/${BALANCE.spirits.fragmentsPerBoost}</span>${state.boost ? `<span class="pill gold">${icon('boost')} 부스트 ${state.boost}</span>` : ''}${state.prismTokens ? `<button class="pill ${S.armPrism ? 'armed' : 'prism'}" id="arm">${icon('prism')} 토큰 ${state.prismTokens} ${S.armPrism ? '장착됨 · 변이체 확정' : '장착'}</button>` : ''}${gyro().active ? `<span class="pill">${icon('ar')} AR</span>` : ''}<button class="pill ${state.settings.gestures ? 'on' : ''}" id="gestBtn">${icon('ar')} 제스처${state.settings.gestures ? ' ON' : ''}</button>`;
-    const gb = $('#gestBtn'); if (gb) gb.onclick = () => { state.settings.gestures = !state.settings.gestures; save(); fx.blip(); renderHud2(); if (state.settings.gestures) startGestures(); else stopGestures(); }; const a = $('#arm'); if (a) a.onclick = () => { S.armPrism = !S.armPrism; fx.blip(); renderHud2(); }; };
+  const renderHud2 = () => { hud2.innerHTML = `<span class="pill">${icon('fragment')} ${state.fragments}/${BALANCE.spirits.fragmentsPerBoost}</span>${state.boost ? `<span class="pill gold">${icon('boost')} 부스트 ${state.boost}</span>` : ''}${state.prismTokens ? `<button class="pill ${S.armPrism ? 'armed' : 'prism'}" id="arm">${icon('prism')} 토큰 ${state.prismTokens} ${S.armPrism ? '장착됨 · 변이체 확정' : '장착'}</button>` : ''}${gyro().active ? `<span class="pill">${icon('ar')} AR</span>` : ''}`; const a = $('#arm'); if (a) a.onclick = () => { S.armPrism = !S.armPrism; fx.blip(); renderHud2(); }; };
   renderHud2();
-  async function startGestures() { if (S.source !== video || gest) { if (S.source !== video) toast('제스처는 카메라 모드에서 동작해요', 1800); return; } gest = createGestureTracker({ face: state.settings.faceControl }); $('#gest').classList.remove('hidden'); try { await gest.load(t => { const el = $('#gestText'); if (el) el.textContent = t; }); } catch { $('#gestText').textContent = '제스처 모델 로드 실패 (네트워크)'; } }
-  function stopGestures() { gest?.close(); gest = null; gestOut = null; $('#gest')?.classList.add('hidden'); }
-  function gestureAction(action, pt) {
-    const now = performance.now(); const G = GESTURE_MAP.find(g => g.action === action) ?? FACE_MAP.find(f => f.action === action);
-    $('#gestIcon').innerHTML = gestIcon(action); $('#gestText').textContent = G?.label ?? action; fx.vibrate([15]);
-    if (action === 'tap') { if (S.mode === 'capture') overlay.dispatchEvent(new PointerEvent('pointerdown', { clientX: overlay.getBoundingClientRect().left + (S.center?.cx ?? 0), clientY: overlay.getBoundingClientRect().top + (S.center?.cy ?? 0), bubbles: true })); else setLupe('공명이 다 차면 브이 사인으로 포획할 수 있어.'); }
-    else if (action === 'grab' || action === 'inhale') { const cw = overlay.clientWidth, ch = overlay.clientHeight; const cands = spirits.list.filter(s => !s.popped && s.alpha > 0.3); const list = action === 'inhale' ? cands.slice(0, 3) : cands.filter(s => pt && Math.hypot(s.x - pt.x * cw, s.y - pt.y * ch) < 140).slice(0, 1); if (!list.length) { setLupe(action === 'inhale' ? '근처에 정령이 없어.' : '손끝 가까이에 정령이 없어. 검지로 가리켜 봐.'); return; } for (const sp of list) { sp.popped = now; const r = catchSpirit(sp.golden); S.floats.push({ x: sp.x, y: sp.y, t0: now, text: sp.golden ? '프리즘 +1' : '조각 +1', color: sp.golden ? FLOAT_INK.golden : FLOAT_INK.normal }); if (r.boostGained) toast(`${icon('boost')} 공명 부스트 획득!`, 2000); afterEvent({ type: 'spirit' }); } fx.chime(1, false); renderHud2(); }
-    else if (action === 'token') { if (state.prismTokens > 0) { S.armPrism = !S.armPrism; renderHud2(); setLupe(S.armPrism ? '프리즘 토큰 장착! 다음 포획은 변이체.' : '토큰 해제.'); } else setLupe('프리즘 토큰이 없어. 의뢰나 황금 정령으로 얻자.'); }
-    else if (action === 'record') { if (!recorder.supported) return setLupe('이 브라우저는 영상 녹화를 지원하지 않아.'); if (recorder.recording) { manualRec = false; recorder.stop().then(async clip => { $('#rec')?.classList.add('hidden'); if (!clip) return; const lbl = S.lock ?? S.target?.label; if (!lbl) { toast('원더를 비춘 상태의 클립만 저장돼요', 2000); return; } const photo = snapshot(video, null); await addMoment({ label: lbl, grade: 'AUTO', variant: false, frame: state.activeFrame, photoDataUrl: photo, clip, clipType: clip.type }); state.stats.clips += 1; save(); toast(`${icon('film')} 자유 클립을 앨범에 저장했어요`, 2200); }); } else if (recorder.start(video, overlay)) { manualRec = true; $('#rec')?.classList.remove('hidden'); setLupe('촬영 중… 손을 다시 펴면 정지.'); } }
-    else if (action === 'snap') { const lbl = S.lock ?? S.target?.label; if (!lbl) return setLupe('원더를 비춘 채로 스냅하자.'); const photo = snapshot(video, S.target?.bbox ?? null); fx.flash(); fx.blip(); addMoment({ label: lbl, grade: 'AUTO', variant: false, frame: state.activeFrame, photoDataUrl: photo }).then(() => toast(`${icon('album')} 스냅 저장 → 앨범`, 1800)); }
+  // ── 아이 게이지 (시선 추적): 전면 카메라 + settings.eyeGauge 일 때만 로드
+  const eyeWanted = () => state.settings.eyeGauge !== false && S.source === video && currentFacing() === 'user';
+  function eyeText(t) { const el = $('#eyeText'); if (el) el.textContent = t; }
+  async function syncEye() {
+    const hud = $('#eyeHud'); if (hud) hud.classList.toggle('off', state.settings.eyeGauge === false);
+    if (!eyeWanted()) { gaze?.close(); gaze = null; eye.reset(); eyeText(state.settings.eyeGauge === false ? '시선 OFF' : '전면 카메라에서 시선 추적이 켜져요'); return; }
+    if (gaze) return; gaze = createGaze({ headGain: BALANCE.eye.headGain });
+    try { await gaze.load(eyeText); eyeText(state.eyeCal ? '시선 ON' : '시선 ON · 탭해서 보정'); } catch { eyeText('시선 모델 로드 실패'); gaze = null; }
   }
-  if (state.settings.gestures) setTimeout(startGestures, 1500);
+  function calibrate() { const smp = gazeInject !== undefined ? gazeInject : gaze?.sample(video, performance.now()); if (!smp?.present) { toast('얼굴이 보여야 보정할 수 있어요', 1800); return false; } state.eyeCal = { gx: smp.gx, gy: smp.gy }; save(); eye.reset(); fx.blip(); toast('시선 보정 완료 · 지금 보는 곳이 화면 중앙', 1800); eyeText('시선 ON'); return true; }
+  { let pressT = 0; const hud = $('#eyeHud'); hud.onpointerdown = () => { pressT = performance.now(); }; hud.onpointerup = () => { if (performance.now() - pressT > 600) { state.settings.eyeGauge = state.settings.eyeGauge === false; save(); fx.blip(); syncEye(); } else if (eyeWanted()) calibrate(); else toast(state.settings.eyeGauge === false ? '길게 눌러 아이 게이지 켜기' : '전면 카메라로 전환하면 시선 추적이 켜져요', 2000); }; }
+  function eyeFire(f, now) {
+    const pt = eyeState.point ?? { x: overlay.clientWidth / 2, y: overlay.clientHeight / 2 };
+    eyeImpact = { t0: now, x: pt.x, y: pt.y, color: f.type === 'spirit' ? '#6DB5A0' : '#E2B45A' };
+    const hud = $('#eyeHud'); hud?.classList.remove('impact'); void hud?.offsetWidth; hud?.classList.add('impact');
+    if (!state.settings.reduceMotion) { const fl = $('#eyeFlash'); fl?.classList.remove('on'); void fl?.offsetWidth; fl?.classList.add('on'); }
+    fx.vibrate([20, 40, 60]); fx.comboTone(3);
+    if (f.type === 'wonder' && S.mode === 'capture') { capture.stop(); S.mode = 'grade'; S.gradeAnim = { grade: f.grade, t0: now }; const G = BALANCE.capture.grades[f.grade]; flashGrade(G.color); if (f.grade === 'PERFECT') fx.chime(3, false); setLupe(`눈으로 붙잡았어! ${G.label}`); }
+    else if (f.type === 'spirit') { const sp = spirits.list.find(x => x.id === f.id && !x.popped); if (!sp) return; sp.popped = now; const r = catchSpirit(sp.golden); S.floats.push({ x: sp.x, y: sp.y, t0: now, text: sp.golden ? '프리즘 +1' : '조각 +1', color: sp.golden ? FLOAT_INK.golden : FLOAT_INK.normal }); if (r.boostGained) toast(`${icon('boost')} 공명 부스트 획득!`, 2000); afterEvent({ type: 'spirit' }); renderHud2(); }
+  }
+  // ── 촬영 · 스냅 (제스처 대신 버튼)
+  const toggleRec = () => { if (S.source !== video) return toast('영상 촬영은 카메라 모드에서 돼요', 1800); if (!recorder.supported) return setLupe('이 브라우저는 영상 녹화를 지원하지 않아.');
+    if (recorder.recording) { manualRec = false; $('#shutter').classList.remove('on'); recorder.stop().then(async clip => { $('#rec')?.classList.add('hidden'); if (!clip) return; const lbl = S.lock ?? S.target?.label; if (!lbl) { toast('원더를 비춘 상태의 클립만 저장돼요', 2000); return; } const photo = snapshot(video, null); await addMoment({ label: lbl, grade: 'AUTO', variant: false, frame: state.activeFrame, photoDataUrl: photo, clip, clipType: clip.type }); state.stats.clips += 1; save(); toast(`${icon('film')} 자유 클립을 앨범에 저장했어요`, 2200); }); }
+    else { recorder.manual = true; if (recorder.start(video, overlay)) { manualRec = true; $('#shutter').classList.add('on'); $('#rec')?.classList.remove('hidden'); setLupe('촬영 중… 다시 누르면 정지 (최대 20초).'); } } };
+  const doSnap = () => { const lbl = S.lock ?? S.target?.label ?? S.fixedTarget?.label; if (!lbl) return setLupe('원더를 비춘 채로 스냅하자.'); const photo = snapshot(S.source, S.source === video ? (S.target?.bbox ?? null) : null); fx.flash(); fx.blip(); addMoment({ label: lbl, grade: 'AUTO', variant: false, frame: state.activeFrame, photoDataUrl: photo }).then(() => toast(`${icon('camera')} 스냅 저장 → 앨범`, 1800)); };
+  { let hold = null, held = false; const sh = $('#shutter');
+    sh.onpointerdown = () => { held = false; hold = setTimeout(() => { held = true; fx.vibrate([30]); toggleRec(); }, 500); };
+    sh.onpointerup = sh.onpointerleave = sh.onpointercancel = (e) => { clearTimeout(hold); if (e.type === 'pointerup' && !held) { if (recorder.recording) toggleRec(); else doSnap(); } held = e.type === 'pointerup' ? false : held; }; }
+  setTimeout(syncEye, 1200);
   const ev = activeEvent(); if (ev && !ev.done) $('#hud2').insertAdjacentHTML('beforeend', `<span class="pill event">${icon('event')} ${esc(ev.title)}</span>`);
   $('#comp').onclick = () => { fx.blip(); const tip = advise({ screen: 'scan', armed: S.armPrism }); setLupeTip(tip); markEventSeen(); $('#comp .dot')?.remove(); if (tip.action === 'arm' && $('#arm')) { S.armPrism = true; renderHud2(); } };
   setTimeout(() => { if (S.alive) { const tip = advise({ screen: 'scan', armed: S.armPrism }); if (tip.action === 'event') { setLupeTip(tip); markEventSeen(); } } }, 2500);
-  $('#back').onclick = () => go('title'); $('#codex').onclick = () => go('codex');
-  $('#flip').onclick = async () => { fx.blip(); try { await flipCamera(video); } catch {} };
+  $('#back').onclick = () => go('title');
+  $('#flip').onclick = async () => { fx.blip(); try { await flipCamera(video); } catch {} syncEye(); };
   $('#file').onchange = (e) => scanImage(e.target.files[0]);
-  $('#tutOk') && ($('#tutOk').onclick = () => { state.tutorialSeen = true; save(); fx.blip(); $('#tut').remove(); });
+  let tutResolve = null; const tutDone = $('#tut') ? new Promise(r => { tutResolve = r; }) : Promise.resolve();
+  $('#tutOk') && ($('#tutOk').onclick = () => { state.tutorialSeen = true; save(); fx.unlockAudio(); fx.blip(); $('#tut').remove(); tutResolve?.(); });
 
   // 탭: 포획 판정 또는 정령 포획
   overlay.onpointerdown = (e) => {
@@ -122,7 +139,9 @@ register('scan', () => {
       statusText.textContent = '온디바이스 AI 모델 로딩 (첫 실행만 몇 초)…';
       await warmModel(); if (!S.alive) return;
       if (!hasCamera()) throw new Error('no-camera');
-      statusText.textContent = '카메라 권한을 허용해 주세요';
+      if ($('#tut')) statusText.textContent = '사용법을 읽고 시작을 누르면 카메라를 열어요';
+      await tutDone; if (!S.alive) return;
+      statusText.innerHTML = '카메라 권한 창에서 <b>허용</b>을 눌러 주세요<br><small>권한 창이 떠 있는 동안에는 화면이 눌리지 않아요</small>';
       await startCamera(video); if (!S.alive) return;
       status.classList.add('hidden');
     } catch {
@@ -151,7 +170,7 @@ register('scan', () => {
         if (S.lock !== tgt.label) { S.lock = tgt.label; S.gauge = Math.min(S.gauge, 0.15); if (state.hints.includes(tgt.label) && !owned(tgt.label)) setLupe('친구가 보여준 그 원더야!'); }
         const cd = canRescan(tgt.label);
         if (cd.ok) { S.gauge = Math.min(1, S.gauge + resonanceFillRate(tgt.score, boosted) * eventMod('fill') * dt); fx.tick(S.gauge); if (t - S.lastLupe > 3500) setLupe(say.scanning());
-          if (S.gauge >= MEDIA.preRollGauge && state.settings.recordClips && S.source === video && !recorder.recording && recorder.supported && document.visibilityState === 'visible') { if (recorder.start(S.source, overlay)) $('#rec')?.classList.remove('hidden'); }
+          if (S.gauge >= MEDIA.preRollGauge && state.settings.recordClips && S.source === video && !recorder.recording && recorder.supported && document.visibilityState === 'visible') { if ((recorder.manual = false, recorder.start(S.source, overlay))) $('#rec')?.classList.remove('hidden'); }
           if (WONDERS[tgt.label].rarity === 4 && !owned(tgt.label)) { $('#vig')?.classList.add('on'); if (t - lastBeat > 900) { fx.heartbeat(); fx.vibrate([15]); lastBeat = t; } } else $('#vig')?.classList.remove('on'); }
         else { cooldown = cd.remainMs; S.gauge = Math.max(0, S.gauge - 2 * dt); if (t - S.lastLupe > 3500) setLupe(say.cooldown()); }
       } else { S.gauge = Math.max(0, S.gauge - BALANCE.resonance.decayPerSec * dt); if (S.gauge === 0) { S.lock = null; if (recorder.recording) { recorder.cancel(); $('#rec')?.classList.add('hidden'); } } $('#vig')?.classList.remove('on'); }
@@ -174,8 +193,14 @@ register('scan', () => {
     spirits.update(t, dt * eventMod('spirit'), cw, ch, S.center ? { x: S.center.cx, y: S.center.cy } : null); spirits.draw(x);
     S.floats = S.floats.filter(f => t - f.t0 < 900);
     for (const f of S.floats) { const p = (t - f.t0) / 900; x.globalAlpha = 1 - p; x.font = FLOAT_FONT; x.textAlign = 'center'; x.fillStyle = f.color; x.fillText(f.text, f.x, f.y - 20 - p * 50); x.globalAlpha = 1; }
-    if (gest?.ready && S.source === video) { const g = gest.update(video, t); if (g) { gestOut = g; for (const e of g.events) gestureAction(GESTURE_MAP.find(m => m.g === e.name)?.action ?? FACE_MAP.find(m => m.f === e.name)?.action ?? '', g.hand); if (g.gesture) { const G = GESTURE_MAP.find(m => m.g === g.gesture); const ic = G?.action ?? g.gesture; if (ic !== lastGestIcon) { lastGestIcon = ic; $('#gestIcon').innerHTML = gestIcon(ic); $('#gestText').textContent = G?.label ?? g.gesture; } } } }
-    if (gestOut?.hand) { const hx = gestOut.hand.x * cw, hy = gestOut.hand.y * ch; x.strokeStyle = '#EDE6D6'; x.lineWidth = 2; x.beginPath(); x.arc(hx, hy, 14, 0, Math.PI * 2); x.stroke(); x.fillStyle = 'rgba(237,230,214,.6)'; x.beginPath(); x.arc(hx, hy, 4, 0, Math.PI * 2); x.fill(); }
+    { const smp = gazeInject !== undefined ? gazeInject : (gaze?.ready && eyeWanted() ? gaze.sample(video, t) : null);
+      const active = gazeInject !== undefined || (!!gaze && eyeWanted());
+      if (active) { const box = S.mode === 'capture' && S.center && tracker.box ? (() => { const [bx, by, bw, bh] = tracker.box; return [bx * tf.s + tf.ox, by * tf.s + tf.oy, bw * tf.s, bh * tf.s]; })() : null;
+        eyeState = eye.update({ now: t, dt, sample: smp, cal: state.eyeCal, cw, ch, targetBox: box, mode: S.mode, spirits: spirits.list.filter(sp => !sp.popped && sp.alpha > 0.3).map(sp => ({ id: sp.id, x: sp.x, y: sp.y, golden: sp.golden })), enabled: true });
+        if (eyeState.fired) eyeFire(eyeState.fired, t);
+        const p = eyeState.point ?? { x: cw / 2, y: ch / 2 };
+        drawEyeReticle(x, { cx: p.x, cy: p.y, fill: eyeState.fill, target: eyeState.target, present: eyeState.present, impact: eyeImpact, reduceMotion: state.settings.reduceMotion, now: t });
+        if (eyeImpact && t - eyeImpact.t0 > 1260) eyeImpact = null; } }
     if (recorder.recording && !manualRec && recorder.elapsed > MEDIA.clipMaxMs) {} if (recorder.recording) recorder.frame();
     S.raf = requestAnimationFrame(drawLoop);
   }
@@ -213,7 +238,7 @@ register('scan', () => {
     let momentId = null; try { const m = await addMoment({ label: tgt.label, grade, variant: isVariant, frame: state.activeFrame, photoDataUrl: photo, clip, clipType: clip?.type ?? null }); momentId = m.id; } catch {}
     go('reveal', { ...result, photo, questsDone, achs, usedToken, combo, milestones, clip, momentId, errand });
   }
-  if (location.search.includes('debug')) window.__scan = { S, capture, spirits, ring: () => capture.tick(performance.now()) };
+  if (location.search.includes('debug')) window.__scan = { S, capture, spirits, ring: () => capture.tick(performance.now()), injectGaze: (smp) => { gazeInject = smp; }, eye: () => eyeState, calibrate: () => calibrate(), injectDetection: (d) => { S.fixedTarget = d; }, setGauge: (v) => { S.gauge = v; } };
   const onVis = async () => {
     if (!S.alive) return;
     if (document.visibilityState === 'hidden') { if (recorder.recording) { recorder.cancel(); $('#rec')?.classList.add('hidden'); } if (S.mode === 'capture') { capture.stop(); S.mode = 'scan'; S.gauge = 0.5; } return; }
@@ -221,5 +246,5 @@ register('scan', () => {
     else video.play?.().catch(() => {});
   };
   document.addEventListener('visibilitychange', onVis);
-  return () => { S.alive = false; document.removeEventListener('visibilitychange', onVis); cancelAnimationFrame(S.raf); recorder.cancel(); gest?.close(); stopCamera(video); };
+  return () => { S.alive = false; document.removeEventListener('visibilitychange', onVis); cancelAnimationFrame(S.raf); recorder.cancel(); gaze?.close(); stopCamera(video); };
 });
