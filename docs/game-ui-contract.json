@@ -1,0 +1,387 @@
+{
+  "contract_version": 1,
+  "project": {
+    "name": "Wonder Scanner",
+    "build": "v5 (commit 980829d), Vite static build on Vercel",
+    "target_devices": [
+      "phone portrait 390x844 (iOS Safari, Android Chrome)",
+      "desktop browser with photo fallback"
+    ],
+    "input_methods": [
+      "touch",
+      "mouse",
+      "keyboard (Enter/Space on focused buttons)"
+    ],
+    "locales": [
+      "Korean"
+    ]
+  },
+  "player_decisions": [
+    {
+      "decision": "Which object to aim at and hold steady until resonance fills.",
+      "required_information": "Detected label rarity hint (???+stars), confidence, gauge %, cooldown, boost state, prism token armed.",
+      "urgency": "current decision support"
+    },
+    {
+      "decision": "When to tap during the shrinking capture ring.",
+      "required_information": "Ring radius vs golden band, cycle count 1/3, grade thresholds.",
+      "urgency": "critical"
+    },
+    {
+      "decision": "Whether to tap a spirit now or keep the object framed.",
+      "required_information": "Spirit position/golden status, fragment count toward boost.",
+      "urgency": "current decision support"
+    },
+    {
+      "decision": "Which memory to refine, recall, duel, or share, and what to buy with stardust.",
+      "required_information": "Stage, points sources, stardust balance, shop prices, milestone distance.",
+      "urgency": "contextual"
+    },
+    {
+      "decision": "Whether to reset progress or delete a memory.",
+      "required_information": "Exact scope of loss and a cancel path.",
+      "urgency": "critical"
+    }
+  ],
+  "screens": [
+    {
+      "id": "title",
+      "type": "hub",
+      "decision": "Start scanning or visit codex/album/quests/shop; see today's event, recall card, and next goals.",
+      "states": [
+        "first run (intro lines)",
+        "returning (advice + event)",
+        "recall available",
+        "no recall today",
+        "cloud disabled"
+      ],
+      "entry": "App boot; back from any screen.",
+      "exit": "Start → scan; tabs → codex/album/quests/shop/profile.",
+      "back_behavior": "Root screen; browser back leaves the app.",
+      "initial_focus": "Start scan button."
+    },
+    {
+      "id": "scan",
+      "type": "gameplay",
+      "decision": "Aim, hold, tap the ring, tap spirits, arm token, ask the companion.",
+      "states": [
+        "model loading",
+        "camera permission pending",
+        "camera denied → photo fallback",
+        "scanning (no target)",
+        "target locked (gauge)",
+        "cooldown",
+        "capture ring",
+        "grade burst",
+        "recording",
+        "legendary vignette",
+        "tutorial overlay"
+      ],
+      "entry": "From title/reveal/codex; camera starts, gyro listener starts.",
+      "exit": "Capture finish → reveal; home/codex buttons stop camera and recorder.",
+      "back_behavior": "Home button returns to title; tutorial overlay closes first.",
+      "initial_focus": "Overlay canvas (tap target); controls row at bottom."
+    },
+    {
+      "id": "reveal",
+      "type": "result overlay",
+      "decision": "Scratch to reveal identity, save/share card or clip, continue scanning or open codex.",
+      "states": [
+        "suspense (epic+/variant)",
+        "card revealed",
+        "scratch pending",
+        "scratch done",
+        "duplicate",
+        "rank up",
+        "chapter complete",
+        "milestone chest modal",
+        "all complete"
+      ],
+      "entry": "From scan finish with result payload.",
+      "exit": "Continue → scan; codex → codex chapter.",
+      "back_behavior": "Chest modal closes first; otherwise continue scan.",
+      "initial_focus": "Scratch zone when new; else continue button."
+    },
+    {
+      "id": "codex",
+      "type": "collection",
+      "decision": "Pick a chapter closest to completion and a missing wonder to hunt.",
+      "states": [
+        "chapter tabs with progress rings",
+        "locked silhouettes",
+        "owned slots with grade/count/mastery",
+        "chapter complete story",
+        "detail modal (owned/locked)"
+      ],
+      "entry": "Tabs/title/reveal (auto-selects closest chapter).",
+      "exit": "Tabs; back → title.",
+      "back_behavior": "Detail modal closes first.",
+      "initial_focus": "Active chapter tab."
+    },
+    {
+      "id": "album",
+      "type": "collection",
+      "decision": "Refine, recall, duel, share, favorite, delete, or gift a memory; view storage.",
+      "states": [
+        "empty",
+        "populated",
+        "filtered (clip/perfect/fav/friend)",
+        "detail modal",
+        "refine sheet",
+        "gift sheet",
+        "storage near cap"
+      ],
+      "entry": "Tabs/title recall card (opens detail + recall).",
+      "exit": "Duel → duel screen; back → title.",
+      "back_behavior": "Sheets/modals close first.",
+      "initial_focus": "Filter chips."
+    },
+    {
+      "id": "duel",
+      "type": "gameplay sequence",
+      "decision": "Start the duel; afterwards rematch or return to album.",
+      "states": [
+        "ready",
+        "rumble",
+        "round 1-3",
+        "win",
+        "lose",
+        "reduced motion (no rumble/hit shake)"
+      ],
+      "entry": "From album detail ⚔️ or shadow challenge event.",
+      "exit": "Rematch → duel; album → album.",
+      "back_behavior": "Back to album at any time; no state change mid-duel.",
+      "initial_focus": "Fight button."
+    },
+    {
+      "id": "quests",
+      "type": "menu",
+      "decision": "Which quest to pursue today; understand prism/boost sources.",
+      "states": [
+        "3 quests with progress",
+        "some done",
+        "all done",
+        "countdown to reset"
+      ],
+      "entry": "Tabs/title.",
+      "exit": "Tabs; back → title.",
+      "back_behavior": "Back → title.",
+      "initial_focus": "First unfinished quest."
+    },
+    {
+      "id": "shop",
+      "type": "shop",
+      "decision": "Spend stardust on boost/prism/reroll/frames; check milestone chests.",
+      "states": [
+        "affordable",
+        "insufficient (poor)",
+        "owned frame",
+        "frame selected"
+      ],
+      "entry": "Title/profile.",
+      "exit": "Back → profile.",
+      "back_behavior": "Back → profile.",
+      "initial_focus": "First shop item."
+    },
+    {
+      "id": "profile",
+      "type": "settings + stats",
+      "decision": "Toggle accessibility settings, set name, review achievements, enter plaza/shop.",
+      "states": [
+        "settings",
+        "achievements locked/unlocked",
+        "reset confirm"
+      ],
+      "entry": "Tabs/gear icon (scrolls to settings).",
+      "exit": "Tabs; back → title.",
+      "back_behavior": "Confirm dialog cancels first.",
+      "initial_focus": "Rank card; gear opens with settings in view."
+    },
+    {
+      "id": "collectors",
+      "type": "social list",
+      "decision": "Log in, publish/unpublish profile, browse other collectors' memories.",
+      "states": [
+        "cloud disabled (explanation)",
+        "logged out",
+        "logged in",
+        "list empty",
+        "list populated",
+        "collector detail"
+      ],
+      "entry": "Profile → 광장.",
+      "exit": "Back → profile.",
+      "back_behavior": "Collector detail → list → profile.",
+      "initial_focus": "Login button or first collector."
+    }
+  ],
+  "information_hierarchy": {
+    "critical": [
+      "capture ring position vs golden band and the resulting grade",
+      "MISS / wonder fled and gauge reset",
+      "destructive confirms (reset progress, delete memory)",
+      "camera or model failure with the photo fallback path"
+    ],
+    "current": [
+      "resonance gauge %, confidence, cooldown seconds, boost/prism state anchored to the object",
+      "spirit positions and golden status",
+      "stardust balance and prices in the shop",
+      "memory stage, points sources, and refine controls"
+    ],
+    "contextual": [
+      "rank/XP, codex count, quest progress chips",
+      "companion advice and today's event",
+      "next-goal ladder, recall card, achievements, stats",
+      "lore, observation notes, chapter stories"
+    ],
+    "hidden": [
+      "other collectors' private (unpublished) memories and save data",
+      "raw detector output beyond the chosen target",
+      "cloud credentials and provider internals"
+    ]
+  },
+  "navigation": {
+    "methods": [
+      "touch",
+      "pointer",
+      "keyboard"
+    ],
+    "focus_order": [
+      "screen header back control",
+      "primary action (start scan / fight / save)",
+      "interactive HUD chips (prism token)",
+      "content list or grid (tabs, slots, moments, shop items)",
+      "secondary actions (share, favorite, delete)",
+      "bottom tab bar"
+    ],
+    "device_switch": "Touch and pointer share the same targets (≥44px); switching to keyboard keeps the current screen and selection, native focus rings appear on buttons; the scan overlay canvas is pointer-only while every other action remains a keyboard-reachable button.",
+    "modal_behavior": "Detail modals, sheets, tutorial, and chest are overlays inside the screen root; click/tap outside or the explicit button closes the topmost overlay first and returns to the underlying screen without changing game state.",
+    "destructive_behavior": "Reset and delete use a native confirm() naming the exact scope; back or cancel never confirms; gift redemption is additive and duplicate codes are rejected with a reason."
+  },
+  "layout": {
+    "aspect_families": [
+      "portrait phone (primary, 390x844 verified)",
+      "portrait tablet",
+      "desktop window with photo fallback"
+    ],
+    "safe_area": "HUD, bottom controls, tab bar, and toasts pad by env(safe-area-inset-*); decorative canvas layers extend full-bleed.",
+    "anchors": [
+      "HUD chips stay in the safe top region and never cover the object center",
+      "object-anchored gauge, tag, and capture ring follow the smoothed bounding box",
+      "companion avatar and controls stay in the bottom-right/bottom safe region",
+      "cards are centered at min(320px, 86vw)"
+    ],
+    "text_scaling": "System fonts 10–34px; long Korean wonder names wrap to two lines in slots and cards; chips truncate only the non-critical hint chip with ellipsis.",
+    "reflow": "Title and meta screens scroll instead of shrinking (flex-shrink:0); chapter tabs scroll horizontally; codex uses 4 columns and album 3 columns; the goals ladder is capped at four rows.",
+    "scrolling": "Each meta screen owns one vertical scroll region below the header; grids scroll inside the screen with bottom padding for the tab bar; modals do not scroll the underlying screen."
+  },
+  "localization": {
+    "externalized": "Not yet externalized: Korean strings live inline in screens and data files; the worlds registry is the planned seam for alternate wonder names and guide lines.",
+    "expansion": "Buttons wrap or reflow; chips use nowrap only for short labels; card lore and notes wrap freely.",
+    "bidirectional": "Not reviewed; layout uses left/right physical properties and would need logical properties for RTL.",
+    "fonts": "System UI stack with Korean fallbacks (Pretendard, Apple SD Gothic Neo, Noto Sans KR); emoji glyphs rely on platform emoji fonts.",
+    "input_glyphs": "Prompts are text plus emoji (탭!, 긁어서 확인); no device-specific glyphs are required."
+  },
+  "accessibility": {
+    "signals": [
+      "grade uses text, color, sound, haptic, and the reward line — never color alone",
+      "rarity uses star count text in addition to color",
+      "cooldown shows seconds as text with a gray bracket",
+      "legendary detection uses vignette plus heartbeat sound plus haptic plus Lupe text",
+      "toasts persist ~3.5s with text; quest/achievement completion also appears on their screens"
+    ],
+    "settings_entry": "Profile → settings is reachable from the title gear icon before any gameplay; settings persist in localStorage and apply immediately.",
+    "motion": "Reduce-motion disables shake, glitch, flash, rays, confetti, aura particles, tag bob, suspense, duel rumble and hit shake; state confirmations remain as text, badges, and sound where enabled; scratch becomes tap-to-reveal.",
+    "media_alternatives": "Sound and haptics are optional toggles; capture clips are optional and never required to progress; no decision depends on audio or haptics alone."
+  },
+  "data_bindings": [
+    {
+      "element": "scan HUD chips and object-anchored gauge",
+      "source": "localStorage state (v3) and per-frame scan loop",
+      "initial_state": "Render current rank/codex/dust/quest counts on entry; gauge starts at 0 with no target.",
+      "update": "Re-render chips after discover/spirit/quest/achievement events; gauge, tag, ring redraw every animation frame from the smoothed target.",
+      "stale": "If the target label changes, the gauge drops to 15% and re-locks; if lost for 1.5s during capture, capture cancels and the gauge resets to 50%.",
+      "error": "Model or camera failure shows the fallback panel with photo upload and a return path; detector exceptions clear the target.",
+      "permission": "Camera and orientation permissions are requested from user gestures; denial routes to photo fallback without blocking the rest of the game."
+    },
+    {
+      "element": "album grid and detail",
+      "source": "IndexedDB wonder-album store",
+      "initial_state": "Read all moments on entry; show the empty state with guidance when none exist.",
+      "update": "Refine, recall, favorite, delete, and duel write back and re-render the screen; stage badges recompute from points.",
+      "stale": "Object URLs are revoked on screen exit; storage stats recompute on each entry.",
+      "error": "IndexedDB failures are caught at addMoment so a capture still reveals without a saved memory.",
+      "permission": "Only this device's data; cloud upload happens only for a logged-in user's own moments."
+    },
+    {
+      "element": "collectors plaza",
+      "source": "cloud provider (Firestore public collectors) when enabled",
+      "initial_state": "Cloud disabled → explanation card; logged out → login button; logged in → list sorted by codex count.",
+      "update": "Login triggers syncAll and profile publish; public toggle updates the profile document.",
+      "stale": "List is fetched on entry only; a manual sync button re-uploads unsynced moments.",
+      "error": "Fetch or auth failures fall back to an empty list with a toast; the local game is unaffected.",
+      "permission": "Firestore rules restrict reads to public profiles and writes to the owner; storage writes are owner-only and size-capped."
+    }
+  ],
+  "verification": {
+    "matrix": [
+      {
+        "state": "photo fallback capture across AUTO, PERFECT, GREAT, GOOD, and MISS",
+        "device": "Chrome desktop emulating 390x844",
+        "input": "pointer (scripted pointerdown on overlay)",
+        "locale": "Korean",
+        "setting": "default motion, sound on",
+        "expected": "Grades match ring radius thresholds; MISS resets gauge and refills; rewards, quests, achievements, and milestones update; no console errors."
+      },
+      {
+        "state": "scratch reveal, album refine/recall, duel",
+        "device": "Chrome desktop emulating 390x844",
+        "input": "pointer drag and buttons",
+        "locale": "Korean",
+        "setting": "default",
+        "expected": "Scratch clears past 50%; refine + recall raise the stage with rewards; duel runs three rounds to a result and grants stardust."
+      },
+      {
+        "state": "live camera capture with clip recording and gyro spirits",
+        "device": "iOS Safari and Android Chrome real devices",
+        "input": "touch",
+        "locale": "Korean",
+        "setting": "reduce motion on and off",
+        "expected": "Ring taps land inside GOOD/PERFECT windows under touch latency; clip saves as mp4/webm with sound; gyro spirits track orientation after permission; reduce-motion keeps all confirmations as text."
+      }
+    ],
+    "acceptance": [
+      "Every declared screen state has a reachable and escapable path (verified for desktop emulation).",
+      "Trusted game state (codex, cooldown, save schema) is unchanged by presentation settings.",
+      "Critical signals use more than one channel and stay inside the safe area.",
+      "Cloud-disabled mode is a complete game with no dead UI."
+    ],
+    "evidence": "docs/screens/v2-*.png and v3-*.png, docs/game-feel-contract.json, HISTORY.md §5 and §8 QA tables, DevTools console logs (0 errors after fixes)."
+  },
+  "decisions": [
+    {
+      "decision": "Keep AR as screen-space canvas effects anchored by 3-DoF gyro rather than WebXR world tracking.",
+      "basis": "No WebXR dependency, works on iOS Safari, static hosting.",
+      "owner": "AR overlay"
+    },
+    {
+      "decision": "Cloud behind an env-gated adapter; local mode is the complete game.",
+      "basis": "User must create Firebase project; app must not degrade without it.",
+      "owner": "cloud"
+    },
+    {
+      "decision": "Scratch reveal only for first discoveries; tap-to-reveal under reduce motion.",
+      "basis": "Preserve surprise without slowing duplicates or excluding motion-sensitive players.",
+      "owner": "reveal UX"
+    },
+    {
+      "decision": "Title scrolls rather than compresses as content grows (event, recall, goals).",
+      "basis": "QA showed squeezed logo/bubble at 844px.",
+      "owner": "layout"
+    }
+  ],
+  "route_out": {
+    "next_owner": "real-device QA + Firebase provisioning",
+    "reason": "Remaining risks are device APIs (camera recording, gyro permission, share sheet) and cloud keys only the owner can create."
+  }
+}
