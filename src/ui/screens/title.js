@@ -9,6 +9,7 @@ import { LUPE } from '../../game/narrative.js';
 import { streakMultiplier } from '../../game/balance.js';
 import { requestGyro } from '../../scanner/gyro.js';
 import { geoSummary, gimmickRemainingMs, remainLabel, revalidateSpots, activeGimmick } from '../../game/spots.js';
+import { getLang, setLang } from '../../i18n/index.js';
 import { distanceLabel, bearingLabel } from '../../geo/provider.js';
 import * as fx from '../fx.js';
 
@@ -45,7 +46,7 @@ function spotCardHtml(pre = null) {
   const emblem = spot?.chapter ? `<img src="/img/ch/${esc(spot.chapter)}.svg" alt="" width="24" height="24"/>` : icon(active ? 'event' : PIN, { size: 24 });
   const ell = 'style="overflow:hidden;text-overflow:ellipsis;min-width:0"';
   return `<button class="spot-card compact spot-entry ${active ? 'top' : ''}" id="spotCard" data-go="spots" aria-label="근처 촬영지 열기">
-    <div class="sp-head"><span class="sp-emblem">${emblem}</span><div class="sp-title"><h3 class="sp-name">${name}</h3>
+    <div class="sp-head"><span class="sp-emblem">${emblem}</span><div class="sp-title"><h3 class="sp-name"${spot && !(active && !spot) ? ' translate="no"' : ''}>${name}</h3>
       ${where ? `<div class="sp-meta">${icon(WALK, { size: 12 })} <span ${ell}>${where}</span></div>` : ''}
       ${gim ? `<div class="sp-meta">${icon('event', { size: 12 })} <span ${ell}>${gim}</span></div>` : ''}
     </div></div>
@@ -66,6 +67,7 @@ register('title', () => {
           <p class="tagline">세상은 원더로 가득하다. 당신은 그냥 "컵"이라 부른다.</p>
         </div>
       </div>
+      <button class="btn icon ghost lang-toggle" id="langToggle" translate="no" title="${getLang() === 'en' ? '한국어로 보기' : 'View in English'}" aria-label="${getLang() === 'en' ? '한국어로 보기' : 'View in English'}">${getLang() === 'en' ? '한' : 'EN'}</button>
       <button class="btn icon ghost gear" id="settings" title="설정" aria-label="설정">${icon('gear')}</button>
     </header>
     ${lupeHtml('', 'lupe', 'wide')}
@@ -107,6 +109,7 @@ register('title', () => {
   $('#start').onclick = async () => { fx.unlockAudio(); fx.blip(); state.onboarded = true; save(); requestGyro(); go('scan'); };
   $$('[data-go]').forEach(b => b.onclick = () => { fx.blip(); go(b.dataset.go); });
   $('#settings').onclick = () => { fx.blip(); go('profile', true); };
+  $('#langToggle').onclick = () => { fx.blip(); setLang(getLang() === 'en' ? 'ko' : 'en'); };
   // 근처 촬영지 카드: 위치 권한이 이미 허용돼 있으면(권한 창 없음) 현재 위치로 재검증해 가장 가까운 곳으로 교체
   // 이동해서 새로 검색하는 동안에도 첫 카테고리가 도착하는 즉시(≈1초) 현재 위치 기준으로 바꾼다 — 이전 위치의 거리를 남겨 두지 않는다
   const swapSpot = (r) => {

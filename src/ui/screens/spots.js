@@ -24,7 +24,7 @@ function gimmickHtml(now = Date.now()) {
   const c = spotChallenge();
   const done = c ? (c.done || []).length : 0, total = c ? c.labels.length : 0;
   return `<div class="info-card gimmick-live"><b>${icon('event')} 기믹 「${esc(g.title)}」 <span class="mono" data-gim-left>${remainLabel(gimmickRemainingMs(now))} 남음</span></b>
-    <small>${esc(g.desc)}${g.spotName ? ` · ${esc(g.spotName)}` : ''}</small>
+    <small>${esc(g.desc)}${g.spotName ? ` · <span translate="no">${esc(g.spotName)}</span>` : ''}</small>
     ${c ? `<div class="progress sm" style="width:100%"><i style="width:${total ? Math.round(done / total * 100) : 0}%"></i></div><small class="mono">스팟 도전 ${done}/${total} · 150m 안에서 포획</small><div class="chips left">${wonderChips(c.labels)}</div>` : ''}
     <button class="btn ghost sm" data-gim-cam>${icon('camera')} 카메라 열기</button></div>`;
 }
@@ -34,7 +34,7 @@ function cardHtml(s, i, now = Date.now()) {
   const badge = s.gimmick ? `<span class="gimmick-badge ${live ? 'on' : ''}">${icon('event', { size: 12 })} <b>${esc(s.gimmick.title)}</b> · ${esc(s.gimmick.desc)}${live ? `<span class="left">· ${remainLabel(gimmickRemainingMs(now))} 남음</span>` : ''}</span>` : '';
   return `<article class="spot-card stagger ${i === 0 ? 'top' : ''}" style="--i:${i}" data-id="${esc(s.id)}">
     <div class="sp-head"><span class="sp-emblem"><img src="/img/ch/${esc(s.chapter)}.svg" alt="${esc(s.chapterTitle)}" width="24" height="24"/></span>
-      <div class="sp-title"><h3 class="sp-name">${esc(s.name)}</h3><div class="sp-meta">${icon(WALK, { size: 12 })} <span>${distanceLabel(s.dist_m)}</span> · <span>${bearingLabel(s.bearing_deg)}</span> · <span>${esc(s.chapterTitle)}</span></div></div></div>
+      <div class="sp-title"><h3 class="sp-name" translate="no">${esc(s.name)}</h3><div class="sp-meta">${icon(WALK, { size: 12 })} <span>${distanceLabel(s.dist_m)}</span> · <span>${bearingLabel(s.bearing_deg)}</span> · <span>${esc(s.chapterTitle)}</span></div></div></div>
     <div class="sp-wonders"><small>여기서</small>${wonderChips(s.labels)}</div>
     ${badge}
     <div class="sp-actions"><button class="btn ghost" data-map="${esc(s.mapsUrl)}">${icon('globe')} 지도 열기</button><button class="btn primary" data-cam="${esc(s.id)}">${icon('camera')} 카메라 열기</button></div>
@@ -143,7 +143,7 @@ window.addEventListener('ws:spot-challenge', (e) => {
 export function spotsEntryHtml() {
   const s = geoSummary();
   const g = s.active, top = s.top;
-  const name = g ? `기믹 「${esc(g.title)}」 진행 중` : top ? esc(top.name) : '근처 촬영지';
+  const name = g ? `기믹 「${esc(g.title)}」 진행 중` : top ? `<span translate="no">${esc(top.name)}</span>` : '근처 촬영지';
   const meta = g ? `${remainLabel(gimmickRemainingMs())} 남음 · ${esc(g.desc)}`
     : top ? `${distanceLabel(top.dist_m)} · ${bearingLabel(top.bearing_deg)} · ${esc(top.chapterTitle)}${s.suggested ? ` · 기믹 「${esc(s.suggested.title)}」` : ''}`
     : '주변 카페·공원·역에서 찍을 원더 찾기';

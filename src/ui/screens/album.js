@@ -172,7 +172,7 @@ register('album', async (filter = 'all', openId = null, opts = {}) => {
         <div class="rar">${headHtml()}</div>
         <div class="name">${title}</div><div class="orig mono">${meta}${m.clip && k !== 'video' ? ` · ${icon('film')}` : ''}${m.cloud ? ` · ${icon('cloud')}` : ''}</div>
         <div class="stage-row"><span class="stage-badge">${stageIcon(m)} ${STAGES[m.stage || 0]?.name ?? STAGES[0].name}</span>${STAGES.slice(1).map(s => `<i class="${(m.stage || 0) >= s.id ? 'on' : ''}" title="${s.name}"></i>`).join('')}<small>회상 ${m.recalls || 0} · 공유 ${m.shares || 0}${list.length > 1 ? ` · ${idx + 1}/${list.length}` : ''}</small></div>
-        <div class="caption">${m.caption ? `${icon('quill')} ${esc(m.caption)}` : '<span class="mute">캡션을 남기면 추억이 자라요 · 더블탭 즐겨찾기</span>'}</div></div>`;
+        <div class="caption">${m.caption ? `${icon('quill')} <span translate="no">${esc(m.caption)}</span>` : '<span class="mute">캡션을 남기면 추억이 자라요 · 더블탭 즐겨찾기</span>'}</div></div>`;
       acts.innerHTML = `<button class="btn ghost" id="dExport">${ic('export', 'share')}<span>꺼내기</span></button><button class="btn ghost" id="dEdit">${icon('quill')}<span>수정하기</span></button><button class="btn ghost" id="dShare">${icon('share')}<span>공유하기</span></button><button class="btn ghost" id="dMore">${ic('more', 'plus')}<span>더보기</span></button>`;
       // 각인 윤곽: cover 크롭(정사각 표시)에 맞춰 재계산 — 정사각 스냅샷이면 그대로, 풀프레임 사진이면 보정
       const ph = $('.photo', wrap);

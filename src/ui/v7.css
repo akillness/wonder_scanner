@@ -203,3 +203,11 @@
 :root.reduce-motion .cam-fly{display:none!important}
 :root.reduce-motion .skeleton-card::after{transform:none;opacity:.6}
 :root.reduce-motion .select-bar,:root.reduce-motion .share-sheet{opacity:1;transform:none}
+
+/* ── i18n (v8.4): 한/EN 전환 — 타이틀 헤더(설정 톱니 왼쪽) · 프로필 설정 행 */
+.lang-toggle{position:absolute;top:calc(var(--safe-t,0px) + 12px);right:64px;z-index:2;font:600 13px/1 "IBM Plex Mono",ui-monospace,monospace;letter-spacing:.04em;min-width:44px;color:var(--brass,#E2B45A)}
+.screen.title .masthead{padding-right:108px}
+.lang-row{align-items:center}
+.lang-seg{display:flex;gap:6px;flex-shrink:0}
+.lang-seg .pill{cursor:pointer;min-height:36px}
+.lang-seg .pill.on{border-color:var(--brass,#E2B45A);color:var(--brass,#E2B45A)}

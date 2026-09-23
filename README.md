@@ -2,337 +2,357 @@
 
 # 🔭 WONDER SCANNER
 
-**세상은 원더로 가득하다. 당신은 그냥 "컵"이라 부른다.**
+**English** · [한국어](README.ko.md)
 
-카메라로 주변 물건을 비추면, 그 물건의 *진짜 모습*(원더)이 드러나는 **수집형 도감 게임**입니다.
-AI는 100% 브라우저 안에서만 돌아갑니다. 사진은 어디로도 전송되지 않습니다.
+**The world is full of Wonders. You just call it a "cup".**
 
-[![Live](https://img.shields.io/badge/▶%20지금%20플레이-wonderscanner.vercel.app-6ee7ff?style=for-the-badge)](https://wonderscanner.vercel.app)
+Point your camera at everyday objects and their *true form* (a Wonder) is revealed. A collection-codex game.
+The AI runs 100% inside your browser. Your photos are never sent anywhere.
+
+[![Live](https://img.shields.io/badge/▶%20Play%20now-wonderscanner.vercel.app-6ee7ff?style=for-the-badge)](https://wonderscanner.vercel.app)
 ![Vite](https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white)
 ![TensorFlow.js](https://img.shields.io/badge/TensorFlow.js-COCO--SSD-FF6F00?logo=tensorflow&logoColor=white)
 ![Vercel](https://img.shields.io/badge/Deployed-Vercel-000?logo=vercel)
 
 <img src="docs/qr.png" alt="QR: wonderscanner.vercel.app" width="160" />
 
-<sub>스마트폰 카메라로 QR을 찍으면 바로 시작됩니다 (카메라 권한 필요)</sub>
+<sub>Scan the QR code with your phone camera to start right away (camera permission required)</sub>
 
 <br/>
 
-<a href="docs/media/play.mp4"><img src="docs/media/play-preview.gif" alt="플레이 영상 미리보기 (클릭하면 40초 MP4)" width="240"/></a>
+<a href="docs/media/play.mp4"><img src="docs/media/play-preview.gif" alt="Gameplay preview (click for the 40-second MP4)" width="240"/></a>
 
-<sub>▶ 클릭하면 40초 플레이 영상(MP4, 390×844, 1.2MB) — 시작 → 사용법 → 사진 스캔 → 포획 링 탭 → 스크래치 → 시선(아이 게이지) 포획 → 도감·앨범·의뢰·프로필</sub>
+<sub>▶ Click for a 40-second gameplay video (MP4, 390×844, 1.2MB) — start → how to use → photo scan → tap the capture ring → scratch → gaze (Eye Gauge) capture → Codex · Album · Quests · Profile</sub>
 
-| 타이틀 | 렌즈 사용법 | 포획 링 | 스크래치 발견 |
+| Title | Lens tutorial | Capture ring | Scratch reveal |
 |:--:|:--:|:--:|:--:|
 | <img src="docs/screens/v8-01-title.png" width="180"/> | <img src="docs/screens/v8-02-tutorial.png" width="180"/> | <img src="docs/screens/v8-03-capture-ring.png" width="180"/> | <img src="docs/screens/v8-05-reveal-scratched.png" width="180"/> |
-| **도감** | **앨범** | **오늘의 의뢰** | **프로필 · 아이 게이지** |
+| **Codex** | **Album** | **Today's quests** | **Profile · Eye Gauge** |
 | <img src="docs/screens/v8-06-codex.png" width="180"/> | <img src="docs/screens/v8-07-album.png" width="180"/> | <img src="docs/screens/v8-08-quests.png" width="180"/> | <img src="docs/screens/v8-09-profile.png" width="180"/> |
 
 </div>
 
 ---
 
-## 🧒 이게 뭐예요? (ELI5)
+## 🧒 What is this? (ELI5)
 
-> **다섯 살에게 설명하면:**
-> 마법 망원경이 있어요. 컵을 들여다보면 "이건 사실 우주선 연료 탱크야!"라고 알려줘요.
-> 그렇게 찾은 것들을 스티커북에 붙여요. 스티커북을 다 채우면 마법사가 비밀 이야기를 들려줘요.
+> **Explained to a five-year-old:**
+> There's a magic telescope. Look at a cup through it and it tells you, "This is actually a spaceship fuel tank!"
+> You stick everything you find into a sticker book. Fill the book and the wizard tells you a secret story.
 
-| ELI5 용어 | 게임 안에서의 뜻 | 실제로는 |
+| ELI5 term | In the game | What it really is |
 |---|---|---|
-| **원더 (Wonder)** | 평범한 물건의 "진짜 모습" | AI가 인식한 사물 80종 각각에 붙인 재해석 이름 + 한 줄 설정 |
-| **렌즈** | 원더를 보여주는 마법 망원경 | 스마트폰 카메라 + 브라우저 안의 사물 인식 AI |
-| **공명 (Resonance)** | 렌즈를 가만히 대고 있으면 차오르는 빛 | AI가 같은 물체를 연속으로 인식하는 동안 채워지는 게이지 |
-| **도감 (Codex)** | 스티커북 | 발견한 원더 80칸짜리 컬렉션 (기기에 저장) |
-| **별가루** | 이미 있는 스티커를 또 뽑았을 때 받는 사탕 | 중복 발견 시 지급되는 자원, 랭크 XP로 이어짐 |
-| **변이체 (프리즘)** | 반짝이는 희귀 스티커 | 약 4~10% 확률의 특별 색상 버전 (보상 3배) |
-| **챕터** | 스티커북의 페이지 | 장소별 6개 테마 세트 (책상·부엌·집·거리·생물·놀이) |
-| **루페 (Lupe)** | 렌즈 속에 사는 마법사 친구 | 상황별 대사와 스토리를 들려주는 안내 캐릭터 |
-| **랭크** | 탐험가 배지 | XP 누적에 따라 열리는 10단계 칭호 |
+| **Wonder** | The "true form" of an ordinary object | A reinterpreted name + one-line lore for each of the 80 object classes the AI recognizes |
+| **Lens** | The magic telescope that shows Wonders | Your phone camera + an object-recognition AI running in the browser |
+| **Resonance** | Light that fills up while you hold the lens steady | A gauge that fills while the AI keeps recognizing the same object |
+| **Codex** | The sticker book | An 80-slot collection of discovered Wonders (saved on your device) |
+| **Stardust** | Candy you get for a sticker you already have | A resource paid out on duplicate discoveries, feeding rank XP |
+| **Variant (Prism)** | A rare shiny sticker | A special-color version at roughly 4–10% (3× rewards) |
+| **Chapter** | A page of the sticker book | Six themed sets by place (desk · kitchen · home · street · living things · play) |
+| **Lupe** | A wizard friend living in the lens | The guide character who comments on what's happening and tells the story |
+| **Rank** | Explorer badge | Ten titles unlocked as XP accumulates |
 
 ---
 
-## 🎮 어떻게 노나요?
+## 🎮 How do you play?
 
-<p align="center"><img src="docs/diagrams/core-loop.svg" alt="코어 루프" width="900"/></p>
+<p align="center"><img src="docs/diagrams/core-loop.svg" alt="Core loop" width="900"/></p>
 
-1. **스캔 시작**을 누르고 카메라 권한을 허용합니다.
-2. 컵, 노트북, 의자… 아무 물건이든 화면 가운데에 두세요. 물체에 **브래킷과 오라**가 생기고 **공명 링**이 차오릅니다.
-3. 링이 꽉 차면 **줄어드는 포획 링**이 나타납니다. 노란 선에 닿는 순간 **탭!**
-   - 🎯 **퍼펙트** = XP ×1.5 · 별가루 ×2 · 변이체 확률 ×3 / ⭐ 그레이트 / ○ 굿 / ✖ 미스 = 원더가 도망, 공명 다시 채우기
-4. 화면을 떠다니는 **정령**을 탭하면 조각(◇)을 얻습니다. 5개 = 다음 공명 2배 속도. 가끔 나오는 **황금 정령**은 프리즘 토큰을 줍니다.
-5. 카드는 **PNG로 저장/공유**할 수 있습니다. 카메라가 없는 PC에서는 **사진 파일**로 같은 흐름을 즐길 수 있습니다.
+1. Tap **Open camera** and allow camera access.
+2. Put anything — a cup, a laptop, a chair… — in the middle of the screen. **Brackets and an aura** appear on the object and the **resonance ring** fills up.
+3. When the ring is full, a **shrinking capture ring** appears. **Tap!** the moment it touches the yellow line.
+   - 🎯 **Perfect** = XP ×1.5 · Stardust ×2 · Variant chance ×3 / ⭐ Great / ○ Good / ✖ Miss = the Wonder escapes; refill resonance
+4. Tap the **Spirits** floating around the screen to collect Fragments (◇). 5 = your next resonance fills 2× faster. The occasional **Golden spirit** gives a Prism token.
+5. Cards can be **saved/shared as PNG**. On a PC without a camera you can play the same loop with a **photo file**.
 
-### 🧭 AR 요소 (WebXR 없이, 2D 캔버스 + 자이로)
+### 🧭 AR elements (no WebXR — 2D canvas + gyro)
 
-| 요소 | 동작 |
+| Element | Behavior |
 |---|---|
-| **스무딩 브래킷 + 홀로 태그** | AI 박스를 보간해 떨림을 없애고, 물체 위에 떠서 살랑이는 라벨을 붙입니다 |
-| **오라 파티클** | 공명이 찰수록 물체 주위를 도는 입자가 늘어납니다 (희귀도 색) |
-| **정령 (Spirits)** | 자이로 요/피치에 앵커돼 폰을 돌리면 시야 밖에서 나타나고, 탭하면 터집니다. 인식된 물체 쪽으로 끌립니다 |
-| **포획 링** | Pokémon GO의 서클 타이밍처럼 줄어드는 링을 노란 선에 맞춰 탭 |
-| **나침반 힌트** | 완성에 가장 가까운 챕터와 미수집 원더를 HUD에 띄워 "2개만 더!"를 유도 |
+| **Smoothed brackets + holo tag** | Interpolates the AI box to remove jitter and floats a label that sways above the object |
+| **Aura particles** | More particles orbit the object as resonance rises (rarity color) |
+| **Spirits** | Anchored to gyro yaw/pitch — turn the phone and they appear from off-screen; tap to pop them. They drift toward the recognized object |
+| **Capture ring** | Like Pokémon GO's circle timing: tap as the shrinking ring meets the yellow line |
+| **Compass hint** | The HUD shows the chapter closest to completion and missing Wonders — "Just 2 more!" |
 
 ---
 
-## ⚖️ 밸런스 설계
+## ⚖️ Balance design
 
-### 희귀도 — "얼마나 자주 마주치는가"로 배분
+### Rarity — distributed by "how often you run into it"
 
-| 희귀도 | 수 | 예시 | 어디서 |
+| Rarity | Count | Examples | Where |
 |:--:|:--:|---|---|
-| ⭐ 일반 | 24 | 컵·노트북·의자·병 | 책상·부엌·집 |
-| ⭐⭐ 희귀 | 26 | 시계·자전거·고양이·바나나 | 거리·반려동물·과일 |
-| ⭐⭐⭐ 영웅 | 20 | 피자·소화전·기차·연 | 외출·놀이 |
-| ⭐⭐⭐⭐ 전설 | 10 | 비행기·기린·서핑보드·스키 | 여행·동물원·바다 |
+| ⭐ Common | 24 | cup · laptop · chair · bottle | desk · kitchen · home |
+| ⭐⭐ Rare | 26 | clock · bicycle · cat · banana | street · pets · fruit |
+| ⭐⭐⭐ Epic | 20 | pizza · fire hydrant · train · kite | outings · play |
+| ⭐⭐⭐⭐ Legendary | 10 | airplane · giraffe · surfboard · skis | travel · zoo · sea |
 
-### 보상표
+### Reward table
 
-| 희귀도 | 첫 발견 XP | 첫 발견 별가루 | 중복 XP | 중복 별가루 |
+| Rarity | First-find XP | First-find Stardust | Duplicate XP | Duplicate Stardust |
 |:--:|:--:|:--:|:--:|:--:|
-| ⭐ 일반 | 20 | 10 | 4 | 3 |
-| ⭐⭐ 희귀 | 40 | 20 | 8 | 6 |
-| ⭐⭐⭐ 영웅 | 80 | 40 | 14 | 12 |
-| ⭐⭐⭐⭐ 전설 | 160 | 80 | 25 | 24 |
+| ⭐ Common | 20 | 10 | 4 | 3 |
+| ⭐⭐ Rare | 40 | 20 | 8 | 6 |
+| ⭐⭐⭐ Epic | 80 | 40 | 14 | 12 |
+| ⭐⭐⭐⭐ Legendary | 160 | 80 | 25 | 24 |
 
-- **변이체**: 별가루 ×3, XP ×1.5. 확률 = 4% + (신뢰도 − 0.5) × 12% → 잘 비출수록 최대 10%.
-- **공명 속도**: AI 신뢰도가 높을수록 빨리 찹니다. 기준 약 2.2초. 놓치면 빠르게 감소합니다.
-- **쿨다운 15초**: 같은 물건 연타 파밍을 막습니다. 다른 물건을 찾게 유도합니다.
-- **챕터 완성 보너스**: +120 XP와 루페의 스토리 조각.
-- **랭크 10단계**: 견습 탐험가(0) → 렌즈 수습생(50) → 골목 관찰자(150) → … → 원더 마스터(4600).
-- **포획 등급**: 링 반경과 목표(0.30)의 거리로 판정. 퍼펙트 ≤0.045, 그레이트 ≤0.10, 굿 ≤0.17, 그 밖은 미스(게이지 35%로 복귀). 3사이클 무입력 = 자동 포획.
-- **오늘의 의뢰 3개** (날짜 시드): 챕터 신규 2종 / 스캔 5회 / 희귀 이상 1종 / 정령 8마리 / 퍼펙트 2회 중 조합. 3번째 의뢰 = **프리즘 토큰**(다음 포획 변이체 확정).
-- **연속 출석**: 하루 +10% XP, 최대 +50%.
-- **도감 깊이**: 같은 원더 3회 → 루페의 관찰 노트, 10회 → 마스터 노트 + 금색 프레임.
-- **업적 15종**: 첫 원더 · 전설 목격 · 퍼펙트 10회 · 황금 정령 · 3일 연속 등.
+- **Variants**: Stardust ×3, XP ×1.5. Chance = 4% + (confidence − 0.5) × 12% → up to 10% the better you frame it.
+- **Resonance speed**: fills faster at higher AI confidence. About 2.2 s baseline. Drops quickly when you lose the object.
+- **15 s cooldown**: stops farming the same object over and over, nudging you to find different things.
+- **Chapter completion bonus**: +120 XP and a story fragment from Lupe.
+- **10 ranks**: Apprentice Explorer (0) → Lens Trainee (50) → Alley Observer (150) → … → Wonder Master (4600).
+- **Capture grades**: judged by the distance between the ring radius and the target (0.30). Perfect ≤0.045, Great ≤0.10, Good ≤0.17, otherwise Miss (gauge back to 35%). Three cycles with no input = auto-capture.
+- **3 daily quests** (date-seeded): a mix of 2 new in a chapter / scan 5 times / 1 rare or better / 8 spirits / 2 Perfects. The 3rd quest = a **Prism token** (next capture is a guaranteed Variant).
+- **Streak**: +10% XP per day, up to +50%.
+- **Codex depth**: same Wonder 3 times → Lupe's observation note; 10 times → master note + gold frame.
+- **15 achievements**: first Wonder · Legendary sighting · 10 Perfects · Golden spirit · 3-day streak, and more.
 
-모든 숫자는 [`src/game/balance.js`](src/game/balance.js) 한 파일에 있습니다.
+Every number lives in one file: [`src/game/balance.js`](src/game/balance.js).
 
 ---
 
-## 📜 서사 — 루페와 여섯 개의 챕터
+## 📜 Story — Lupe and the six chapters
 
-당신은 **원더 탐험가**. 렌즈 속에 사는 안내 AI **루페(Lupe)** 가 발견마다 반응하고,
-챕터를 완성할 때마다 원더 세계의 비밀을 한 조각 들려줍니다. 80종을 모두 모으면 엔딩 대사가 열립니다.
+You are a **Wonder Explorer**. **Lupe**, the guide AI living in the lens, reacts to every discovery,
+and each time you complete a chapter she tells you one more piece of the Wonder world's secret. Collect all 80 to unlock the ending.
 
-| 챕터 | 장소 힌트 | 원더 수 | 대표 원더 |
+| Chapter | Where to look | Wonders | Signature Wonder |
 |---|---|:--:|---|
-| 🖥️ 책상 위의 우주 | 책상 주변 | 10 | 컵 → *은하계 연료 탱크* |
-| 🍳 부엌의 연금술 | 냉장고·식탁 | 21 | 냉장고 → *시간 정지 금고* |
-| 🏠 일상의 유물 | 거실·침실·현관 | 15 | 소파 → *집 안의 늪* |
-| 🚦 거리의 거인들 | 밖으로 | 13 | 소화전 → *도로변 물의 봉인탑* |
-| 🐾 살아있는 신비 | 사람·동물 | 11 | 고양이 → *액체 상태의 군주* |
-| 🎈 놀이의 파편 | 공원·바다·산 | 10 | 연 → *실에 묶인 작은 하늘 배* |
+| 🖥️ The Desk Cosmos | around the desk | 10 | cup → *Galactic Fuel Tank* |
+| 🍳 Kitchen Alchemy | fridge · dining table | 21 | refrigerator → *Time-Stop Vault* |
+| 🏠 Everyday Relics | living room · bedroom · entrance | 15 | couch → *The Living-Room Swamp* |
+| 🚦 Street Giants | outdoors | 13 | fire hydrant → *Roadside Water-Seal Tower* |
+| 🐾 Living Mysteries | people · animals | 11 | cat → *Monarch in Liquid Form* |
+| 🎈 Shards of Play | park · sea · mountains | 10 | kite → *A Little Sky-Ship on a String* |
 
 ---
 
-## 💫 경제 순환 — 별가루는 어디서 오고 어디로 가나
+## 💫 Economy loop — where Stardust comes from and where it goes
 
-<p align="center"><img src="docs/diagrams/economy.svg" alt="경제 순환" width="900"/></p>
+<p align="center"><img src="docs/diagrams/economy.svg" alt="Economy loop" width="900"/></p>
 
-| 사용처 | 가격 | 효과 |
+| Spend on | Price | Effect |
 |---|:--:|---|
-| ⚡ 공명 부스트 | 80 | 다음 공명 2배 속도 (최대 3개 보유) |
-| ✨ 프리즘 토큰 | 320 | 다음 포획 변이체 확정 (3번째 의뢰·황금 정령·보물상자로도 획득) |
-| 🔁 의뢰 새로고침 | 60 | 미완료 의뢰 1개 교체 |
-| 🖼️ 카드 프레임 | 150 / 300 / 600 | 오로라 · 잔불 · 공허 — 카드·앨범·콜라주에 적용 |
+| ⚡ Resonance boost | 80 | Next resonance fills 2× faster (hold up to 3) |
+| ✨ Prism token | 320 | Next capture is a guaranteed Variant (also from the 3rd quest, Golden spirits, and treasure chests) |
+| 🔁 Quest refresh | 60 | Swap one unfinished quest |
+| 🖼️ Card frames | 150 / 300 / 600 | Aurora · Ember · Void — applied to cards, the Album, and collages |
 
-**보물상자**: 5 · 10 · 20 · 40 · 60 · 80종 수집마다 별가루·프리즘·XP. **목표 사다리**: 타이틀에 가장 가까운 성취 4개와 보상을 항상 보여줍니다.
+**Treasure chests**: Stardust · Prism · XP at every 5 · 10 · 20 · 40 · 60 · 80 Wonders collected. **Goal ladder**: the title always shows the 4 nearest achievements and their rewards.
 
-## 📸 추억 — 찍고 끝나는 사진이 아니다
+## 📸 Memories — not photos you take and forget
 
-<p align="center"><img src="docs/diagrams/memory-evolution.svg" alt="추억 진화" width="900"/></p>
+<p align="center"><img src="docs/diagrams/memory-evolution.svg" alt="Memory evolution" width="900"/></p>
 
-| 기능 | 설명 |
+| Feature | Description |
 |---|---|
-| **앨범** | 포획마다 사진(640px·≈50KB)과 **포획 클립**(540p·5초·사운드 포함·≈700KB)이 IndexedDB에 저장. 상한 160MB, 즐겨찾기 아닌 오래된 것부터 정리 |
-| **진화** | 🌱씨앗 → 🌿새싹 → 🌸만개 → ⭐별. 캡션·필터·회상·공유·재방문·7일 숙성이 포인트. 단계마다 별가루·XP |
-| **회상** | 하루 한 번 타이틀에 "N일 전의 추억"이 떠오릅니다. 열어보면 자라고 별가루 +10 |
-| **다듬기** | 캡션 60자 · 빛 필터 5종(노을·새벽·기억·꿈결) · 프레임 |
-| **대결** | 두 추억이 신비·타이밍·성장 3라운드로 싸웁니다. 그림자 상대는 내 추억의 "다른 세계 버전". 승리 별가루 + 양쪽 모두 성장 |
-| **공유** | 카드 PNG · 클립 파일 · 9장 콜라주 · 🎁 **선물 코드**(서버 없음: 친구는 별가루·친구 추억·힌트를 받음) |
+| **Album** | Every capture stores a photo (640px · ≈50KB) and a **capture clip** (540p · 5 s · with sound · ≈700KB) in IndexedDB. 160MB cap; the oldest non-favorites are cleaned up first |
+| **Evolution** | 🌱 Seed → 🌿 Sprout → 🌸 Bloom → ⭐ Star. Captions, filters, Recall, sharing, revisits and 7-day aging earn points. Each stage pays Stardust and XP |
+| **Recall** | Once a day, "your memory from N days ago" surfaces on the title. Open it and it grows, +10 Stardust |
+| **Polish** | 60-character caption · 5 light filters (Sunset · Dawn · Memory · Dream) · frames |
+| **Duel** | Two memories battle over 3 rounds: Mystery, Timing, Growth. The shadow opponent is an "other-world version" of your own memory. Winning pays Stardust and both sides grow |
+| **Share** | Card PNG · clip file · 9-photo collage · 🎁 **gift code** (no server: your friend gets Stardust, your memory, and a hint) |
 
-## 🧪 렌즈 스킬 — 사진을 다듬는 능력
+## 🧪 Lens skills — abilities for polishing your photos
 
-<p align="center"><img src="docs/screens/v4-01-skill-editor.png" alt="스킬 에디터" width="300"/></p>
+<p align="center"><img src="docs/screens/v4-01-skill-editor.png" alt="Skill editor" width="300"/></p>
 
-| 스킬 | 해금 | 하는 일 | 성장 |
+| Skill | Unlock | What it does | Growth |
 |---|:--:|---|---|
-| 😄 이모티콘 | Lv1 | 이모지 20종을 탭해서 붙이고 드래그로 옮김 | 스킬 1종 이상 사용 +1pt |
-| 🎨 톤보정 | Lv2 · ✨120 | 밝기·대비·채도·온도 슬라이더 + 프리셋 4 | |
-| 🔷 쉐입 | Lv3 · ✨180 | 스포트라이트 · 말풍선(문구) · 별 버스트 · 폴라로이드 · 무지개 테두리 | |
-| 🌀 왜곡 | Lv4 · ✨240 | 볼록 · 오목 · 소용돌이, 탭한 곳이 중심 (픽셀 역매핑) | 스킬 3종 이상 +1pt 추가 |
-| 🫥 숨은사진 | Lv5 · ✨300 | 작은 이모지를 랜덤 위치에 숨김 → 회상 때 **10초 숨은 그림 찾기**(✨15) · 사진 가리기(스크래치로 보기) | |
-| ✨ 광채 | Lv6 · ✨200 | 비네트 + 반짝이 입자 | |
+| 😄 Emoji | Lv1 | Tap to place 20 emoji and drag them around | +1 pt for using at least 1 skill |
+| 🎨 Tone | Lv2 · ✨120 | Brightness · contrast · saturation · temperature sliders + 4 presets | |
+| 🔷 Shapes | Lv3 · ✨180 | Spotlight · speech bubble (text) · star burst · polaroid · rainbow border | |
+| 🌀 Warp | Lv4 · ✨240 | Bulge · pinch · swirl centered where you tap (pixel inverse mapping) | +1 more pt for 3+ skills |
+| 🫥 Hidden photo | Lv5 · ✨300 | Hide a small emoji at a random spot → a **10-second hidden-object hunt** on Recall (✨15) · cover the photo (scratch to see) | |
+| ✨ Glow | Lv6 · ✨200 | Vignette + sparkle particles | |
 
-편집은 640px 사진에 **구워져(bake)** 저장되고 원본은 따로 보존됩니다(↺ 원본). 카드·콜라주·광장에는 구운 결과가 그대로 쓰입니다.
+Edits are **baked** into the 640px photo while the original is kept separately (↺ Original). Cards, collages and the Plaza use the baked result.
 
-## 👁 아이 게이지 — 눈으로 붙잡기 (제스처 대체)
+## 👁 Eye Gauge — capture with your eyes (replaces gestures)
 
-손 제스처와 얼굴 표정 조작은 **제거**하고, 시선 추적 하나로 바꿨습니다. 전면 카메라에서 MediaPipe FaceLandmarker가 눈 방향과 머리 자세로 **시선점**을 계산하고, 화면의 루페 눈(조준점)이 그곳을 따라갑니다.
+Hand gestures and facial-expression controls were **removed** and replaced with a single gaze tracker. On the front camera, MediaPipe FaceLandmarker computes a **gaze point** from eye direction and head pose, and Lupe's eye on screen (the reticle) follows it.
 
-| 대상 | 조건 | 바라보는 시간 | 결과 |
+| Target | Condition | Look for | Result |
 |---|---|:--:|---|
-| 원더 (포획 링이 떴을 때) | 시선점이 물체 박스 안 (20% 여유, 최소 44px) | 0.9초 | 포획. 흔들림 8px 이하 **퍼펙트**, 18px 이하 **그레이트**, 그 외 굿 |
-| 정령 | 시선점에서 60px 안 | 0.6초 | 정령 포획 (황금 정령은 프리즘 토큰) |
-| 얼굴 없음 · 눈 감음 | — | — | 게이지가 초당 1.5씩 줄고 "얼굴이 보이지 않아요" 표시 |
+| Wonder (when the capture ring is up) | Gaze point inside the object box (20% margin, min 44px) | 0.9 s | Capture. Shake ≤ 8px = **Perfect**, ≤ 18px = **Great**, otherwise Good |
+| Spirit | Within 60px of the gaze point | 0.6 s | Spirit captured (Golden spirits give a Prism token) |
+| No face · eyes closed | — | — | The gauge drops 1.5/s and shows "Can't see your face" |
 
-| 조작 | 방법 |
+| Control | How |
 |---|---|
-| 켜기/끄기 | 스캔 화면 좌하단 눈 배지를 **길게** 누르기, 또는 프로필 → 설정 |
-| 보정 | 화면 중앙을 보면서 눈 배지 **탭** (프로필에서 초기화) |
-| 후면 카메라 · 사진 스캔 | 눈은 숨고 탭으로만 동작 |
+| On/off | **Long-press** the eye badge at the bottom-left of the scan screen, or Profile → Settings |
+| Calibrate | Look at the center of the screen and **tap** the eye badge (reset in Profile) |
+| Rear camera · photo scan | The eye hides; tap-only |
 
-발동 순간에는 눈꺼풀 깜빡임, 충격파 링 2개, 스파크 12개, 가장자리 황동 플래시, 햅틱이 나옵니다(모션 줄이기 시 텍스트·햅틱만). 얼굴 모델은 첫 사용 때 CDN에서 받습니다.
+When it fires you get an eyelid blink, 2 shock rings, 12 sparks, a brass edge flash and haptics (with Reduce motion: text and haptics only). The face model is downloaded from a CDN on first use.
 
-#### 🎯 인식률·정밀도 (v8.2)
+#### 🎯 Recognition and precision (v8.2)
 
-시선은 원래 흔들리고, 사람은 3~5초마다 눈을 깜빡입니다. 그대로 두면 0.9초 홀드가 자꾸 끊깁니다. 그래서 게이지 규칙에 네 가지를 더했습니다.
+Gaze naturally wobbles, and people blink every 3–5 seconds. Left alone, the 0.9 s hold keeps breaking. So the gauge rules gained four additions.
 
-| 장치 | 뜻 | 수치 |
+| Mechanism | Meaning | Value |
 |---|---|---|
-| **깜빡임 유예** | 눈을 잠깐 감아도 조준점과 게이지를 그대로 붙잡아 둔다 | 300ms |
-| **이탈 유예** | 시선이 잠깐 튀어도(단속운동) 게이지를 0으로 되돌리지 않는다 | 150ms |
-| **유지 시 넓은 판정** | 이미 붙잡은 대상은 박스를 35% 넓혀 판정 (처음 잡을 땐 20%) | 히스테리시스 |
-| **One Euro 필터** | 가만히 볼 땐 떨림을 누르고, 크게 움직이면 바로 따라간다 | minCutoff 0.6 · β 0.007 |
-| 추론 주기 | 얼굴 모델 20Hz (15Hz→) | 50ms |
-| 감지 연속성 | 이미 잠긴 물체는 신뢰도 0.15 낮은 감지로도 추적을 유지 (새 잠금은 기존 임계값) | `BALANCE.detect` |
+| **Blink grace** | Keeps the reticle and gauge in place during a brief eye closure | 300ms |
+| **Switch grace** | A brief gaze jump (saccade) doesn't reset the gauge to 0 | 150ms |
+| **Wider hold box** | A target you already hold is judged with a 35% larger box (20% when first acquiring) | hysteresis |
+| **One Euro filter** | Suppresses jitter when you look steadily, follows immediately on large moves | minCutoff 0.6 · β 0.007 |
+| Inference rate | Face model 20Hz (was 15Hz) | 50ms |
+| Detection continuity | An already-locked object stays tracked with detections 0.15 lower in confidence (new locks use the normal threshold) | `BALANCE.detect` |
 
-노드에서 돌리는 순수 상태 머신 검증(`npm test`, v8.1 → v8.2):
+Pure state-machine verification run in Node (`npm test`, v8.1 → v8.2):
 
-| 시나리오 | v8.1 | v8.2 |
+| Scenario | v8.1 | v8.2 |
 |---|:--:|:--:|
-| 0.1초 단속운동 후 첫 발동 | 1450ms | **1017ms** |
-| 12px 지터 입력의 조준점 떨림(프레임당) | 1.03px | **0.94px** |
-| 300px 점프 후 90% 도달 | 267ms | **33ms** |
-| 홀드 중 깜빡임 2회 | 발동 | 발동 (게이지 동결) |
-| 지터 7 / 9 / 17 / 19px 등급 | P / G / G / GOOD | P / G / G / GOOD |
+| First fire after a 0.1 s saccade | 1450ms | **1017ms** |
+| Reticle jitter per frame with 12px input jitter | 1.03px | **0.94px** |
+| Time to reach 90% after a 300px jump | 267ms | **33ms** |
+| Two blinks during a hold | fires | fires (gauge frozen) |
+| Grades at 7 / 9 / 17 / 19px jitter | P / G / G / GOOD | P / G / G / GOOD |
 
-### 📸 셔터 바 — 버튼은 4개만
+### 📸 Shutter bar — only 4 buttons
 
-| 버튼 | 동작 |
+| Button | Action |
 |---|---|
-| 홈 | 타이틀로 |
-| 사진 | 갤러리 사진으로 스캔 (카메라가 없거나 거부됐을 때) |
-| **셔터 (가운데, 78px)** | **탭 = 사진**(원더가 없어도 찍힌다 · 베스트 포토 자동 선택 · 앨범 `사진` 필터) · **길게 0.5초 = 영상 촬영 시작/정지**(최대 20초, 앨범 `영상` 필터) |
-| 전환 | 전면/후면 카메라 (전면에서 아이 게이지가 켜짐) |
+| Home | Back to the title |
+| Photo | Scan a gallery photo (when there's no camera or it was denied) |
+| **Shutter (center, 78px)** | **Tap = photo** (works even without a Wonder · best photo picked automatically · Album `Photo` filter) · **Hold 0.5 s = start/stop video** (up to 20 s, Album `Video` filter) |
+| Flip | Front/rear camera (the Eye Gauge turns on with the front camera) |
 
-> **모바일에서 처음 켤 때**: "렌즈 사용법"의 **시작!**을 누르면 그때 카메라 권한 창이 뜹니다. 권한 창이 떠 있는 동안에는 브라우저가 화면 터치를 막으므로, 창에서 **허용**을 눌러야 게임이 이어집니다. 거부하면 사진 스캔으로 계속할 수 있습니다.
+> **First launch on mobile**: the camera permission prompt appears when you tap **Start!** in the lens tutorial. While the prompt is open the browser blocks touches on the page, so tap **Allow** to continue. If you deny it you can keep playing with photo scans.
 
-## 📍 주변 촬영지 — 위치로 추천받기 (옵트인)
+## 📍 Nearby spots — recommendations by location (opt-in)
 
-"근처 카페에 가면 부엌 원더가 있고, 공원에 가면 정령이 두 배로 나온다." 위치는 **"내 주변 촬영지 찾기"를 탭할 때만** 묻고, 좌표는 100m 단위로 반올림해 1시간만 기기에 저장합니다. 카메라 프레임은 여전히 기기 밖으로 나가지 않습니다.
+"Go to a nearby café and you'll find Kitchen Wonders; go to a park and Spirits appear twice as often." Your location is asked **only when you tap "Find nearby spots"**, and only coordinates rounded to ~100 m are stored on the device for 1 hour. Camera frames still never leave the device.
 
-| 어디서 | 챕터 | 여기서 찍을 원더 | 기믹 (30분) |
+| Where | Chapter | Wonders to shoot here | Boost event (30 min) |
 |---|---|---|---|
-| 카페 · 빵집 | 부엌의 연금술 | 컵 · 케이크 · 도넛 | **커피 시간** — 부엌 원더 별가루 ×2 |
-| 공원 · 놀이터 | 놀이의 파편 · 살아있는 신비 | 프리스비 · 연 · 공 · 개 | **산책** — 정령 출몰 ×2 |
-| 역 · 정류장 | 거리의 거인들 | 버스 · 기차 · 신호등 | **거리의 거인들** — 공명 +50% |
-| 도서관 · 서점 | 책상 위의 우주 | 책 · 노트북 · 시계 | **정독** — 책상 원더 별가루 ×2 |
-| 마트 · 몰 | 일상의 유물 · 부엌 | 가방 · 병 · 바나나 | **장보기** — 3종 스팟 도전 → ✨100 |
+| Café · bakery | Kitchen Alchemy | cup · cake · donut | **Coffee Time** — Kitchen Wonders Stardust ×2 |
+| Park · playground | Shards of Play · Living Mysteries | frisbee · kite · ball · dog | **Stroll** — Spirit spawns ×2 |
+| Station · stop | Street Giants | bus · train · traffic light | **Street Giants** — Resonance +50% |
+| Library · bookstore | The Desk Cosmos | book · laptop · clock | **Close Reading** — Desk Wonders Stardust ×2 |
+| Supermarket · mall | Everyday Relics · Kitchen | handbag · bottle · banana | **Shopping Run** — 3-Wonder spot challenge → ✨100 |
 
-- 장소 데이터: `VITE_GOOGLE_MAPS_KEY`가 있으면 **Google Places API (New)**, 없으면 **OpenStreetMap Nominatim** (키 불필요, 1초 간격 순차 조회). 서울시청 기준 실측 20곳 / 2.7초.
-- 진입: 타이틀의 "근처 촬영지" 카드, 의뢰 화면 상단, 프로필 → 설정 "위치 기반 추천"(자동 새로고침 켜기).
-- 카드마다 거리·방위(`320m · 북동`), 챕터 엠블럼, 원더 3개, "지도 열기"(구글 지도 링크, 키 불필요)와 "카메라 열기".
+- Place data: **Google Places API (New)** when `VITE_GOOGLE_MAPS_KEY` is set, otherwise **OpenStreetMap Nominatim** (no key, sequential requests 1 s apart).
+- **Around your current position (v8.3)**: up to 40 results per category, sorted **by distance**; categories with nothing within 800 m are retried within 2 km. Distances and bearings use your live (unrounded) position; only the ~100 m-rounded coordinates are stored, for 1 hour.
+- **Moves with you**: moving more than 250 m from the cached point triggers a new search; otherwise only the distances are recomputed from where you are. If location permission was already granted, the title and spots screens refresh silently, with no prompt.
+- Results appear progressively as each category arrives, and the header shows location accuracy (±m). Measured: nearest café at Gangnam Station 71 m (244 m in v8.2), 5 place types around Dongtan.
+- Entry points: the "Nearby spots" card on the title, the top of the Quests screen, and Profile → Settings "Location-based recommendations" (turns on auto-refresh).
+- Each card shows distance and bearing (`320m · NE`), the chapter emblem, 3 Wonders, "Open map" (Google Maps link, no key needed) and "Open camera".
 
-## 🌐 소셜 — 혼자가 아닌 수집
+## 🌐 Social — collecting, not alone
 
-| 단계 | 동작 | 필요한 것 |
+| Stage | What you get | Requires |
 |---|---|---|
-| 지금 | 선물 코드로 원더 보여주기, 카드·클립·콜라주 공유 | 없음 |
-| 클라우드 켜면 | **Google 로그인** → 추억이 내 계정에 저장, 기기 간 이어하기, **탐험가 광장**에서 다른 컬렉터의 추억 둘러보기 | Firebase 키 5개 ([docs/CLOUD_SETUP.md](docs/CLOUD_SETUP.md)) |
+| Now | Show Wonders with gift codes, share cards · clips · collages | Nothing |
+| With cloud on | **Google sign-in** → memories saved to your account, continue across devices, browse other collectors' memories in the **Explorer Plaza** | 5 Firebase keys ([docs/CLOUD_SETUP.md](docs/CLOUD_SETUP.md)) |
 
-## 🔮 루페 — 따라다니는 안내자
+## 🔮 Lupe — the guide who follows you
 
-| 역할 | 예 |
+| Role | Examples |
 |---|---|
-| **조언** (상태를 읽고 우선순위로 고름) | "프리즘 토큰이 2개 있어, 희귀한 게 보이면 장착하자" · "보물상자까지 2종!" · "밤이네, 램프 하나만 켜 줘" · "점심시간엔 부엌 원더가 잘 보여" |
-| **사건** (하루 1개, 날짜 시드) | ⚡ 원더 폭풍(챕터 별가루 2배) · 정령 대이동(정령 2배) · 맑은 렌즈(공명 +50%) · 루페의 부탁(특정 원더 찍어오기) · 그림자 도전장(대결 승리 보상) |
-| **동행** | 스캔 화면 우하단 아바타를 탭하면 지금 상황의 팁, 빨간 점은 새 사건 |
+| **Advice** (reads your state and picks by priority) | "You have 2 Prism tokens — equip one when you see something rare" · "2 more to a treasure chest!" · "It's night, turn on just one lamp" · "Kitchen Wonders show up well at lunchtime" |
+| **Events** (one a day, date-seeded) | ⚡ Wonder Storm (chapter Stardust ×2) · Spirit Migration (spirits ×2) · Clear Lens (resonance +50%) · Lupe's Request (bring back a specific Wonder) · Shadow Challenge (duel victory reward) |
+| **Companion** | Tap the avatar at the bottom-right of the scan screen for a tip about right now; a red dot means a new event |
 
-## 🎆 연출
+## 🎆 Staging
 
-| 순간 | 연출 |
+| Moment | Effect |
 |---|---|
-| 잠금 | 뷰파인더 브래킷 4개가 화면 모서리에서 물체로 **수렴**(120ms) — "지금 이걸 붙잡았다" |
-| 공명 중 | **추적 실루엣**: 물체 둘레의 각인 윤곽이 공명만큼 그려지고(25·50·75·100% 코너 틱), 지나온 자리는 잔상 궤적으로 남는다. **추적 명암**: 물체는 밝게, 바깥은 살짝 어둡게. **아우라**: 챕터별 기운(잔불·녹청 안개·궤도·먹번짐·프리즘)이 게이지에 비례해 늘어난다. 태그에 `cup · 신뢰도 87% · 공명 62%` |
-| 놓침 | 마지막 실루엣이 1.5초 점선 잔영으로 남는다 ("놓침 · 다시 비춰 봐") |
-| 포획 링 | 물체 밖 40% 스포트라이트, 공명 50%·100%에서 맥동 링 |
-| 퍼펙트 / 그레이트 | 90ms 프리즈 프레임 + 줌 펀치(1.06 / 1.03) + 황동 스피드라인 16 / 8개 + 실루엣 도장 |
-| 미스 | 실루엣이 화면 밖으로 달아나며 잔상 3장 |
-| 베스트 포토 | 공명 60%~포획 사이 최대 8프레임 중 **선명도×신뢰도×중앙성**이 가장 높은 컷이 카드 사진이 된다. 발견 화면의 "다른 컷" 스트립에서 교체 가능. 셔터 탭도 최근 0.4초 중 가장 선명한 컷 |
-| 발견 (모든 등급) | 화면 플래시 → 카드 3D 플립 → 스탬프(NEW! / ×n) → 파티클 → **스크래치**로 세계관 이름·실제 라벨 긁어서 확인 |
-| 영웅 이상 서스펜스 | 드럼롤 + 맥동하는 오브 + "?" → 1.4초 뒤 공개 |
-| 콤보 | 퍼펙트/그레이트 연속 시 "🔥 N COMBO" + 상승 톤 |
-| 보물상자 | 마일스톤 도달 시 상자 열림 + 별 파티클 |
-| 대결 | 아레나 진동 → 라운드별 피격 흔들림·HP 감소 → 승자 발광 |
-| 영웅 이상 | 글리치 + 화면 흔들림 + 슬로모션 진입 |
-| 전설 · 변이체 | 회전 후광(rays) + 별 모양 파티클 비 + 저음 드론 사운드 + 햅틱 |
-| 랭크 업 / 챕터 완성 | 토스트 + 추가 파티클 + 스토리 카드 |
+| Lock | Four viewfinder brackets **converge** from the screen corners onto the object (120ms) — "got it" |
+| Resonating | **Tracked silhouette**: an engraved outline around the object is drawn as resonance rises (corner ticks at 25·50·75·100%), leaving an afterimage trail. **Tracking shade**: the object is lit, the surroundings slightly darkened. **Aura**: a per-chapter energy (ember · verdigris mist · orbit · ink bleed · prism) grows with the gauge. The tag reads `cup · confidence 87% · resonance 62%` |
+| Lost | The last silhouette lingers 1.5 s as a dotted afterimage ("Lost · aim again") |
+| Capture ring | 40% spotlight outside the object, pulse rings at 50% and 100% resonance |
+| Perfect / Great | 90ms freeze frame + zoom punch (1.06 / 1.03) + 16 / 8 brass speed lines + silhouette stamp |
+| Miss | The silhouette flees off-screen leaving 3 afterimages |
+| Best photo | Among up to 8 frames between 60% resonance and capture, the sharpest × most confident × most centered shot becomes the card photo. Swap it from the "Other shots" strip on the reveal screen. A shutter tap also takes the sharpest frame of the last 0.4 s |
+| Discovery (all grades) | Screen flash → 3D card flip → stamp (NEW! / ×n) → particles → **scratch** to reveal the Wonder name and the real label |
+| Epic+ suspense | Drum roll + pulsing orb + "?" → revealed after 1.4 s |
+| Combo | "🔥 N COMBO" + rising tone for consecutive Perfect/Great |
+| Treasure chest | Chest opens + star particles on reaching a milestone |
+| Duel | Arena shake → per-round hit shake and HP drain → the winner glows |
+| Epic+ | Glitch + screen shake + slow-motion entrance |
+| Legendary · Variant | Rotating halo (rays) + star-shaped particle rain + low drone sound + haptics |
+| Rank up / chapter complete | Toast + extra particles + story card |
 
-사운드는 에셋 없이 **Web Audio 합성**으로 만들어 로딩 비용이 0입니다. 타이틀 우상단에서 끌 수 있습니다.
+Sound is **synthesized with Web Audio** — no assets, zero loading cost. Mute it at the top-right of the title.
 
 ---
 
-## 🧠 구조 — 전부 브라우저 안에서
+## 🧠 Architecture — all inside the browser
 
-<p align="center"><img src="docs/diagrams/architecture.svg" alt="구조" width="900"/></p>
+<p align="center"><img src="docs/diagrams/architecture.svg" alt="Architecture" width="900"/></p>
 
-- **개인정보**: 카메라 프레임은 기기 밖으로 나가지 않습니다. 저장되는 것은 도감 진행 상황(로컬)뿐입니다.
-- **오프라인**: 모델(약 5MB)이 한 번 로드되면 인식은 네트워크 없이 동작합니다.
+- **Privacy**: camera frames never leave the device. Only your codex progress is stored (locally).
+- **Offline**: once the model (about 5MB) is loaded, recognition works without a network.
 
 ```
 src/
-├─ data/      wonders.js(80종) · chapters.js(6챕터) · worlds/(세계관 레지스트리)
-├─ game/      balance.js · state.js(v3) · capture.js · quests.js · achievements.js · notes.js · narrative.js
-│             economy.js · media.js · memories.js · duel.js · companion.js · skills.js(편집 스킬 엔진: 왜곡·톤·쉐입·이모지·숨김·광채)
-├─ scanner/   detector.js · camera.js · gyro.js · recorder.js · gaze.js(FaceLandmarker 시선) · eye.js(아이 게이지 상태 머신)
+├─ data/      wonders.js (80) · chapters.js (6 chapters) · worlds/ (world registry)
+├─ game/      balance.js · state.js (v3) · capture.js · quests.js · achievements.js · notes.js · narrative.js
+│             economy.js · media.js · memories.js · duel.js · companion.js · skills.js (edit-skill engine: warp · tone · shapes · emoji · hide · glow)
+├─ scanner/   detector.js · camera.js · gyro.js · recorder.js · gaze.js (FaceLandmarker gaze) · eye.js (Eye Gauge state machine)
 ├─ ar/        overlay.js · spirits.js
-├─ cloud/     provider.js(어댑터) · firebase.js(동적 import, 키 없으면 번들 제외)
-├─ ui/        shell.js · fx.js · card.js · scratch.js · editor.js(스킬 에디터) · screens/(title·scan·reveal·codex·album·quests·shop·profile·collectors·duel)
+├─ geo/       provider.js · nominatim.js · google.js · osm.js (nearby spots)
+├─ i18n/      index.js (runtime KO/EN layer) · en.js (English dictionary, lazy-loaded)
+├─ cloud/     provider.js (adapter) · firebase.js (dynamic import, excluded from the bundle without keys)
+├─ ui/        shell.js · fx.js · card.js · scratch.js · editor.js (skill editor) · screens/ (title · scan · reveal · codex · album · quests · shop · profile · collectors · duel · spots)
 └─ main.js
-public/img/   lupe.svg(마스코트) · logo.svg · ch/*.svg(챕터 엠블럼) — 손으로 그린 벡터
+public/img/   lupe.svg (mascot) · logo.svg · ch/*.svg (chapter emblems) — hand-drawn vectors
 ```
 
 ---
 
-## 🚀 실행과 배포
+## 🌐 Language — English / 한국어
+
+| Item | Behavior |
+|---|---|
+| First visit | Follows the browser language (Korean → Korean, anything else → English) · `?lang=en` / `?lang=ko` in the URL also works |
+| Switch | The **EN / 한** button at the top-right of the title, or Profile → Settings → **Language** |
+| Saved | On the device (localStorage) · game progress and saves are independent of the language |
+| Never translated | User content (captions, explorer names) and place names |
+
+How it works: the Korean source strings stay as they are; only in English mode is a dictionary (`src/i18n/en.js`, lazy-loaded, 37KB gzip) used to swap on-screen text, attributes, canvas text and dialogs. `npm run i18n:check` lists new Korean strings that still need a translation.
+
+## 🚀 Run and deploy
 
 ```bash
 npm install
-npm run dev        # http://localhost:5173  (카메라는 localhost 또는 HTTPS에서만)
+npm run dev        # http://localhost:5173  (the camera only works on localhost or HTTPS)
+npm test           # eye-gauge precision · geo · i18n
 npm run build      # dist/
-vercel --prod      # 정적 배포
+vercel --prod      # static deploy
 ```
 
-| 항목 | 값 |
+| Item | Value |
 |---|---|
-| 라이브 | https://wonderscanner.vercel.app |
-| 스택 | Vite 7 · Vanilla JS · TensorFlow.js 4 · COCO-SSD · MediaPipe Tasks Vision(시선 추적, 지연 로드) · canvas-confetti · Web Audio · DeviceOrientation |
-| 데이터 | localStorage `wonder-scanner:v1` (스키마 v3) + IndexedDB `wonder-album` · 선택: Firebase |
-| 지원 | iOS Safari / Android Chrome (카메라), 데스크톱 브라우저 (사진 업로드) |
+| Live | https://wonderscanner.vercel.app |
+| Stack | Vite 7 · Vanilla JS · TensorFlow.js 4 · COCO-SSD · MediaPipe Tasks Vision (gaze tracking, lazy-loaded) · canvas-confetti · Web Audio · DeviceOrientation |
+| Data | localStorage `wonder-scanner:v1` (schema v3) + IndexedDB `wonder-album` · optional: Firebase |
+| Supported | iOS Safari / Android Chrome (camera), desktop browsers (photo upload) |
 
 ---
 
-## ❓ 자주 묻는 것
+## ❓ FAQ
 
-- **인식이 안 돼요.** 물체를 화면의 절반 정도 크기로, 밝은 곳에서 비춰 보세요. 신뢰도 50% 이상만 인식합니다.
-- **왜 사람도 원더인가요?** COCO 80종에 `person`이 포함되어 있고, "두 발로 걷는 질문 생성기"는 서사상 원더를 발견하는 유일한 종입니다.
-- **데이터를 지우고 싶어요.** 프로필 → 설정 → **초기화**.
-- **화면 효과가 부담돼요.** 프로필 → 설정 → **모션 줄이기** (흔들림·글리치·플래시 제거), **자동 포획** (타이밍 링 생략).
+- **It doesn't recognize anything.** Make the object about half the screen and point at it in good light. Only confidence ≥ 50% counts.
+- **Why are people Wonders too?** `person` is one of the 80 COCO classes, and in the story the "two-legged question generator" is the only species that discovers Wonders.
+- **I want to delete my data.** Profile → Settings → **Reset**.
+- **The effects are too much.** Profile → Settings → **Reduce motion** (removes shake, glitch and flashes), **Auto-capture** (skips the timing ring).
 
 ---
 
-## 📚 문서
+## 📚 Docs
 
-- [`HISTORY.md`](HISTORY.md) — 스프린트 1(4시간 MVP) + 스프린트 2(AR·콘텐츠·폴리싱) 기록
-- [`docs/PRD.md`](docs/PRD.md) — 제품 요구사항 (페르소나 · 기능표 · 지표 · 세계관 확장 · 로드맵)
-- [`docs/CLOUD_SETUP.md`](docs/CLOUD_SETUP.md) — Google 로그인 · 사용자별 저장 · 광장 켜는 법
-- [`docs/game-feel-contract.json`](docs/game-feel-contract.json) — 포획 순간의 게임 필 계약
-- [`DESIGN.md`](DESIGN.md) — 디자인 시스템 「황동 렌즈 탐험 일지」 (색·서체·컴포넌트·모바일 게임 원칙)
-- [`docs/GAMEPLAY_V7.md`](docs/GAMEPLAY_V7.md) — 추적 실루엣 · 액션 연출 · 아우라 스킨 · 아이 게이지(시선) · 카메라 퍼스트 · 위치 추천 사양
-- [`docs/vfx/aura-tracking.json`](docs/vfx/aura-tracking.json) · [`docs/vfx/eye-impact.json`](docs/vfx/eye-impact.json) — game-vfx 검증기를 통과한 연출 계약
-- [`docs/qa/`](docs/qa/) — 정밀도 QA 기록 (`tests/eye-precision.mjs` = `npm test`)
-- 원안: Gemini 브레인스토밍 "AI 매직 렌즈: 일상의 놀라운 재발견" (아이디어 3번)을 게임 요소·밸런스·서사·코어루프·연출 중심으로 확장
+- [`README.ko.md`](README.ko.md) — 한국어 README
+- [`HISTORY.md`](HISTORY.md) — Sprint 1 (4-hour MVP) + Sprint 2 (AR · content · polish) log
+- [`docs/PRD.md`](docs/PRD.md) — product requirements (personas · feature table · metrics · world expansion · roadmap)
+- [`docs/CLOUD_SETUP.md`](docs/CLOUD_SETUP.md) — how to enable Google sign-in · per-user storage · the Plaza
+- [`docs/game-feel-contract.json`](docs/game-feel-contract.json) — the game-feel contract for the capture moment
+- [`DESIGN.md`](DESIGN.md) — design system "Brass-Lens Expedition Journal" (color · type · components · mobile-game principles)
+- [`docs/GAMEPLAY_V7.md`](docs/GAMEPLAY_V7.md) — tracked silhouette · action staging · aura skins · Eye Gauge (gaze) · camera-first · location recommendation spec
+- [`docs/vfx/aura-tracking.json`](docs/vfx/aura-tracking.json) · [`docs/vfx/eye-impact.json`](docs/vfx/eye-impact.json) — staging contracts that pass the game-vfx validator
+- [`docs/qa/`](docs/qa/) — precision QA records (`tests/eye-precision.mjs` = `npm test`)
+- Origin: Gemini brainstorm "AI Magic Lens: rediscovering the everyday" (idea #3), expanded around game systems, balance, story, core loop and staging
 
-<div align="center"><sub>Sprint 1 (4h MVP) → Sprint 8 (AR · 추억 · 소셜 · NPC · 스킬 · 아이 게이지 · 위치 추천 · 정밀도) · 2026-09-23</sub></div>
+<div align="center"><sub>Sprint 1 (4h MVP) → Sprint 8 (AR · memories · social · NPC · skills · Eye Gauge · location · precision · i18n (KO/EN)) · 2026-09-24</sub></div>

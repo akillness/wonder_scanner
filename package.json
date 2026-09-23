@@ -8,7 +8,8 @@
     "dev": "vite --host",
     "build": "vite build",
     "preview": "vite preview --host",
-    "test": "node tests/eye-precision.mjs && node tests/geo.mjs"
+    "test": "node tests/eye-precision.mjs && node tests/geo.mjs && node tests/i18n.mjs",
+    "i18n:check": "node scripts/i18n-check.mjs"
   },
   "dependencies": {
     "@mediapipe/tasks-vision": "^1.0.1",

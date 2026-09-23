@@ -2,6 +2,7 @@ import { state, rank, ownedCount, totalCount, closestChapter } from '../game/sta
 import { questSummary } from '../game/quests.js';
 import { WONDERS, RARITY, ALL_LABELS } from '../data/wonders.js';
 import { icon } from './icons.js';
+import { tr } from '../i18n/index.js';
 
 // ── 아이콘 재수출 (DESIGN.md 9.4): 화면 코드는 shell 에서 icon 을 가져다 쓴다. hasIcon 은 신규 아이콘 이름 폴백용.
 export { icon, hasIcon } from './icons.js';
@@ -16,6 +17,7 @@ export function register(name, fn) { routes[name] = fn; }
 export function go(name, ...args) { leave?.(); leave = null; const r = routes[name]?.(...args); if (typeof r === 'function') leave = r; window.scrollTo(0, 0); }
 
 export function typeInto(el, text, speed = 20) {
+  text = tr(String(text ?? '')); // 영어 모드: 타자 전에 문장 전체를 번역 (부분 문자열이 섞이지 않게)
   return new Promise(res => { if (!el) return res(); let i = 0; el.textContent = ''; el.classList.add('cursor');
     const t = setInterval(() => { el.textContent = text.slice(0, ++i); if (i >= text.length || !el.isConnected) { clearInterval(t); el.classList.remove('cursor'); res(); } }, speed); });
 }

@@ -18,12 +18,15 @@ import { bindRarity, checkAchievements } from './game/achievements.js';
 import { WONDERS, RARITY } from './data/wonders.js';
 import { streakMultiplier } from './game/balance.js';
 import { refreshSpots, cachedGeo } from './game/spots.js';
+import { initI18n } from './i18n/index.js';
 
 bindRarity(l => WONDERS[l]?.rarity ?? 0);
 const st = touchStreak();
 ensureDailyQuests();
 checkAchievements();
 syncReduceMotion();
+// 한/영 (v8.4): 영어면 사전을 받고 번역 계층을 건 뒤에 첫 화면을 그린다 (한국어면 즉시 통과)
+await initI18n();
 go('title');
 warmModel();
 if (st.extended && st.days >= 2) setTimeout(() => toast(`${icon('flame')} ${st.days}일 연속 출석! 오늘 XP ×${streakMultiplier(st.days).toFixed(1)}`, 3500), 600);

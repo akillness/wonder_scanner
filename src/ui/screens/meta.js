@@ -5,6 +5,7 @@ import { ACHIEVEMENTS } from '../../game/achievements.js';
 import { BALANCE, streakMultiplier } from '../../game/balance.js';
 import * as fx from '../fx.js';
 import { SKILLS, ownsSkill } from '../../game/skills.js';
+import { getLang, setLang } from '../../i18n/index.js';
 
 function untilMidnight() { const n = new Date(), m = new Date(n); m.setHours(24, 0, 0, 0); const s = Math.floor((m - n) / 1000); return `${Math.floor(s / 3600)}시간 ${Math.floor(s % 3600 / 60)}분`; }
 
@@ -68,6 +69,7 @@ register('profile', (openSettings = false) => {
     <div class="settings ledger">
       ${settings.map(([k, t, d]) => `<label class="setting ledger-row"><div><b>${icon(SETTING_ICON[k] ?? 'circle')} ${t}</b><small>${d}</small></div><input type="checkbox" data-k="${k}" ${state.settings[k] ? 'checked' : ''}><i class="sw"></i></label>`).join('')}
       <label class="setting ledger-row"><div><b>${icon('quill')} 탐험가 이름</b><small>카드·콜라주·선물 코드에 표시</small></div><input type="text" id="name" maxlength="12" value="${esc(state.name || '')}" placeholder="탐험가" autocomplete="off"/></label>
+      <div class="setting ledger-row lang-row"><div><b translate="no">${icon('globe')} 언어 · Language</b><small>한국어 / English · 기기에 저장</small></div><div class="lang-seg" translate="no" role="group" aria-label="Language"><button class="pill ${getLang() === 'ko' ? 'on' : ''}" data-lang="ko" aria-pressed="${getLang() === 'ko'}">한국어</button><button class="pill ${getLang() === 'en' ? 'on' : ''}" data-lang="en" aria-pressed="${getLang() === 'en'}">English</button></div></div>
       <button class="btn ghost sm" id="reset" style="margin-top:8px">도감·기록 초기화</button>
     </div>
     ${tabsHtml('profile')}
@@ -78,5 +80,6 @@ register('profile', (openSettings = false) => {
   $('#reset').onclick = () => { if (confirm('도감·랭크·별가루·업적을 모두 지웁니다. 정말요?')) { resetAll(); syncReduceMotion(); go('title'); } };
   $('#shop').onclick = () => { fx.blip(); go('shop'); }; $('#album').onclick = () => { fx.blip(); go('album'); }; $('#plaza').onclick = () => { fx.blip(); go('collectors'); };
   $('#name').onchange = (e) => { state.name = e.target.value.trim(); save(); fx.blip(); };
+  $$('[data-lang]').forEach(b => b.onclick = () => { fx.blip(); setLang(b.dataset.lang); });
   if (openSettings) setTimeout(() => $('#settings')?.scrollIntoView({ behavior: 'smooth' }), 50);
 });
