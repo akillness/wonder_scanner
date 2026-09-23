@@ -24,8 +24,8 @@ gantt
     P4 코어루프 UI(타이틀·스캔·발견·도감)   :done, p4, after p3, 45m
     P5 연출(파티클·글리치·사운드·카드 공유)  :done, p5, after p4, 35m
     section 마무리
-    P6 QA·빌드                             :active, p6, after p5, 15m
-    P7 Vercel 배포 + Git 푸시               :p7, after p6, 15m
+    P6 QA·빌드                             :done, p6, after p5, 15m
+    P7 Vercel 배포 + Git 푸시               :active, p7, after p6, 15m
     P8 문서(README 소개 + HISTORY.md)       :p8, after p7, 20m
 ```
 
@@ -39,8 +39,8 @@ gantt
 | P3 | 카메라 스트림 + 온디바이스 탐지 + 공명(Resonance) 게이지 | ✅ 완료 |
 | P4 | 화면 4종: 타이틀 → 스캔 → 발견(Reveal) → 도감(Codex) | ✅ 완료 |
 | P5 | 희귀도별 파티클, 화면 흔들림/글리치, Web Audio 효과음, 카드 PNG 공유 | ✅ 완료 |
-| P6 | 모바일 뷰포트 확인, 빌드 통과 | 🔄 진행 중 |
-| P7 | `vercel --prod` 배포, `git push origin main` | ⬜ 대기 |
+| P6 | 모바일 뷰포트 확인, 빌드 통과 | ✅ 완료 |
+| P7 | `vercel --prod` 배포, `git push origin main` | 🔄 진행 중 |
 | P8 | README를 소개 문서로 교체, `HISTORY.md` 작성 | ⬜ 대기 |
 
 ## 게임 디자인 요약 (P0 산출물)

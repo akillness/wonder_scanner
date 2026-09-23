@@ -26,7 +26,8 @@ export async function renderCard({ label, wonder, photo, isVariant, rankTitle, d
 export async function shareCard(canvas, title) {
   const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
   const file = new File([blob], `wonder-${Date.now()}.png`, { type: 'image/png' });
-  if (navigator.canShare?.({ files: [file] })) {
+  const touch = matchMedia('(pointer: coarse)').matches; // 데스크톱은 공유 시트 대신 즉시 다운로드
+  if (touch && navigator.canShare?.({ files: [file] })) {
     try { await navigator.share({ files: [file], title, text: `${title} — 🔭 WONDER SCANNER` }); return 'shared'; } catch (e) { if (e.name === 'AbortError') return 'cancel'; }
   }
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = file.name; a.click();

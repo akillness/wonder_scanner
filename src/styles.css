@@ -49,7 +49,7 @@ h1.logo{margin:8px 0 0;font-size:34px;letter-spacing:.12em;background:linear-gra
 .pill b{color:var(--gold)}
 .xp{width:70px;height:4px;background:rgba(255,255,255,.15);border-radius:2px;overflow:hidden}
 .xp i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2))}
-.scan .bottom{position:absolute;left:0;right:0;bottom:0;padding:0 12px calc(var(--safe-b) + 12px);display:flex;flex-direction:column;gap:10px}
+.scan .bottom{position:absolute;left:0;right:0;bottom:0;z-index:4;padding:0 12px calc(var(--safe-b) + 12px);display:flex;flex-direction:column;gap:10px}
 .scan .controls{display:flex;gap:10px;justify-content:center;align-items:center}
 .status{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;background:rgba(11,15,26,.85);text-align:center;padding:24px;z-index:3}
 .spinner{width:44px;height:44px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--accent);animation:spin 1s linear infinite}
