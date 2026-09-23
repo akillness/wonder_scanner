@@ -1,86 +1,113 @@
 {
-  "contract_version": 1,
+  "contract_version": 3,
   "mechanic": {
-    "name": "wonder capture moment (resonance to reveal)",
-    "build": "wonder_scanner v2 (commit after 02ec778), Vite dev + production build",
-    "scene": "scan screen, live camera or photo fallback, single detected object",
-    "target_devices": ["iOS Safari touch", "Android Chrome touch", "desktop Chrome with photo fallback"],
-    "network_state": "offline after model load; all simulation on-device",
-    "camera": "rear camera full-bleed video with 2D canvas overlay"
+    "name": "wonder capture moment (tracked silhouette, staged resolution, aura, eye gauge, camera-first)",
+    "build": "wonder_scanner v7 working tree on 2026-09-23 (after v8.1 commit 9560ffc; scan.js wired by the peer session at 23:05:59 during QA), Vite dev",
+    "scene": "scan screen as a camera: live video or photo fallback, single detected object; reveal, album and spots screens for the record side",
+    "target_devices": ["iOS Safari touch", "Android Chrome touch", "desktop Chrome with photo fallback (480px shell)"],
+    "network_state": "offline after model load; simulation on-device; only rounded coordinates (3 decimals) leave the device when the player taps '주변 촬영지 찾기'",
+    "camera": "rear camera full-bleed video inside .overlay-wrap with a 2D canvas overlay (silhouette, shade, aura, ring, tag, staging, eye reticle)"
   },
-  "goal": "Make the capture moment a readable intention-to-consequence skill step (timing tap with graded outcome) and make the live camera view itself a playfield (AR spirits, aura, holo tag), without changing detection, cooldown, save schema truth, or blocking input.",
+  "goal": "Make the tracked object itself the progress readout (etched outline filled by gauge, ghost trail, loss afterimage), make each resolution (lock, 50/100% pulse, capture spotlight, PERFECT/GREAT/GOOD punch, MISS flee, spirit pop, eye impact) read as one intention-to-consequence beat, and carry the silhouette into the record (reveal card, album detail, share card), without changing detection, cooldown, fill, grade thresholds, rewards or the save key.",
   "baseline": {
-    "capture": "Chrome DevTools automation on 390x844 viewport with photo-fallback path; state read via window.__scan debug hook (mode, gauge, ring radius, grade) and localStorage.",
+    "capture": "Headless Chrome (CDP bridge) on 390x844 mobile+touch, camera denied -> photo fallback, prefers-reduced-motion emulated per probe; overlay pixels read with getImageData, tag text via fillText spy, timings with injected frame clocks, WAAPI paused for mid-punch frames; album via IndexedDB (media.js), geo via fetch/geolocation mocks; docs/qa/v7-precision.md holds the full table.",
     "observations": [
-      "v1 capture was passive: gauge filled while holding still, then reveal fired with no player action; every capture produced identical presentation.",
-      "Bounding box jittered frame to frame, weakening the anchored feel of the bracket.",
-      "The camera view had nothing to interact with between detections."
+      "v2 control: plain bracket + built-in aura particles + holo tag; the gauge was only visible on the resonance ring, so tracking loss and progress were not readable on the object.",
+      "v2 control: grade outcome was carried by burst text, flash, chime and haptic, with no freeze, punch, spotlight or flee direction; MISS had no spatial consequence.",
+      "v2 control: the captured photo carried no bbox, so reveal/album could not show what the lens had locked on."
     ],
     "measured_stages": ["input", "simulation", "state", "render", "feedback", "recovery"],
-    "inferred_stages": ["intent", "perceived responsiveness on real touch devices"]
+    "inferred_stages": ["intent", "integration (scan.js was owned and being edited by the peer session; the render/feedback numbers below come from calling overlay/staging/auras with the shared contract on the same overlay canvas, plus one smoke pass of the wired scan.js at 23:05)", "perceived responsiveness on real touch devices"]
   },
   "response_chain": [
-    { "stage": "intent", "owner": "player", "evidence": "Player aims at an object, then taps when the shrinking ring meets the golden band.", "status": "inferred" },
-    { "stage": "input", "owner": "overlay pointerdown handler", "evidence": "Scripted pointerdown at ring radius 0.328 (target 0.30) produced grade PERFECT; at 0.90 produced MISS; at 0.46 produced GOOD.", "status": "measured" },
-    { "stage": "simulation", "owner": "capture.js state machine", "evidence": "Modes scan -> capture -> grade -> finish observed via debug hook; 3 cycles without tap resolved to AUTO.", "status": "measured" },
-    { "stage": "state", "owner": "state.discover / questEvent / checkAchievements", "evidence": "localStorage after PERFECT: bestGrade PERFECT, stats.perfects 1, XP 20*1.5*1.5=45, dust 10*3*2=60; MISS incremented stats.misses and reset gauge to 0.48.", "status": "measured" },
-    { "stage": "render", "owner": "ar/overlay.js", "evidence": "Smoothed bracket, aura particles scaled by gauge, holo tag, shrinking ring with golden band, grade burst text; screenshots v2-04/v2-05.", "status": "measured" },
-    { "stage": "feedback", "owner": "ui/fx.js", "evidence": "Grade flash color, chime on PERFECT, denied tone and haptic pattern on MISS, Lupe line changes per outcome.", "status": "measured" },
-    { "stage": "recovery", "owner": "scan.js", "evidence": "After MISS mode returned to scan with gauge 0.48 and refilled to a second capture; after finish the scan loop stopped, camera released, reveal rendered.", "status": "measured" }
+    { "stage": "intent", "owner": "player", "evidence": "Player aims, watches the outline fill and the corner ticks at 25/50/75/100%, then taps (or holds gaze) when the ring meets the band.", "status": "inferred" },
+    { "stage": "input", "owner": "overlay pointerdown / eye gauge", "evidence": "Probe 'timing ring grade': createCapture tap at r=.30/.36/.46/.60/.90 -> PERFECT/GREAT/GOOD/MISS/MISS x3, boundaries +-0.01 symmetric, AUTO after 3 cycles. Probe 'eye precision' (node tests/eye-precision.mjs) 14/14: hold 917ms PERFECT, jitter 7/9/17/19px -> PERFECT/GREAT/GREAT/GOOD, loss->0 in 850ms. pointerdown still uses performance.now() not e.timeStamp (peer).", "status": "measured" },
+    { "stage": "simulation", "owner": "capture.js / balance.js (frozen)", "evidence": "Same thresholds as v2 (perfect .045, great .10, good .17, cycleMs 1500, cycles 3); gimmickMod only multiplies eventMod: probe 'gimmick start' eventMod('dust',{chapter:'kitchen'})=2, desk=1, after expiry=1.", "status": "measured" },
+    { "stage": "state", "owner": "state.js additive fields / media.js / spots.js", "evidence": "Probe 'aura economy': state.auraSkins ??= ['ember'], buyAura('orbit') 100 dust -> '별가루가 120 부족해요', 500 -> ok (280 left), equip/unequip per label and global. Probe 'media model': addMoment kind photo/video/wonder(+box,alts) and a legacy record normalize to kind 'wonder', box null, alts [], edited false; listMoments filters photo 2/video 1/wonder 4/perfect 1/friend 1. Probe 'geo save': state.geo lat 37.567/lng 126.978 (3 decimals), 15 spots with minimal keys, 1h cache.", "status": "measured" },
+    { "stage": "render", "owner": "ar/overlay.js + ui/staging.js + ar/auras.js", "evidence": "Probe 'etch 50%': top/right edges Iron ink a255 (top a192 at fractional y), bottom/left 0, ticks TR/BR only; '100% flash' all brass a255 then Iron solid at +400ms; tag 'cup · conf 87% · 공명 50%' / '탭!' in capture. 'ghost trail' 6 ring entries at 45ms steps, alpha 13..48 rising. 'tracking shade' outer a48 = (0.10+0.6*0.15)*255, centre light a36; capture ramp 64->83->102 (0.25->0.4 in 80ms). 'aura pool' ember 41 at gauge .85, 48 = POOL_MAX charged, never above; orbit 41. 'eye impact' ring1 a148 / ring2 a177 / bone spark a94 exactly 1-t. Reveal card etch rect == photo rect [50,27,290,290]; album detail [50,130.2,290,290] (v1 7px stretch fixed).", "status": "measured (module layer); scan.js integration smoke only: __scan.trail 3 entries, aura orbit count 19 at gauge .33, .track-log '최근: cup 33%'" },
+    { "stage": "feedback", "owner": "ui/staging.js createStaging + fx.js + CSS hooks", "evidence": "Probe 'lock-on' bracket Bone a210 at t=.5 (=.3+.6*easeOut). 'pulse' only at the 50% and 100% crossings. 'spotlight' 0->51->102 over 80ms, quiet controller 102 at t0. 'PERFECT punch' matrix(1.06) at 70ms with transform-origin at bbox centre, resolves 403ms (GOOD 243ms) to transform none; 'freeze' blits the pooled capture (live source painted Ember, pixel stays Bone). 'speed lines' brass a128 at t=.5. 'MISS' body moves 52.5px away from the tap origin in Ember a115 with 3 streaks, .vignette.miss inset Ember 45% for 120ms. 'spirit pop' verdigris a122 / golden brass. 'eye impact' rings+sparks+.eye-hud.impact+.eye-flash 3px brass inset.", "status": "measured (module layer); wired call sites inferred" },
+    { "stage": "recovery", "owner": "silhouette loss / aura cancel / staging reset", "evidence": "Probe 'loss afterimage': drawLoss true at +10/+450/+1490ms and false at +1510ms, alpha 85->60->0 linear, tag '놓침 · 다시 비춰 봐' until 1490. 'aura cancel' 48 -> 48 at 399ms -> 0 at 456ms (setPhase('cancel') while drawing) and 0 at 465ms when drawing simply stops (staleMs 400). staging.reset() -> isActive false, freeze released. Shade/spotlight are canvas only (no pointer-events), taps stay open.", "status": "measured" }
   ],
   "primary_hypothesis": {
-    "weak_link": "simulation response: no player decision between resonance-full and reveal",
-    "problem": "Because the reveal fired automatically, the player had no moment of intention whose consequence they could read, so all captures felt equivalent regardless of skill.",
-    "change": "Insert a timing ring after the gauge fills: tap radius is graded PERFECT/GREAT/GOOD/MISS with continuous distance thresholds; MISS makes the wonder flee (gauge reset), grades scale rewards and variant odds. Detection, cooldown, and discovery bookkeeping are unchanged.",
-    "expected_signal": "Players can name their grade from the burst text and reward line, and repeat scans show different outcomes tied to their tap timing.",
-    "falsifier": "Grades feel random on real touch latency, or players cannot hit GOOD reliably, or the MISS flee reads as a bug.",
-    "competing_explanation": "The flat feel may have come from identical reveal presentation rather than the missing decision; addressed separately by grade-specific flash, chime and reward line."
+    "weak_link": "render/feedback: the object under the lens did not show what was being tracked, how far the resonance had come, or where the resolution went",
+    "problem": "In v2 the only progress readout was the resonance ring and the grade burst; tracking loss, the tap consequence (MISS) and the capture had no spatial or temporal shape on the object itself, and the record (reveal/album) could not show the locked outline.",
+    "change": "Etched outline whose perimeter equals gauge with corner ticks at 25/50/75/100%, ghost trail and 1.5s loss afterimage; staging beats (120ms lock-on, 300ms pulse at 50/100%, 80ms spotlight to 0.4, 90ms freeze + 1.06/1.03 punch + 16/8 speed lines, 300ms MISS flee 60px + Ember vignette, 250ms spirit pop, 360ms eye impact); per-wonder aura skins (pool 48, zero per-frame allocation); bbox persisted as normalized box (+alts) so reveal, album and share card draw the same brass outline. Simulation truth untouched.",
+    "expected_signal": "Players can say from the outline alone how full the resonance is and whether the lens still holds the object; a MISS is seen as the object fleeing away from the tap; the reveal card shows the same outline they saw in the viewfinder.",
+    "falsifier": "Outline ticks read as noise on jittery boxes, the freeze/punch feels like a hitch on real devices, the shade makes the camera look broken, or players cannot find the eye badge (currently occluded by the Lupe bubble in the peer's layout).",
+    "competing_explanation": "The v2 flatness may have come from the identical reveal presentation rather than the missing tracking readout; v7 keeps the reveal changes (silhouette hero, burst strip) as a separate layer so the two can be attributed."
   },
   "event_channels": [
-    { "event": "PERFECT capture", "importance": "high", "channels": ["gold grade burst text", "gold radial flash", "ascending chime", "5-pulse haptic", "reward line x1.5 XP / x2 dust", "Lupe line"], "necessary_information": "Tap landed inside the tightest window and rewards are multiplied.", "accessibility_alternative": "With reduced motion the flash/shake are skipped; grade text, reward line and Lupe line remain. With auto-capture on, the ring is skipped entirely." },
-    { "event": "MISS", "importance": "high", "channels": ["red burst text", "descending denied tone", "3-pulse haptic", "gauge visibly drops to 35%", "Lupe: fled"], "necessary_information": "The tap was outside the band; resonance must refill.", "accessibility_alternative": "Text and gauge state carry the information without sound or haptics." },
-    { "event": "spirit caught", "importance": "routine", "channels": ["pop scale-out", "floating +1 text", "short blip", "HUD fragment counter"], "necessary_information": "Fragment count progressed toward a boost.", "accessibility_alternative": "Counter and floating text carry the information; no camera motion involved." }
+    { "event": "target locked", "importance": "routine", "channels": ["4 viewfinder brackets converge to the bbox in 120ms (Bone, a .3->.9)", "tick"], "necessary_information": "The lens now holds this object.", "accessibility_alternative": "Reduced motion: no convergence; the etched outline and the tag appear directly." },
+    { "event": "resonance 50% / 100%", "importance": "routine", "channels": ["corner ticks at 25/50/75/100%", "one thin ring expands from the bbox centre for 300ms (Bone 25%, 1px)", "100%: outline thickens to 3px and flashes brass for 120ms then stays solid", "tag '공명 NN%' + 3px bar"], "necessary_information": "How far the resonance has come.", "accessibility_alternative": "Reduced motion: no pulse ring, no flash; ticks, outline fill and tag remain." },
+    { "event": "capture ring appears", "importance": "high", "channels": ["outside of the bbox darkens to 0.4 over 80ms (tracking shade doubles as spotlight)", "tag becomes '탭!' in brass", "existing shrinking ring + band"], "necessary_information": "Tap now; the object is the only lit thing.", "accessibility_alternative": "Reduced motion: darkness is applied immediately (no ramp); ring logic unchanged; auto-capture setting skips the ring." },
+    { "event": "PERFECT", "importance": "high", "channels": ["90ms freeze of the last frame (pooled capture)", "zoom punch 1.06 at the bbox centre with spring return (~400ms)", "16 brass speed lines for 200ms", "outline stamps solid", "grade burst text (existing)", "chime + 5-pulse haptic + reward line (existing)"], "necessary_information": "The tap landed in the tightest window; rewards multiplied.", "accessibility_alternative": "Reduced motion: no freeze, punch or speed lines; solid outline, burst text, chime, haptic and reward line remain." },
+    { "event": "GREAT / GOOD", "importance": "routine", "channels": ["same beat with punch 1.03 and 8 speed lines, no flash"], "necessary_information": "Landed, but not in the tightest window.", "accessibility_alternative": "As PERFECT." },
+    { "event": "MISS", "importance": "high", "channels": ["outline flees 60px away from the tap origin over 300ms leaving 3 Ember streaks", "Ember edge vignette 120ms (.vignette.miss)", "gauge reset to 0.35 (existing)", "denied tone + haptic + Lupe line (existing)"], "necessary_information": "The object got away; resonance must refill.", "accessibility_alternative": "Reduced motion: no flee streaks or vignette; text, tone, haptic and the visibly lower outline fill remain." },
+    { "event": "spirit caught", "importance": "routine", "channels": ["verdigris pop ring + 6 sparks 250ms (brass when golden)", "floating +1 text (existing)"], "necessary_information": "Fragment count progressed.", "accessibility_alternative": "Reduced motion: no pop; counter and text remain." },
+    { "event": "eye impact (gaze fired)", "importance": "high", "channels": ["2 brass shockwave rings 0->90px over 360ms (second +60ms)", "12 brass/Bone sparks 240ms", ".eye-hud.impact badge spring", ".eye-flash 3px brass inset 180ms", "haptic [20,40,60] + comboTone(3)"], "necessary_information": "The gaze hold completed and the action fired.", "accessibility_alternative": "Reduced motion: no rings, sparks or flash; badge, text, haptic and tone remain. Note: the badge is currently occluded by the Lupe bubble in the peer's scan.js layout." },
+    { "event": "target lost", "importance": "routine", "channels": ["last bbox lingers as a dashed outline for 1.5s (Bone a .6->0)", "tag '놓침 · 다시 비춰 봐'", "aura fades to 0 within 400ms", "existing gauge decay"], "necessary_information": "Where the object was when the lens lost it.", "accessibility_alternative": "Afterimage and tag are kept under reduced motion (static, no trail)." },
+    { "event": "snap / record (camera-first)", "importance": "routine", "channels": ["Bone flash 120ms", "fx.shutter() two-step click (settings.sound, settings.shutterSound)", "thumbnail flies to .cam-thumb 250ms", "album tile with camera/film badge"], "necessary_information": "A photo/video was saved to the album even without a wonder.", "accessibility_alternative": "Flash/fly skipped under reduced motion; toast and album count remain. Status: media layer measured; the peer's doSnap at 23:05 still requires a label and omits kind:'photo' (regression vs §6.11)." },
+    { "event": "spot gimmick active", "importance": "routine", "channels": ["gimmick badge on the spot card and title card ('기믹 「커피 시간」 30분 남음')", "Lupe advise line with pin icon", "eventMod multiplier (x2 dust for the chapter)"], "necessary_information": "A location bonus is running and where.", "accessibility_alternative": "Text only; no motion involved." }
   ],
   "safety": {
-    "simulation_truth": "Detection confidence, cooldown, codex bookkeeping, XP curve and save schema are unchanged; grades only multiply rewards and variant odds.",
-    "input_policy": "No input lock is added. A tap during the ring resolves immediately; taps outside capture mode route to spirits. Three ring cycles without a tap resolve to AUTO so no player is blocked.",
-    "return_to_rest": "Capture stops on finish, target loss (1.5s), and screen exit; overlay is cleared every frame; camera tracks are stopped in the route cleanup.",
-    "multiplayer_authority": "Not applicable; single-device offline game."
+    "simulation_truth": "Detection, cooldown, fill rate, grade thresholds, rewards, BALANCE and the save key wonder-scanner:v1 are unchanged; v7 adds fields (box, alts, kind, auraSkins, auraByLabel, auraSkin, geo, eyeCal) that old saves and old moments lack and that every reader defaults (normalizeMoment, state ??=).",
+    "input_policy": "Freeze, punch, spotlight and shade are canvas/transform only with no pointer-events; a tap during the ring still resolves immediately; spirits stay tappable under the spotlight; AUTO still resolves after 3 cycles.",
+    "return_to_rest": "Silhouette afterimage ends at 1.5s, aura reaches 0 within 400ms of loss or draw stop, staging timelines are 120/300/90+200/300/250ms and reset() clears them and releases the pooled freeze; punch always restores transform:none (finished promise + timer fallback).",
+    "multiplayer_authority": "Not applicable; single-device offline game. Location is opt-in and never uploaded."
   },
   "accessibility": {
     "settings": [
-      { "control": "reduce motion", "affected_channels": ["camera shake", "glitch", "full-screen flash", "rays", "confetti", "aura particles", "tag bob"], "behavior": "Off path removes these while keeping grade text, reward line, Lupe text and stable brackets.", "persistence": "state.settings.reduceMotion in localStorage key wonder-scanner:v1" },
-      { "control": "auto capture", "affected_channels": ["timing ring"], "behavior": "Skips the ring and captures at AUTO grade when the gauge fills.", "persistence": "state.settings.autoCapture" },
-      { "control": "haptics", "affected_channels": ["vibration"], "behavior": "Off removes vibration without removing visual or audio confirmation.", "persistence": "state.settings.haptics" },
-      { "control": "sound", "affected_channels": ["Web Audio ticks and chimes"], "behavior": "Off silences synthesized audio.", "persistence": "state.settings.sound" }
+      { "control": "reduce motion (state.settings.reduceMotion, prefers-reduced-motion, :root.reduce-motion)", "affected_channels": ["ghost trail", "100% brass flash", "lock-on convergence", "pulse ring", "spotlight ramp", "freeze", "punch", "speed lines", "MISS flee streaks", "Ember vignette", "spirit pop", "eye rings/sparks/flash", "aura emitters", "tag bob", "reveal hero scale", "shutter flash/fly"], "behavior": "Off path keeps etched outline + ticks + tag, static spotlight/shade, static 1px aura ring, loss afterimage, solid stamp, grade text, tone, haptic and reward line. overlay.drawTarget and staging OR the caller flag with the OS media query and the root class (probes 'root class quiet' and 'OS prefers-reduced-motion').", "persistence": "state.settings.reduceMotion in localStorage key wonder-scanner:v1" },
+      { "control": "auto capture", "affected_channels": ["timing ring", "spotlight"], "behavior": "Skips the ring and captures at AUTO when the gauge fills (unchanged).", "persistence": "state.settings.autoCapture" },
+      { "control": "eye gauge", "affected_channels": ["eye reticle", "eye impact"], "behavior": "Front camera only; off hides the reticle and leaves tap capture.", "persistence": "state.settings.eyeGauge, state.eyeCal" },
+      { "control": "haptics / sound / shutterSound", "affected_channels": ["vibration", "Web Audio", "fx.shutter()"], "behavior": "Off removes the channel without removing visual confirmation.", "persistence": "state.settings.haptics / sound / shutterSound" }
     ],
-    "redundant_signals": "Grade outcome is carried by text, color, sound, haptic and the reward line; none is the sole channel."
+    "reduce_motion_channels": [
+      { "channel": "ghost trail", "default": "12-entry ring buffer every 80ms, Bone a 0->.30", "reduced": "off", "alternative": "etched outline + ticks", "evidence": "probe 'reduce motion x trail': old trail alpha 0 (caller flag) / 0 (OS emulation), etch a192 kept" },
+      { "channel": "100% flash", "default": "brass 3px for 120ms", "reduced": "off, outline goes solid directly", "alternative": "solid outline + tag 100%", "evidence": "staging draw() skips snap flash when rm()" },
+      { "channel": "lock-on brackets / pulse ring", "default": "120ms converge / 300ms ring", "reduced": "off", "alternative": "outline appears, ticks", "evidence": "createStaging draw() returns after spotlight when quiet" },
+      { "channel": "spotlight / tracking shade", "default": "0.4 outside ramp 80ms; shade 0.10+g*0.15 fade-in 160ms with charged pulse", "reduced": "kept, applied instantly, no pulse", "alternative": "static darkness carries the 'tap now' state", "evidence": "probe 'spotlight quiet' a102 at t0; 'shade capture rm' a102 at t0" },
+      { "channel": "freeze + punch + speed lines", "default": "90ms freeze, 1.06/1.03 punch, 16/8 lines", "reduced": "off", "alternative": "solid stamp + grade text + chime + haptic", "evidence": "punch() -> false immediately under rm and under OS emulation" },
+      { "channel": "MISS flee + Ember vignette", "default": "60px flee, 3 streaks, 120ms vignette", "reduced": "off", "alternative": "denied tone, haptic, outline fill visibly lower, Lupe line", "evidence": "quiet controller: canvas a0, #vig.miss not toggled" },
+      { "channel": "spirit pop", "default": "250ms ring + 6 sparks", "reduced": "off", "alternative": "floating +1 text + counter", "evidence": "quiet controller: canvas a0" },
+      { "channel": "aura emitter", "default": "4..48 pooled particles per skin", "reduced": "static 1px skin-colour ring", "alternative": "ring still identifies the skin", "evidence": "probe 'aura rm': count 0, ring a152 at rx 122" },
+      { "channel": "eye impact", "default": "2 rings, 12 sparks, edge flash, badge spring", "reduced": "rings/sparks/flash off", "alternative": "badge bold + text + haptic + tone", "evidence": "staging.css and scan.js gate .eye-flash on !reduceMotion" },
+      { "channel": "loss afterimage", "default": "dashed outline 1.5s + tag", "reduced": "kept", "alternative": "n/a (static)", "evidence": "drawLoss ignores reduceMotion" },
+      { "channel": "reveal hero silhouette", "default": "brass outline 1.15->1 for 400ms before suspense", "reduced": "off (no scale, no extra delay)", "alternative": "card etch overlay", "evidence": "reveal.js heroMs = 0 when prefers-reduced-motion; staging.css :root.reduce-motion .etch-hero{animation:none}" },
+      { "channel": "album/spots UI motion", "default": "select-bar slide, undo countdown bar, skeleton shimmer, swipe spring", "reduced": "off / static", "alternative": "same content without motion", "evidence": "v7.css section 11 (prefers-reduced-motion and :root.reduce-motion)" }
+    ],
+    "redundant_signals": "Progress: outline fill + ticks + tag bar + ring. Grade: burst text + colour + chime + haptic + reward line + punch. Loss: afterimage + tag + aura fade. None is the sole channel."
   },
   "comparison": {
-    "control": "v1 build (commit 02ec778): passive fill then automatic reveal.",
-    "variant": "v2 build: same detection and fill, then timing ring with graded resolution, AR spirits and aura layered on the overlay.",
-    "matched_conditions": ["same photo fixtures (dog.jpg, laptop.jpg, cup.jpg)", "same 390x844 viewport and camera-denied fallback", "same balance constants for fill rate and cooldown", "same save key"],
-    "repetition_basis": "Three captures (AUTO, PERFECT, MISS->GOOD) plus one spirit tap; each read back from state and DOM.",
+    "control": "v2 build (commit after 02ec778): plain bracket, built-in aura particles, holo tag, timing ring with graded burst; photos without bbox.",
+    "variant": "v7 layer: silhouette (etch + trail + afterimage), staging (lock/pulse/spotlight/freeze/punch/lines/flee/spirit), aura skins + tracking shade, eye gauge impact, camera-first album/reveal (kind/box/alts, burst strip, etch on card), spots/gimmick; same detection, fill, grades, rewards, save key.",
+    "matched_conditions": ["same 390x844 viewport and camera-denied photo fallback", "same synthetic source geometry (720x1280) and bbox for every silhouette/staging probe", "same BALANCE constants", "same save key wonder-scanner:v1 with additive fields only", "reduced-motion probed both via caller flag and OS emulation"],
+    "repetition_basis": "Ring grades 3x per radius plus boundary pairs; eye precision 14 node cases; each canvas probe read at injected frame times (deterministic) and aura counts over 350-450ms rAF runs; album/reveal/spots flows run once end to end with DB read-back; scan.js smoke once after the peer's wiring.",
     "acceptance": [
-      "Grades map to tap radius as specified and are visible in burst text and reward line.",
-      "MISS returns to scan with gauge 0.35..0.5 and a second capture succeeds.",
-      "AUTO resolves after 3 cycles without input.",
-      "Reduced-motion and auto-capture settings persist and are honored by fx.js and scan.js.",
-      "No console errors across title, scan, reveal, codex, quests, profile."
+      "Etched outline perimeter equals gauge with ticks at 25/50/75/100%, brass flash at 100% then solid (measured).",
+      "Staging timings within STAGING constants and all transforms return to rest; freeze uses a pooled capture (measured).",
+      "Aura particles never exceed 48 and reach 0 within 400ms of loss (measured 41/48, 0 at 456ms).",
+      "Tracking shade outer alpha = 0.10 + gauge*0.15 and ramps to 0.4 in capture (measured 48 at g=.6, 64->102).",
+      "Reveal and album draw the same normalized box on the photo with no text over the photo (measured rect == photo rect).",
+      "Old moments without kind/box/alts and old saves keep working (measured legacy normalization).",
+      "No console errors across scan, reveal, album, spots, title in both scan.js revisions (measured 0).",
+      "Open: peer scan.js layout (.cam-bar/.cam-tools/.bubble.compact), eye badge occlusion, doSnap kind/label regression, pointerdown timeStamp."
     ]
   },
   "performance": {
-    "budgets": "Overlay draw must stay under one frame at 60 Hz on mid-range phones; detection loop is throttled to about 20 Hz.",
-    "basis": "Desktop Chrome automation only; real-device frame pacing not yet measured.",
-    "measurement": "Bundle: app 79 KB (32 KB gzip), TF chunk 274 KB gzip unchanged."
+    "budgets": "Overlay draw within one 60Hz frame; silhouette/staging/aura draw with zero per-frame allocation; aura pool <= 48 particles, <= 3 draw calls, blur 0; shade 2 draw calls; eye impact <= 12 sparks, <= 3 draw calls.",
+    "basis": "Desktop headless Chrome (swiftshader) only; real-device frame pacing not measured. docs/vfx contracts pass validate_vfx_spec.py (aura-tracking particles 60 = 12 trail + 48 aura, draw 8; eye-impact 14/6).",
+    "measurement": "Punch resolves in 403ms (PERFECT) / 243ms (GOOD) wall clock; spots list renders from 1 mocked Nominatim request; both-provider failure resolves in 7.3s with info logs only."
   },
   "decisions": [
-    { "decision": "Add a timing ring rather than more reveal effects.", "basis": "The missing stage was a player decision, not feedback volume.", "owner": "game design" },
-    { "decision": "Treat AR as screen-space camera effects (gyro-anchored spirits, aura, holo tag) rather than world tracking.", "basis": "No WebXR; 3-DoF orientation is enough for look-around play and keeps the bundle static.", "owner": "AR overlay" },
-    { "decision": "Ship reduce-motion and auto-capture toggles with the effect.", "basis": "Timing rings and flashes are the largest new vestibular and skill demands.", "owner": "accessibility" }
+    { "decision": "Make the outline itself the progress bar instead of adding more HUD.", "basis": "The weak link was readability on the object; the ring alone did not say what was held or where it went.", "owner": "game design" },
+    { "decision": "Merge the capture spotlight into the tracking shade (drawTrackingShade mode:'capture' ramps to 0.4) rather than stacking two even-odd fills.", "basis": "One layer owns 'outside is dark', avoiding double darkening and radius mismatch (Fixer change, verified 64->83->102).", "owner": "AR overlay" },
+    { "decision": "Freeze from a pooled capture taken at grade time, not by re-drawing the live video each frame.", "basis": "A live <video> keeps playing under the overlay; only a captured canvas actually freezes (verified: live source painted Ember, freeze stayed Bone).", "owner": "staging" },
+    { "decision": "Keep every v7 field additive and default on read.", "basis": "Old saves/moments must keep working; verified with a legacy record and a fresh state.", "owner": "media/state" },
+    { "decision": "Location is opt-in, rounded to 3 decimals, cached 1h, never uploaded; gimmicks only multiply eventMod.", "basis": "Camera frames never leave the device; the geo layer must not touch simulation truth.", "owner": "geo" }
   ],
   "route_out": {
-    "next_owner": "real-device QA (iOS Safari, Android Chrome)",
-    "reason": "Touch latency for the PERFECT window and gyro permission flow on iOS were not measurable in desktop automation."
+    "next_owner": "peer session (scan.js) then real-device QA (iOS Safari, Android Chrome)",
+    "reason": "scan.js was wired at 23:05:59 during this QA and only smoke-tested: the camera-first layout (.cam-bar/.cam-tools/.bubble.compact), the eye badge occlusion, doSnap's kind:'photo'/label-null regression and the pointerdown timeStamp remain on the peer side; freeze/punch feel, touch latency for the PERFECT window and gyro/eye permission flows need real devices."
   }
 }

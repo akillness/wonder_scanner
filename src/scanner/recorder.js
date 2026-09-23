@@ -15,6 +15,7 @@ export function createRecorder() {
         chunks = []; result = null; startedAt = performance.now(); canvas = null; ctx = null;
         rec.ondataavailable = e => { if (e.data?.size) chunks.push(e.data); };
         rec.onstop = () => { result = chunks.length ? new Blob(chunks, { type }) : null; stopResolve?.(result); stopResolve = null; rec = null; };
+        rec.onerror = () => { clearTimeout(timer); try { rec?.stop(); } catch {} rec = null; chunks = []; result = null; stopResolve?.(null); stopResolve = null; try { this.onerror?.(); } catch {} };
         rec.start(250); timer = setTimeout(() => this.stop(), maxMs ?? 5000); return true;
       }
       const sw = source.videoWidth || source.naturalWidth || 640, sh = source.videoHeight || source.naturalHeight || 480;
@@ -25,6 +26,7 @@ export function createRecorder() {
       chunks = []; result = null; startedAt = performance.now();
       rec.ondataavailable = e => { if (e.data?.size) chunks.push(e.data); };
       rec.onstop = () => { result = chunks.length ? new Blob(chunks, { type }) : null; stopResolve?.(result); stopResolve = null; rec = null; };
+        rec.onerror = () => { clearTimeout(timer); try { rec?.stop(); } catch {} rec = null; chunks = []; result = null; stopResolve?.(null); stopResolve = null; try { this.onerror?.(); } catch {} };
       rec.start(250);
       timer = setTimeout(() => this.stop(), maxMs ?? (this.manual ? 20000 : MEDIA.clipMaxMs));
       this._src = source; this._ov = overlay; return true;

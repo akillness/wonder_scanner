@@ -29,7 +29,7 @@ export function bearingDeg(aLat, aLng, bLat, bLng) {
 const WINDS = ['북', '북동', '동', '남동', '남', '남서', '서', '북서'];
 export const bearingLabel = (deg) => WINDS[Math.round((((Number(deg) || 0) % 360) + 360) % 360 / 45) % 8];
 export const distanceLabel = (m) => { const v = Math.max(0, Number(m) || 0); return v < 1000 ? `${Math.round(v)}m` : `${(v / 1000).toFixed(1)}km`; };
-export const mapsUrl = (lat, lng) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${lat},${lng}`)}`;
+export const mapsUrl = (lat, lng) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${Number(lat).toFixed(6)},${Number(lng).toFixed(6)}`)}`;
 
 /** Spot 에 dist_m · bearing_deg · mapsUrl 을 붙이고 거리순 정렬 + id 중복 제거 */
 export function decorate(spots, { lat, lng } = {}) {

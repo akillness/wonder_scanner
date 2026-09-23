@@ -80,7 +80,10 @@ register('spots', () => {
   const view = (html) => { const b = $('#body'); if (b) { b.innerHTML = html; bindBody(); } };
   const listHtml = (r) => {
     const full = r.source === 'google' ? 'Google Places' : r.source === 'osm' ? 'OSM (Nominatim)' : providerName();
-    const s = $('#src'); if (s) { s.title = full; s.innerHTML = `${icon(PIN)} ${esc(srcShort(full))}${r.at ? ` · ${ago(r.at)}` : ''}`; }
+    const s = $('#src'); if (s) {
+      s.title = r.stale ? '지도 서버가 잠시 응답하지 않아 이전 결과를 표시 중' : full;
+      s.innerHTML = `${icon(PIN)} ${esc(srcShort(full))}${r.stale ? ' · 이전 결과' : (r.at ? ` · ${ago(r.at)}` : '')}`;
+    }
     return `<div class="spot-list">${r.spots.map((sp, i) => cardHtml(sp, i)).join('')}</div>`;
   };
   const show = (r) => {

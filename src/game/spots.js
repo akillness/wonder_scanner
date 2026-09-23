@@ -104,7 +104,12 @@ export async function refreshSpots({ force = false, position = null, now = Date.
     const p = position ?? await locate({ timeoutMs: GEO.timeoutMs });
     if (!p?.ok) return { status: p?.error === 'denied' ? 'denied' : 'unavailable', error: p?.error, cached: false, spots: [], gimmick: null };
     const raw = await nearby({ lat: p.lat, lng: p.lng, radius: GEO.radiusM, timeoutMs: GEO.timeoutMs });
-    saveGeo({ lat: p.lat, lng: p.lng, spots: raw, now });
+    // 강제 새로고침이 일시적으로 실패해도 유효한 1시간 캐시를 비우지 않는다.
+    // stale 표시는 UI가 사용자에게 이전 결과를 보여 주고 있음을 명시할 때만 사용한다.
+    if (!raw.length && c?.spots?.length) {
+      return { status: 'ok', cached: true, stale: true, source: c.spots[0]?.source ?? providerName(), at: c.at, ...recommend(c.spots, c) };
+    }
+    if (raw.length) saveGeo({ lat: p.lat, lng: p.lng, spots: raw, now });
     return { status: raw.length ? 'ok' : 'empty', cached: false, source: raw[0]?.source ?? providerName(), at: now, ...recommend(raw, p) };
   } catch (e) { console.info('[geo] refresh failed:', e?.name || e); return { status: 'unavailable', cached: false, spots: [], gimmick: null }; }
 }

@@ -118,7 +118,7 @@ register('title', () => {
       return `<button class="thumb" data-id="${esc(m.id)}" title="${esc(momentName(m))}" aria-label="${esc(momentName(m))} 추억 열기">${u ? `<img src="${u}" alt=""/>` : momentMark(m)}${video ? `<span class="film-badge">${icon('film')} ${fmtDuration(m.duration)}</span>` : ''}</button>`;
     }).join('') + `<button class="more" data-album aria-label="앨범 열기"><span>앨범 ${icon('arrow-right', { size: 14 })}</span></button>`;
     el.style.display = '';
-    $$('.thumb', el).forEach(b => b.onclick = () => { fx.blip(); go('album', 'all', b.dataset.id); });
+    $$('.thumb', el).forEach(b => b.onclick = () => { fx.blip(); go('album', 'all', b.dataset.id, { recall: false }); }); // 썸네일 열기는 회상 보상 없음 (회상 카드만 보상)
     const more = $('[data-album]', el); if (more) more.onclick = () => { fx.blip(); go('album'); };
   }).catch(() => { $('#thumbs')?.remove(); });
   recallCandidate().then(m => {
