@@ -34,9 +34,9 @@ export function drawEyeReticle(x, { cx, cy, fill, target, present, impact, reduc
   const BONE = '#EDE6D6', BRASS = '#E2B45A', VERD = '#6DB5A0', col = target?.type === 'spirit' ? VERD : BRASS;
   x.save(); x.globalAlpha = present ? 1 : 0.35;
   let lid = 0; if (impact && !reduceMotion) { const t = (now - impact.t0) / 180; if (t < 1) lid = t < 0.5 ? t * 2 : (1 - t) * 2; }
-  const w = 28, h = 14 * (1 - lid);
-  x.strokeStyle = BONE; x.lineWidth = 1.5; x.beginPath(); x.moveTo(cx - w, cy); x.quadraticCurveTo(cx, cy - h * 1.6, cx + w, cy); x.quadraticCurveTo(cx, cy + h * 1.6, cx - w, cy); x.stroke();
-  if (h > 2) { x.lineWidth = 4; x.strokeStyle = 'rgba(237,230,214,.18)'; x.beginPath(); x.arc(cx, cy, 9, 0, Math.PI * 2); x.stroke(); if (fill > 0) { x.strokeStyle = col; x.beginPath(); x.arc(cx, cy, 9, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * fill); x.stroke(); } x.fillStyle = '#0B0F1A'; x.beginPath(); x.arc(cx, cy, 4, 0, Math.PI * 2); x.fill(); }
+  const w = 34, h = 17 * (1 - lid);
+  x.shadowColor = 'rgba(0,0,0,.85)'; x.shadowBlur = 6; x.strokeStyle = BONE; x.lineWidth = 2.5; x.beginPath(); x.moveTo(cx - w, cy); x.quadraticCurveTo(cx, cy - h * 1.6, cx + w, cy); x.quadraticCurveTo(cx, cy + h * 1.6, cx - w, cy); x.stroke();
+  if (h > 2) { x.shadowBlur = 0; x.lineWidth = 5; x.strokeStyle = 'rgba(11,15,26,.55)'; x.beginPath(); x.arc(cx, cy, 11, 0, Math.PI * 2); x.stroke(); if (fill > 0) { x.strokeStyle = col; x.beginPath(); x.arc(cx, cy, 11, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * fill); x.stroke(); } x.fillStyle = '#0B0F1A'; x.beginPath(); x.arc(cx, cy, 5, 0, Math.PI * 2); x.fill(); }
   x.restore();
   if (!present) { x.save(); x.fillStyle = 'rgba(237,230,214,.7)'; x.font = '500 12px "IBM Plex Mono", monospace'; x.textAlign = 'center'; x.fillText('얼굴이 보이지 않아요', cx, cy + 34); x.restore(); }
   if (impact && !reduceMotion) {

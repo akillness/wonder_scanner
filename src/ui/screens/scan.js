@@ -152,9 +152,19 @@ register('scan', () => {
     detectLoop(); S.raf = requestAnimationFrame(drawLoop);
   })();
 
+  // 잠금 히스테리시스: 라벨이 프레임마다 흔들려도 게이지가 리셋되지 않도록 (GAMEPLAY_V7 §3.2)
+  let held = null, heldAt = 0, cand = null, candN = 0;
+  function stabilize(det) {
+    const now = performance.now();
+    if (!det) { if (held && now - heldAt < 450) return held; held = null; cand = null; candN = 0; return null; }
+    if (!held || det.label === held.label) { held = det; heldAt = now; cand = null; candN = 0; return det; }
+    if (cand === det.label) candN++; else { cand = det.label; candN = 1; }
+    if (candN >= 4 || det.score - held.score >= 0.15) { held = det; heldAt = now; cand = null; candN = 0; return det; }
+    return now - heldAt < 450 ? held : (held = det, heldAt = now, det);
+  }
   async function detectLoop() {
     while (S.alive) {
-      if (document.visibilityState === 'visible' && S.source === video && video.readyState >= 2 && !S.fixedTarget) { try { S.target = await detectTarget(video); } catch { S.target = null; } }
+      if (document.visibilityState === 'visible' && S.source === video && video.readyState >= 2 && !S.fixedTarget) { try { const d = await detectTarget(video); if (location.search.includes('debug')) window.__lastDet = d ? `${d.label}:${d.score.toFixed(2)}` : null; S.target = stabilize(d); } catch (e) { if (location.search.includes('debug')) window.__lastDet = 'ERR ' + e.message; S.target = null; } }
       await new Promise(r => setTimeout(r, 40));
     }
   }
@@ -186,7 +196,7 @@ register('scan', () => {
       if (S.mode === 'capture') { if (!live || live.label !== S.capTarget.label) { S.lostSince ||= t; if (t - S.lostSince > 1500) { capture.stop(); S.mode = 'scan'; S.gauge = 0.5; setLupe(say.lost()); } } else S.lostSince = 0; }
       const box = tracker.update(live?.bbox ?? S.capTarget.bbox, dt);
       S.center = drawTarget(x, { box, label: S.capTarget.label, score: S.capTarget.score, gauge: 1, cooldownMs: null, owned: owned(S.capTarget.label), now: t, dt, reduceMotion: rm, boosted }, tf);
-      if (S.mode === 'capture') { const ring = capture.tick(t); if (ring?.auto) return finish('AUTO'); if (ring) drawCaptureRing(x, S.center, ring, t); }
+      if (S.mode === 'capture') { const ring = capture.tick(t); if (ring?.auto) return finish('AUTO'); if (ring) { const rr = Math.min(S.center.r, Math.min(cw, ch) * 0.12); drawCaptureRing(x, { ...S.center, r: rr, cx: Math.max(rr * 3.3, Math.min(cw - rr * 3.3, S.center.cx)), cy: Math.max(rr * 3.3 + 40, Math.min(ch - rr * 3.3 - 170, S.center.cy)) }, ring, t); } }
       else { const p = (t - S.gradeAnim.t0) / 750; drawGradeBurst(x, S.center, S.gradeAnim.grade, Math.min(1, p)); if (p >= 1) { if (S.gradeAnim.grade === 'MISS') { S.mode = 'scan'; S.gauge = BALANCE.capture.missGaugeReset; } else return finish(S.gradeAnim.grade); } }
     }
     // AR 정령 + 플로팅 텍스트

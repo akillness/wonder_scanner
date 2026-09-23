@@ -18,11 +18,15 @@ AI는 100% 브라우저 안에서만 돌아갑니다. 사진은 어디로도 전
 
 <br/>
 
-| 타이틀 · 목표 사다리 · 사건 | 스크래치 발견 | 추억 대결 | 추억 앨범 · 진화 |
+<a href="docs/media/play.mp4"><img src="docs/media/play-preview.gif" alt="플레이 영상 미리보기 (클릭하면 40초 MP4)" width="240"/></a>
+
+<sub>▶ 클릭하면 40초 플레이 영상(MP4, 390×844, 1.2MB) — 시작 → 사용법 → 사진 스캔 → 포획 링 탭 → 스크래치 → 시선(아이 게이지) 포획 → 도감·앨범·의뢰·프로필</sub>
+
+| 타이틀 | 렌즈 사용법 | 포획 링 | 스크래치 발견 |
 |:--:|:--:|:--:|:--:|
-| <img src="docs/screens/v3-06-title.png" width="180"/> | <img src="docs/screens/v3-01-scratch.png" width="180"/> | <img src="docs/screens/v3-02-duel.png" width="180"/> | <img src="docs/screens/v3-03-album-detail.png" width="180"/> |
-| **퍼펙트 → 변이체** | **도감** | **별가루 상점** | **탐험가 광장** |
-| <img src="docs/screens/v2-04-perfect.png" width="180"/> | <img src="docs/screens/v2-06-codex.png" width="180"/> | <img src="docs/screens/v3-04-shop.png" width="180"/> | <img src="docs/screens/v3-05-collectors.png" width="180"/> |
+| <img src="docs/screens/v8-01-title.png" width="180"/> | <img src="docs/screens/v8-02-tutorial.png" width="180"/> | <img src="docs/screens/v8-03-capture-ring.png" width="180"/> | <img src="docs/screens/v8-05-reveal-scratched.png" width="180"/> |
+| **도감** | **앨범** | **오늘의 의뢰** | **프로필 · 아이 게이지** |
+| <img src="docs/screens/v8-06-codex.png" width="180"/> | <img src="docs/screens/v8-07-album.png" width="180"/> | <img src="docs/screens/v8-08-quests.png" width="180"/> | <img src="docs/screens/v8-09-profile.png" width="180"/> |
 
 </div>
 
@@ -163,20 +167,34 @@ AI는 100% 브라우저 안에서만 돌아갑니다. 사진은 어디로도 전
 
 편집은 640px 사진에 **구워져(bake)** 저장되고 원본은 따로 보존됩니다(↺ 원본). 카드·콜라주·광장에는 구운 결과가 그대로 쓰입니다.
 
-## 🖐 제스처 — 손과 얼굴로 조작
+## 👁 아이 게이지 — 눈으로 붙잡기 (제스처 대체)
 
-스캔 화면의 **🖐 제스처** 칩을 켜면 MediaPipe 손 인식(+선택: 얼굴 블렌드셰이프)이 기기에서 돌아갑니다. 모델은 첫 사용 시 CDN에서 받고, 추론은 100ms 간격으로 카메라 인식과 병행됩니다.
+손 제스처와 얼굴 표정 조작은 **제거**하고, 시선 추적 하나로 바꿨습니다. 전면 카메라에서 MediaPipe FaceLandmarker가 눈 방향과 머리 자세로 **시선점**을 계산하고, 화면의 루페 눈(조준점)이 그곳을 따라갑니다.
 
-| 손 | 동작 | 얼굴 (전면 카메라 권장) | 동작 |
-|:--:|---|:--:|---|
-| ✌️ 브이 | 포획 링 탭 | 😉 두 번 깜빡 | 포획 링 탭 |
-| ✊ 주먹 | 손끝 근처 정령 포획 | 😮 입 벌리기 | 정령 흡입 (최대 3) |
-| 🖐 손바닥 | 자유 영상 촬영 시작/정지 (최대 20초, 앨범 저장) | 🤨 눈썹 올리기 | 프리즘 토큰 장착 |
-| 👍 따봉 | 프리즘 토큰 장착 | 😄 미소 | 스냅 (사진 즉시 저장) |
-| 🤟 아이러브유 | 스냅 | | |
-| ☝️ 포인팅 | 손끝 포인터 표시 | | |
+| 대상 | 조건 | 바라보는 시간 | 결과 |
+|---|---|:--:|---|
+| 원더 (포획 링이 떴을 때) | 시선점이 물체 박스 안 (20% 여유, 최소 44px) | 0.9초 | 포획. 흔들림 8px 이하 **퍼펙트**, 18px 이하 **그레이트**, 그 외 굿 |
+| 정령 | 시선점에서 60px 안 | 0.6초 | 정령 포획 (황금 정령은 프리즘 토큰) |
+| 얼굴 없음 · 눈 감음 | — | — | 게이지가 초당 1.5씩 줄고 "얼굴이 보이지 않아요" 표시 |
 
-제스처는 350ms 이상 유지될 때 1회 발동하고, 화면 좌하단 HUD에 인식된 제스처가 표시됩니다. 접근성: 모든 제스처 동작은 버튼/탭으로도 가능하며 설정에서 끌 수 있습니다.
+| 조작 | 방법 |
+|---|---|
+| 켜기/끄기 | 스캔 화면 좌하단 눈 배지를 **길게** 누르기, 또는 프로필 → 설정 |
+| 보정 | 화면 중앙을 보면서 눈 배지 **탭** (프로필에서 초기화) |
+| 후면 카메라 · 사진 스캔 | 눈은 숨고 탭으로만 동작 |
+
+발동 순간에는 눈꺼풀 깜빡임, 충격파 링 2개, 스파크 12개, 가장자리 황동 플래시, 햅틱이 나옵니다(모션 줄이기 시 텍스트·햅틱만). 얼굴 모델은 첫 사용 때 CDN에서 받습니다.
+
+### 📸 셔터 바 — 버튼은 4개만
+
+| 버튼 | 동작 |
+|---|---|
+| 홈 | 타이틀로 |
+| 사진 | 갤러리 사진으로 스캔 (카메라가 없거나 거부됐을 때) |
+| **셔터 (가운데, 78px)** | **탭 = 스냅**(사진을 앨범에 저장) · **길게 0.5초 = 영상 촬영 시작/정지**(최대 20초) |
+| 전환 | 전면/후면 카메라 (전면에서 아이 게이지가 켜짐) |
+
+> **모바일에서 처음 켤 때**: "렌즈 사용법"의 **시작!**을 누르면 그때 카메라 권한 창이 뜹니다. 권한 창이 떠 있는 동안에는 브라우저가 화면 터치를 막으므로, 창에서 **허용**을 눌러야 게임이 이어집니다. 거부하면 사진 스캔으로 계속할 수 있습니다.
 
 ## 🌐 소셜 — 혼자가 아닌 수집
 
@@ -223,7 +241,7 @@ src/
 ├─ data/      wonders.js(80종) · chapters.js(6챕터) · worlds/(세계관 레지스트리)
 ├─ game/      balance.js · state.js(v3) · capture.js · quests.js · achievements.js · notes.js · narrative.js
 │             economy.js · media.js · memories.js · duel.js · companion.js · skills.js(편집 스킬 엔진: 왜곡·톤·쉐입·이모지·숨김·광채)
-├─ scanner/   detector.js · camera.js · gyro.js · recorder.js · gesture.js(MediaPipe 손·얼굴, 동적 import)
+├─ scanner/   detector.js · camera.js · gyro.js · recorder.js · gaze.js(FaceLandmarker 시선) · eye.js(아이 게이지 상태 머신)
 ├─ ar/        overlay.js · spirits.js
 ├─ cloud/     provider.js(어댑터) · firebase.js(동적 import, 키 없으면 번들 제외)
 ├─ ui/        shell.js · fx.js · card.js · scratch.js · editor.js(스킬 에디터) · screens/(title·scan·reveal·codex·album·quests·shop·profile·collectors·duel)
@@ -245,7 +263,7 @@ vercel --prod      # 정적 배포
 | 항목 | 값 |
 |---|---|
 | 라이브 | https://wonderscanner.vercel.app |
-| 스택 | Vite 7 · Vanilla JS · TensorFlow.js 4 · COCO-SSD · MediaPipe Tasks Vision(제스처·얼굴, 지연 로드) · canvas-confetti · Web Audio · DeviceOrientation |
+| 스택 | Vite 7 · Vanilla JS · TensorFlow.js 4 · COCO-SSD · MediaPipe Tasks Vision(시선 추적, 지연 로드) · canvas-confetti · Web Audio · DeviceOrientation |
 | 데이터 | localStorage `wonder-scanner:v1` (스키마 v3) + IndexedDB `wonder-album` · 선택: Firebase |
 | 지원 | iOS Safari / Android Chrome (카메라), 데스크톱 브라우저 (사진 업로드) |
 
@@ -268,4 +286,4 @@ vercel --prod      # 정적 배포
 - [`docs/game-feel-contract.json`](docs/game-feel-contract.json) — 포획 순간의 게임 필 계약
 - 원안: Gemini 브레인스토밍 "AI 매직 렌즈: 일상의 놀라운 재발견" (아이디어 3번)을 게임 요소·밸런스·서사·코어루프·연출 중심으로 확장
 
-<div align="center"><sub>Sprint 1 (4h MVP) → Sprint 6 (AR · 추억 · 소셜 · NPC · 스킬 · 제스처) · 2026-09-23</sub></div>
+<div align="center"><sub>Sprint 1 (4h MVP) → Sprint 8 (AR · 추억 · 소셜 · NPC · 스킬 · 아이 게이지) · 2026-09-23</sub></div>
