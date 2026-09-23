@@ -16,6 +16,7 @@ import { createRecorder } from '../../scanner/recorder.js';
 import { addMoment, MEDIA } from '../../game/media.js';
 import { bumpCombo, claimMilestones } from '../../game/economy.js';
 import { advise, eventMod, onDiscoverEvent, markEventSeen, activeEvent } from '../../game/companion.js';
+import { createGestureTracker, GESTURE_MAP, FACE_MAP } from '../../scanner/gesture.js';
 
 let modelPromise = null;
 export const warmModel = () => (modelPromise ??= loadDetector());
@@ -31,6 +32,7 @@ register('scan', () => {
     <div class="hud2" id="hud2"></div>
     <div class="vignette" id="vig"></div><div class="rec hidden" id="rec">● REC</div>
     <button class="companion" id="comp" title="루페에게 묻기"><img src="/img/lupe.svg" alt="루페"/><span class="dot"></span></button>
+    <div class="gest-hud hidden" id="gest"><span id="gestIcon">🖐</span><small id="gestText">제스처 대기</small></div>
     <div class="hint-chip">${nudge.missing.length ? `<span class="pill">🧭 ${esc(nudge.chapter.title)} ${nudge.remain}개 남음 · ${nudge.missing.slice(0, 3).map(l => `${WONDERS[l].emoji} ${l}`).join(' · ')}</span>` : ''}</div>
     <div class="status" id="status"><div class="spinner"></div><div id="statusText">렌즈를 여는 중…</div></div>
     <div class="bottom">
@@ -51,10 +53,24 @@ register('scan', () => {
   const video = $('video'), overlay = $('canvas.overlay'), still = $('img.still'), lupe = $('#lupe'), status = $('#status'), statusText = $('#statusText'), hud2 = $('#hud2');
   const S = { alive: true, mode: 'scan', source: video, target: null, fixedTarget: null, lock: null, gauge: 0, lastT: performance.now(), raf: 0, lastLupe: 0, center: null, capTarget: null, lostSince: 0, gradeAnim: null, armPrism: false, floats: [] };
   const tracker = createTracker(), spirits = createSpirits(), capture = createCapture(), recorder = createRecorder(); let lastBeat = 0, recBadge = null;
+  let gest = null, gestOut = null, manualRec = false, lastGestIcon = '';
   startGyro();
   const setLupe = (t) => { if (lupe) lupe.textContent = t; S.lastLupe = performance.now(); };
-  const renderHud2 = () => { hud2.innerHTML = `<span class="pill">◇ ${state.fragments}/${BALANCE.spirits.fragmentsPerBoost}</span>${state.boost ? `<span class="pill gold">⚡ 부스트 ${state.boost}</span>` : ''}${state.prismTokens ? `<button class="pill ${S.armPrism ? 'armed' : 'prism'}" id="arm">✨ 토큰 ${state.prismTokens} ${S.armPrism ? '장착됨 · 변이체 확정' : '장착'}</button>` : ''}${gyro().active ? '<span class="pill">🧭 AR</span>' : ''}`; const a = $('#arm'); if (a) a.onclick = () => { S.armPrism = !S.armPrism; fx.blip(); renderHud2(); }; };
+  const renderHud2 = () => { hud2.innerHTML = `<span class="pill">◇ ${state.fragments}/${BALANCE.spirits.fragmentsPerBoost}</span>${state.boost ? `<span class="pill gold">⚡ 부스트 ${state.boost}</span>` : ''}${state.prismTokens ? `<button class="pill ${S.armPrism ? 'armed' : 'prism'}" id="arm">✨ 토큰 ${state.prismTokens} ${S.armPrism ? '장착됨 · 변이체 확정' : '장착'}</button>` : ''}${gyro().active ? '<span class="pill">🧭 AR</span>' : ''}<button class="pill ${state.settings.gestures ? 'on' : ''}" id="gestBtn">🖐 제스처${state.settings.gestures ? ' ON' : ''}</button>`;
+    const gb = $('#gestBtn'); if (gb) gb.onclick = () => { state.settings.gestures = !state.settings.gestures; save(); fx.blip(); renderHud2(); if (state.settings.gestures) startGestures(); else stopGestures(); }; const a = $('#arm'); if (a) a.onclick = () => { S.armPrism = !S.armPrism; fx.blip(); renderHud2(); }; };
   renderHud2();
+  async function startGestures() { if (S.source !== video || gest) { if (S.source !== video) toast('제스처는 카메라 모드에서 동작해요', 1800); return; } gest = createGestureTracker({ face: state.settings.faceControl }); $('#gest').classList.remove('hidden'); try { await gest.load(t => { const el = $('#gestText'); if (el) el.textContent = t; }); } catch { $('#gestText').textContent = '제스처 모델 로드 실패 (네트워크)'; } }
+  function stopGestures() { gest?.close(); gest = null; gestOut = null; $('#gest')?.classList.add('hidden'); }
+  function gestureAction(action, pt) {
+    const now = performance.now(); const G = GESTURE_MAP.find(g => g.action === action) ?? FACE_MAP.find(f => f.action === action);
+    $('#gestIcon').textContent = G?.icon ?? '🖐'; $('#gestText').textContent = G?.label ?? action; fx.vibrate([15]);
+    if (action === 'tap') { if (S.mode === 'capture') overlay.dispatchEvent(new PointerEvent('pointerdown', { clientX: overlay.getBoundingClientRect().left + (S.center?.cx ?? 0), clientY: overlay.getBoundingClientRect().top + (S.center?.cy ?? 0), bubbles: true })); else setLupe('공명이 다 차면 ✌️로 포획할 수 있어.'); }
+    else if (action === 'grab' || action === 'inhale') { const cw = overlay.clientWidth, ch = overlay.clientHeight; const cands = spirits.list.filter(s => !s.popped && s.alpha > 0.3); const list = action === 'inhale' ? cands.slice(0, 3) : cands.filter(s => pt && Math.hypot(s.x - pt.x * cw, s.y - pt.y * ch) < 140).slice(0, 1); if (!list.length) { setLupe(action === 'inhale' ? '근처에 정령이 없어.' : '손끝 가까이에 정령이 없어. ☝️로 가리켜 봐.'); return; } for (const sp of list) { sp.popped = now; const r = catchSpirit(sp.golden); S.floats.push({ x: sp.x, y: sp.y, t0: now, text: sp.golden ? '✨ 프리즘 +1' : `◇ +1`, color: sp.golden ? '#ffd166' : '#8fe3ff' }); if (r.boostGained) toast('⚡ 공명 부스트 획득!', 2000); afterEvent({ type: 'spirit' }); } fx.chime(1, false); renderHud2(); }
+    else if (action === 'token') { if (state.prismTokens > 0) { S.armPrism = !S.armPrism; renderHud2(); setLupe(S.armPrism ? '프리즘 토큰 장착! 다음 포획은 변이체.' : '토큰 해제.'); } else setLupe('프리즘 토큰이 없어. 의뢰나 황금 정령으로 얻자.'); }
+    else if (action === 'record') { if (!recorder.supported) return setLupe('이 브라우저는 영상 녹화를 지원하지 않아.'); if (recorder.recording) { manualRec = false; recorder.stop().then(async clip => { $('#rec')?.classList.add('hidden'); if (!clip) return; const lbl = S.lock ?? S.target?.label; if (!lbl) { toast('원더를 비춘 상태의 클립만 저장돼요', 2000); return; } const photo = snapshot(video, null); await addMoment({ label: lbl, grade: 'AUTO', variant: false, frame: state.activeFrame, photoDataUrl: photo, clip, clipType: clip.type }); state.stats.clips += 1; save(); toast('🎬 자유 클립을 앨범에 저장했어요', 2200); }); } else if (recorder.start(video, overlay)) { manualRec = true; $('#rec')?.classList.remove('hidden'); setLupe('🎬 촬영 중… 🖐 다시 펴면 정지.'); } }
+    else if (action === 'snap') { const lbl = S.lock ?? S.target?.label; if (!lbl) return setLupe('원더를 비춘 채로 스냅하자.'); const photo = snapshot(video, S.target?.bbox ?? null); fx.flash(); fx.blip(); addMoment({ label: lbl, grade: 'AUTO', variant: false, frame: state.activeFrame, photoDataUrl: photo }).then(() => toast('📸 스냅 저장 → 앨범', 1800)); }
+  }
+  if (state.settings.gestures) setTimeout(startGestures, 1500);
   const ev = activeEvent(); if (ev && !ev.done) $('#hud2').insertAdjacentHTML('beforeend', `<span class="pill event">⚡ ${esc(ev.title)}</span>`);
   $('#comp').onclick = () => { fx.blip(); const tip = advise({ screen: 'scan', armed: S.armPrism }); setLupe(`${tip.icon} ${tip.text}`); markEventSeen(); $('#comp .dot')?.remove(); if (tip.action === 'arm' && $('#arm')) { S.armPrism = true; renderHud2(); } };
   setTimeout(() => { if (S.alive) { const tip = advise({ screen: 'scan', armed: S.armPrism }); if (tip.action === 'event') { setLupe(`${tip.icon} ${tip.text}`); markEventSeen(); } } }, 2500);
@@ -146,7 +162,9 @@ register('scan', () => {
     spirits.update(t, dt * eventMod('spirit'), cw, ch, S.center ? { x: S.center.cx, y: S.center.cy } : null); spirits.draw(x);
     S.floats = S.floats.filter(f => t - f.t0 < 900);
     for (const f of S.floats) { const p = (t - f.t0) / 900; x.globalAlpha = 1 - p; x.font = '800 15px system-ui'; x.textAlign = 'center'; x.fillStyle = f.color; x.fillText(f.text, f.x, f.y - 20 - p * 50); x.globalAlpha = 1; }
-    if (recorder.recording) recorder.frame();
+    if (gest?.ready && S.source === video) { const g = gest.update(video, t); if (g) { gestOut = g; for (const e of g.events) gestureAction(GESTURE_MAP.find(m => m.g === e.name)?.action ?? FACE_MAP.find(m => m.f === e.name)?.action ?? '', g.hand); if (g.gesture) { const G = GESTURE_MAP.find(m => m.g === g.gesture); const ic = G?.icon ?? '🖐'; if (ic !== lastGestIcon) { lastGestIcon = ic; $('#gestIcon').textContent = ic; $('#gestText').textContent = G?.label ?? g.gesture; } } } }
+    if (gestOut?.hand) { const hx = gestOut.hand.x * cw, hy = gestOut.hand.y * ch; x.strokeStyle = '#fff'; x.lineWidth = 2; x.beginPath(); x.arc(hx, hy, 14, 0, Math.PI * 2); x.stroke(); x.fillStyle = 'rgba(255,255,255,.6)'; x.beginPath(); x.arc(hx, hy, 4, 0, Math.PI * 2); x.fill(); }
+    if (recorder.recording && !manualRec && recorder.elapsed > MEDIA.clipMaxMs) {} if (recorder.recording) recorder.frame();
     S.raf = requestAnimationFrame(drawLoop);
   }
   async function scanImage(file) {
@@ -184,5 +202,5 @@ register('scan', () => {
     go('reveal', { ...result, photo, questsDone, achs, usedToken, combo, milestones, clip, momentId, errand });
   }
   if (location.search.includes('debug')) window.__scan = { S, capture, spirits, ring: () => capture.tick(performance.now()) };
-  return () => { S.alive = false; cancelAnimationFrame(S.raf); recorder.cancel(); stopCamera(video); };
+  return () => { S.alive = false; cancelAnimationFrame(S.raf); recorder.cancel(); gest?.close(); stopCamera(video); };
 });

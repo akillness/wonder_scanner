@@ -287,3 +287,13 @@ h1.logo{margin:8px 0 0;font-size:34px;letter-spacing:.12em;background:linear-gra
 .screen.title>*{flex-shrink:0}
 .screen.title .logo-img{width:72px;height:72px;margin-top:8px}
 .screen.title .stat-strip{margin:14px 0 8px}
+
+/* ═══════════ v6: 스킬 에디터 · 제스처 ═══════════ */
+.editor{max-width:420px}.editor canvas{width:100%;border-radius:14px;touch-action:none;cursor:crosshair;background:#000}
+.editor .skills .pill.locked{opacity:.45}
+.editor label{flex-direction:row;align-items:center;gap:8px;font-size:12px}.editor input[type=range]{flex:1;accent-color:var(--accent)}
+.photo-zone{position:relative}
+.find-badge{position:absolute;top:8px;left:8px;background:rgba(11,15,26,.85);border:1px solid var(--gold);color:var(--gold);border-radius:10px;padding:6px 10px;font-weight:800;font-size:13px;z-index:3}
+.gest-hud{position:absolute;left:12px;bottom:calc(var(--safe-b) + 150px);z-index:4;background:rgba(11,15,26,.8);border:1px solid var(--line);border-radius:14px;padding:6px 10px;display:flex;align-items:center;gap:8px;max-width:60%}
+.gest-hud span{font-size:24px}.gest-hud small{font-size:11px;color:var(--mute);line-height:1.3}
+.gest-table{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}.gest-table div{display:flex;gap:8px;align-items:center;background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:8px}.gest-table span{font-size:22px}.gest-table small{font-size:11px;color:var(--mute)}

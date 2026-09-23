@@ -4,6 +4,8 @@ import { ensureDailyQuests, questText } from '../../game/quests.js';
 import { ACHIEVEMENTS } from '../../game/achievements.js';
 import { BALANCE, streakMultiplier } from '../../game/balance.js';
 import * as fx from '../fx.js';
+import { GESTURE_MAP, FACE_MAP } from '../../scanner/gesture.js';
+import { SKILLS, ownsSkill } from '../../game/skills.js';
 
 function untilMidnight() { const n = new Date(), m = new Date(n); m.setHours(24, 0, 0, 0); const s = Math.floor((m - n) / 1000); return `${Math.floor(s / 3600)}시간 ${Math.floor(s % 3600 / 60)}분`; }
 
@@ -34,11 +36,15 @@ register('profile', (openSettings = false) => {
     <div class="stats"><div><b>${ownedCount()}</b><small>/${totalCount()} 수집</small></div><div><b>${state.scans}</b><small>스캔</small></div><div><b>${s.perfects}</b><small>🎯 퍼펙트</small></div><div><b>${s.variants}</b><small>✨ 변이체</small></div><div><b>${s.spirits}</b><small>🫧 정령</small></div><div><b>${state.completedChapters.length}</b><small>/6 챕터</small></div><div><b>${state.streak.days}</b><small>🔥 연속일</small></div><div><b>${state.dust}</b><small>✨ 별가루</small></div></div>
     <div class="row" style="margin:10px 0"><button class="btn ghost sm grow" id="shop">🏪 별가루 상점 · 보물상자</button><button class="btn ghost sm grow" id="album">📸 앨범 · 🎁 선물</button><button class="btn ghost sm grow" id="plaza">🌐 광장</button></div>
     <div class="stats" style="grid-template-columns:repeat(3,1fr)"><div><b>${s.bestCombo || 0}</b><small>🔥 최고 콤보</small></div><div><b>${s.giftsSent || 0}</b><small>🎁 보낸 선물</small></div><div><b>${s.giftsGot || 0}</b><small>🎁 받은 선물</small></div></div>
+    <h3>🧪 렌즈 스킬 <small>${SKILLS.filter(k => ownsSkill(k.id)).length}/${SKILLS.length}</small></h3>
+    <div class="chips left">${SKILLS.map(k => `<span class="pill ${ownsSkill(k.id) ? 'on' : ''}">${k.icon} ${k.name}${ownsSkill(k.id) ? '' : ` 🔒Lv${k.unlockLevel}`}</span>`).join('')}</div>
+    <h3>🖐 제스처 표</h3>
+    <div class="gest-table">${GESTURE_MAP.map(g => `<div><span>${g.icon}</span><small>${esc(g.label)}</small></div>`).join('')}${FACE_MAP.map(f => `<div><span>${f.icon}</span><small>${esc(f.label)}</small></div>`).join('')}</div>
     <h3>🏅 업적 <small>${state.achievements.length}/${ACHIEVEMENTS.length}</small></h3>
     <div class="ach-grid">${ACHIEVEMENTS.map(a => { const on = state.achievements.includes(a.id); return `<div class="ach ${on ? 'on' : ''}" title="${esc(a.desc)}"><span>${a.icon}</span><b>${esc(a.title)}</b><small>${esc(a.desc)}</small></div>`; }).join('')}</div>
     <h3 id="settings">⚙️ 설정</h3>
     <div class="settings">
-      ${[['sound', '🔊 효과음', '공명 틱, 발견 차임'], ['haptics', '📳 햅틱', '포획·발견 시 진동'], ['reduceMotion', '🌙 모션 줄이기', '흔들림·글리치·플래시·후광을 끄고 안정된 표시로 대체'], ['autoCapture', '🎯 자동 포획', '타이밍 링을 건너뛰고 공명이 차면 바로 포획 (등급 보너스 없음)'], ['recordClips', '🎬 포획 클립 녹화', '공명 60%부터 발견까지 사운드 포함 짧은 영상을 앨범에 저장 (540p, 5초 ≈ 700KB)']].map(([k, t, d]) => `<label class="setting"><div><b>${t}</b><small>${d}</small></div><input type="checkbox" data-k="${k}" ${state.settings[k] ? 'checked' : ''}><i class="sw"></i></label>`).join('')}
+      ${[['sound', '🔊 효과음', '공명 틱, 발견 차임'], ['haptics', '📳 햅틱', '포획·발견 시 진동'], ['reduceMotion', '🌙 모션 줄이기', '흔들림·글리치·플래시·후광을 끄고 안정된 표시로 대체'], ['autoCapture', '🎯 자동 포획', '타이밍 링을 건너뛰고 공명이 차면 바로 포획 (등급 보너스 없음)'], ['recordClips', '🎬 포획 클립 녹화', '공명 60%부터 발견까지 사운드 포함 짧은 영상을 앨범에 저장 (540p, 5초 ≈ 700KB)'], ['gestures', '🖐 손 제스처', '카메라 모드에서 손 모양으로 포획·정령·토큰·촬영 (MediaPipe, 첫 사용 시 모델 다운로드)'], ['faceControl', '🙂 얼굴 제어', '깜빡임·입·눈썹·미소로 조작 (전면 카메라 권장, 제스처 ON 필요)']].map(([k, t, d]) => `<label class="setting"><div><b>${t}</b><small>${d}</small></div><input type="checkbox" data-k="${k}" ${state.settings[k] ? 'checked' : ''}><i class="sw"></i></label>`).join('')}
       <label class="setting"><div><b>🪪 탐험가 이름</b><small>카드·콜라주·선물 코드에 표시</small></div><input type="text" id="name" maxlength="12" value="${esc(state.name || '')}" placeholder="탐험가" style="width:110px;background:var(--bg);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:6px 8px"/></label>
       <button class="btn ghost sm" id="reset" style="margin-top:8px">도감·기록 초기화</button>
     </div>

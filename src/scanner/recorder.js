@@ -19,7 +19,7 @@ export function createRecorder() {
       rec.ondataavailable = e => { if (e.data?.size) chunks.push(e.data); };
       rec.onstop = () => { result = chunks.length ? new Blob(chunks, { type }) : null; stopResolve?.(result); stopResolve = null; rec = null; };
       rec.start(250);
-      timer = setTimeout(() => this.stop(), MEDIA.clipMaxMs);
+      timer = setTimeout(() => this.stop(), this.manual ? 20000 : MEDIA.clipMaxMs);
       this._src = source; this._ov = overlay; return true;
     },
     /** 매 프레임 호출: 소스 + 오버레이 합성 (cover 기준으로 오버레이를 소스 좌표에 맞춤) */

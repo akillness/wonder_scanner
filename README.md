@@ -148,6 +148,36 @@ AI는 100% 브라우저 안에서만 돌아갑니다. 사진은 어디로도 전
 | **대결** | 두 추억이 신비·타이밍·성장 3라운드로 싸웁니다. 그림자 상대는 내 추억의 "다른 세계 버전". 승리 별가루 + 양쪽 모두 성장 |
 | **공유** | 카드 PNG · 클립 파일 · 9장 콜라주 · 🎁 **선물 코드**(서버 없음: 친구는 별가루·친구 추억·힌트를 받음) |
 
+## 🧪 렌즈 스킬 — 사진을 다듬는 능력
+
+<p align="center"><img src="docs/screens/v4-01-skill-editor.png" alt="스킬 에디터" width="300"/></p>
+
+| 스킬 | 해금 | 하는 일 | 성장 |
+|---|:--:|---|---|
+| 😄 이모티콘 | Lv1 | 이모지 20종을 탭해서 붙이고 드래그로 옮김 | 스킬 1종 이상 사용 +1pt |
+| 🎨 톤보정 | Lv2 · ✨120 | 밝기·대비·채도·온도 슬라이더 + 프리셋 4 | |
+| 🔷 쉐입 | Lv3 · ✨180 | 스포트라이트 · 말풍선(문구) · 별 버스트 · 폴라로이드 · 무지개 테두리 | |
+| 🌀 왜곡 | Lv4 · ✨240 | 볼록 · 오목 · 소용돌이, 탭한 곳이 중심 (픽셀 역매핑) | 스킬 3종 이상 +1pt 추가 |
+| 🫥 숨은사진 | Lv5 · ✨300 | 작은 이모지를 랜덤 위치에 숨김 → 회상 때 **10초 숨은 그림 찾기**(✨15) · 사진 가리기(스크래치로 보기) | |
+| ✨ 광채 | Lv6 · ✨200 | 비네트 + 반짝이 입자 | |
+
+편집은 640px 사진에 **구워져(bake)** 저장되고 원본은 따로 보존됩니다(↺ 원본). 카드·콜라주·광장에는 구운 결과가 그대로 쓰입니다.
+
+## 🖐 제스처 — 손과 얼굴로 조작
+
+스캔 화면의 **🖐 제스처** 칩을 켜면 MediaPipe 손 인식(+선택: 얼굴 블렌드셰이프)이 기기에서 돌아갑니다. 모델은 첫 사용 시 CDN에서 받고, 추론은 100ms 간격으로 카메라 인식과 병행됩니다.
+
+| 손 | 동작 | 얼굴 (전면 카메라 권장) | 동작 |
+|:--:|---|:--:|---|
+| ✌️ 브이 | 포획 링 탭 | 😉 두 번 깜빡 | 포획 링 탭 |
+| ✊ 주먹 | 손끝 근처 정령 포획 | 😮 입 벌리기 | 정령 흡입 (최대 3) |
+| 🖐 손바닥 | 자유 영상 촬영 시작/정지 (최대 20초, 앨범 저장) | 🤨 눈썹 올리기 | 프리즘 토큰 장착 |
+| 👍 따봉 | 프리즘 토큰 장착 | 😄 미소 | 스냅 (사진 즉시 저장) |
+| 🤟 아이러브유 | 스냅 | | |
+| ☝️ 포인팅 | 손끝 포인터 표시 | | |
+
+제스처는 350ms 이상 유지될 때 1회 발동하고, 화면 좌하단 HUD에 인식된 제스처가 표시됩니다. 접근성: 모든 제스처 동작은 버튼/탭으로도 가능하며 설정에서 끌 수 있습니다.
+
 ## 🌐 소셜 — 혼자가 아닌 수집
 
 | 단계 | 동작 | 필요한 것 |
@@ -192,11 +222,11 @@ AI는 100% 브라우저 안에서만 돌아갑니다. 사진은 어디로도 전
 src/
 ├─ data/      wonders.js(80종) · chapters.js(6챕터) · worlds/(세계관 레지스트리)
 ├─ game/      balance.js · state.js(v3) · capture.js · quests.js · achievements.js · notes.js · narrative.js
-│             economy.js(상점·보물상자·목표·선물코드·콤보) · media.js(앨범·압축) · memories.js(진화·회상) · duel.js · companion.js(조언·사건)
-├─ scanner/   detector.js · camera.js · gyro.js · recorder.js(클립 + 사운드 믹스)
+│             economy.js · media.js · memories.js · duel.js · companion.js · skills.js(편집 스킬 엔진: 왜곡·톤·쉐입·이모지·숨김·광채)
+├─ scanner/   detector.js · camera.js · gyro.js · recorder.js · gesture.js(MediaPipe 손·얼굴, 동적 import)
 ├─ ar/        overlay.js · spirits.js
 ├─ cloud/     provider.js(어댑터) · firebase.js(동적 import, 키 없으면 번들 제외)
-├─ ui/        shell.js · fx.js · card.js · scratch.js · screens/(title·scan·reveal·codex·album·quests·shop·profile·collectors·duel)
+├─ ui/        shell.js · fx.js · card.js · scratch.js · editor.js(스킬 에디터) · screens/(title·scan·reveal·codex·album·quests·shop·profile·collectors·duel)
 └─ main.js
 public/img/   lupe.svg(마스코트) · logo.svg · ch/*.svg(챕터 엠블럼) — 손으로 그린 벡터
 ```
@@ -215,7 +245,7 @@ vercel --prod      # 정적 배포
 | 항목 | 값 |
 |---|---|
 | 라이브 | https://wonderscanner.vercel.app |
-| 스택 | Vite 7 · Vanilla JS · TensorFlow.js 4 · COCO-SSD · canvas-confetti · Web Audio · DeviceOrientation |
+| 스택 | Vite 7 · Vanilla JS · TensorFlow.js 4 · COCO-SSD · MediaPipe Tasks Vision(제스처·얼굴, 지연 로드) · canvas-confetti · Web Audio · DeviceOrientation |
 | 데이터 | localStorage `wonder-scanner:v1` (스키마 v3) + IndexedDB `wonder-album` · 선택: Firebase |
 | 지원 | iOS Safari / Android Chrome (카메라), 데스크톱 브라우저 (사진 업로드) |
 
@@ -238,4 +268,4 @@ vercel --prod      # 정적 배포
 - [`docs/game-feel-contract.json`](docs/game-feel-contract.json) — 포획 순간의 게임 필 계약
 - 원안: Gemini 브레인스토밍 "AI 매직 렌즈: 일상의 놀라운 재발견" (아이디어 3번)을 게임 요소·밸런스·서사·코어루프·연출 중심으로 확장
 
-<div align="center"><sub>Sprint 1 (4h MVP) → Sprint 5 (AR · 추억 · 소셜 · NPC) · 2026-09-23</sub></div>
+<div align="center"><sub>Sprint 1 (4h MVP) → Sprint 6 (AR · 추억 · 소셜 · NPC · 스킬 · 제스처) · 2026-09-23</sub></div>

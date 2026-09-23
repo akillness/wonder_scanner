@@ -19,7 +19,7 @@ export const filterCss = (id) => FILTERS.find(f => f.id === id)?.css ?? 'none';
 
 export function pointsFor(m) {
   const revisits = state.codex[m.label]?.count ?? 1, ageDays = (Date.now() - m.ts) / 86400000;
-  return (m.caption ? 1 : 0) + Math.min(3, m.recalls || 0) + Math.min(2, m.shares || 0) + (revisits >= 3 ? 1 : 0) + (ageDays >= 7 ? 1 : 0) + (m.filter && m.filter !== 'none' ? 1 : 0);
+  return (m.caption ? 1 : 0) + Math.min(3, m.recalls || 0) + Math.min(2, m.shares || 0) + (revisits >= 3 ? 1 : 0) + (ageDays >= 7 ? 1 : 0) + (m.filter && m.filter !== 'none' ? 1 : 0) + ((m.skills?.length || 0) >= 1 ? 1 : 0) + ((m.skills?.length || 0) >= 3 ? 1 : 0);
 }
 export function stageFor(m) { const p = pointsFor(m); return [...STAGES].reverse().find(s => p >= s.min) ?? STAGES[0]; }
 

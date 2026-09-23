@@ -7,6 +7,8 @@ import { renderCard, shareCard, shareBlob } from '../card.js';
 import * as fx from '../fx.js';
 import { STAGES, FILTERS, filterCss, stageFor, refine, recall, markShared, daysAgo } from '../../game/memories.js';
 import { cloudEnabled } from '../../cloud/provider.js';
+import { openEditor } from '../editor.js';
+import { mountScratch } from '../scratch.js';
 
 register('album', async (filter = 'all', openId = null) => {
   const ms = await listMoments(), st = await stats();
@@ -18,7 +20,7 @@ register('album', async (filter = 'all', openId = null) => {
     <div class="progress sm" title="앨범 용량 ${st.pct}%"><i style="width:${st.pct}%"></i></div>
     <div class="chips left">${[['all', '전체'], ['clip', '🎬 클립'], ['perfect', '🎯 퍼펙트'], ['fav', '❤️ 즐겨찾기'], ['friend', '🎁 친구']].map(([k, l]) => `<button class="pill ${k === filter ? 'on' : ''}" data-f="${k}">${l}</button>`).join('')}</div>
     <div class="row" style="margin:8px 0"><button class="btn ghost sm grow" id="collage" ${shown.length ? '' : 'disabled'}>🧩 콜라주 공유 (최근 ${Math.min(9, shown.length)}장)</button><button class="btn ghost sm grow" id="gift">🎁 선물 코드</button></div>
-    ${shown.length ? `<div class="album-grid">${shown.map(m => { const w = WONDERS[m.label], u = URL.createObjectURL(m.thumb || m.photo); urls.push(u); return `<button class="mom ${m.variant ? 'variant' : ''}" data-id="${m.id}" style="--sc:${RARITY[w.rarity].color}"><img src="${u}" alt="" loading="lazy" style="filter:${filterCss(m.filter)}"/><span class="tag">${STAGES[m.stage || 0].icon} ${w.emoji}${m.clip ? ' 🎬' : ''}${m.fav ? ' ❤️' : ''}${m.friend ? ' 🎁' : ''}${m.cloud ? ' ☁️' : ''}</span></button>`; }).join('')}</div>`
+    ${shown.length ? `<div class="album-grid">${shown.map(m => { const w = WONDERS[m.label], u = URL.createObjectURL(m.thumb || m.photo); urls.push(u); return `<button class="mom ${m.variant ? 'variant' : ''}" data-id="${m.id}" style="--sc:${RARITY[w.rarity].color}"><img src="${u}" alt="" loading="lazy" style="filter:${filterCss(m.filter)}${m.cover ? ' blur(8px)' : ''}"/><span class="tag">${m.cover ? '🔒 ' : ''}${m.skills?.length ? '🧪 ' : ''}${STAGES[m.stage || 0].icon} ${w.emoji}${m.clip ? ' 🎬' : ''}${m.fav ? ' ❤️' : ''}${m.friend ? ' 🎁' : ''}${m.cloud ? ' ☁️' : ''}</span></button>`; }).join('')}</div>`
       : `<div class="empty">📷 아직 추억이 없어요.<br><small>원더를 포획하면 사진(과 클립)이 여기 쌓입니다.</small></div>`}
     <div class="info-card"><b>🌱 추억은 자랍니다</b><small>${STAGES.map(s => `${s.icon} ${s.name}`).join(' → ')} · 캡션 쓰기, 필터 고르기, 회상, 공유, 같은 원더 재방문, 7일 숙성이 성장 포인트. 단계가 오르면 별가루·XP 보상.</small></div>
     <div class="info-card"><b>🗜️ 압축 정책</b><small>사진 640px·JPEG 74% (약 50KB) · 클립 540p·24fps·1.1Mbps (5초 ≈ 700KB) · 앨범 상한 ${fmtBytes(st.cap)}, 넘치면 즐겨찾기 아닌 오래된 것부터 정리</small></div>
@@ -35,19 +37,23 @@ register('album', async (filter = 'all', openId = null) => {
     const w = WONDERS[m.label], R = RARITY[w.rarity], u = URL.createObjectURL(m.photo), cu = m.clip ? URL.createObjectURL(m.clip) : null;
     const el = document.createElement('div'); el.className = 'modal';
     el.innerHTML = `<div class="card frame-${m.frame || 'default'} ${m.variant ? 'variant' : ''}" style="--r-color:${R.color};--r-glow:${R.glow};animation:pop .4s both" onclick="event.stopPropagation()">
-      ${cu ? `<video class="photo" src="${cu}" playsinline loop muted autoplay controls style="filter:${filterCss(m.filter)}"></video>` : `<img class="photo" src="${u}" alt="" style="filter:${filterCss(m.filter)}"/>`}
+      <div class="scratch-zone photo-zone" id="pz">${cu ? `<video class="photo" src="${cu}" playsinline loop muted autoplay controls style="filter:${filterCss(m.filter)}"></video>` : `<img class="photo" src="${u}" alt="" style="filter:${filterCss(m.filter)}"/>`}</div>
       <div class="rar"><span>${R.stars} ${R.label}</span><span>${GI[m.grade] ?? ''} ${m.grade}${m.friend ? ` · 🎁 ${esc(m.friend.name)}` : ''}</span></div>
       <div class="name">${w.emoji} ${esc(w.name)}</div><div class="orig">${daysAgo(m.ts)} · ${new Date(m.ts).toLocaleDateString('ko-KR')} · ${fmtBytes(m.bytes || 0)}${m.clip ? ' · 🎬' : ''}${m.cloud ? ' · ☁️' : ''}</div>
       <div class="stage-row"><span class="stage-badge">${STAGES[m.stage || 0].icon} ${STAGES[m.stage || 0].name}</span>${STAGES.slice(1).map(s => `<i class="${(m.stage || 0) >= s.id ? 'on' : ''}" title="${s.name}"></i>`).join('')}<small>회상 ${m.recalls || 0} · 공유 ${m.shares || 0}</small></div>
       <div class="caption">${m.caption ? `📝 ${esc(m.caption)}` : '<span class="mute">캡션을 남기면 추억이 자라요</span>'}</div>
       <div class="row" style="flex-wrap:wrap;gap:6px;margin-top:6px">
-        <button class="btn sm primary" id="mRefine">✏️ 다듬기</button><button class="btn sm ghost" id="mDuel">⚔️ 대결</button>
+        <button class="btn sm primary" id="mRefine">✏️ 다듬기</button><button class="btn sm primary" id="mSkill">🧪 스킬</button><button class="btn sm ghost" id="mDuel">⚔️ 대결</button>${m.hidden?.emoji && !m.hidden.found ? '<button class="btn sm ghost" id="mFind">🔎 숨은 그림</button>' : ''}
         <button class="btn sm ghost" id="mShare">🖼️ 카드</button>${cu ? '<button class="btn sm ghost" id="mClip">🎬 클립 공유</button>' : ''}<button class="btn sm ghost" id="mFav">${m.fav ? '💔 해제' : '❤️ 즐겨찾기'}</button><button class="btn sm ghost" id="mGift">🎁 선물</button><button class="btn sm ghost" id="mDel">🗑️</button>
       </div></div>`;
     el.onclick = () => { el.remove(); URL.revokeObjectURL(u); if (cu) URL.revokeObjectURL(cu); }; app.appendChild(el); fx.blip();
     $('#mShare', el).onclick = async (e) => { e.target.textContent = '…'; const c = await renderCard({ label: m.label, wonder: w, photo: u, isVariant: m.variant, rankTitle: state.name || '탐험가', date: new Date(m.ts).toLocaleDateString('ko-KR'), frame: m.frame, caption: m.caption, filter: filterCss(m.filter) }); const r = await shareCard(c, w.name); e.target.textContent = '🖼️ 카드'; if (r !== 'cancel') { const ev = await markShared(m.id); if (ev?.leveled) toast(`🌱 「${ev.leveled.icon} ${ev.leveled.name}」로 진화! ✨+${ev.leveled.reward.dust}`, 3000, 'quest'); } };
     $('#mRefine', el).onclick = () => { el.click(); refinePanel(m); };
     $('#mDuel', el).onclick = () => { el.click(); go('duel', m.id, 'shadow'); };
+    $('#mSkill', el).onclick = () => { el.click(); openEditor(m.id, () => go('album', filter)); };
+    if (m.cover) requestAnimationFrame(() => mountScratch($('#pz', el), { label: '가려진 추억 — 긁어서 보기', tapOnly: state.settings.reduceMotion }));
+    if ($('#mFind', el)) $('#mFind', el).onclick = () => { const zone = $('#pz', el); const img = zone.querySelector('img,video'); let t = 10; const badge = document.createElement('div'); badge.className = 'find-badge'; badge.textContent = `🔎 ${m.hidden.emoji} 찾기 · ${t}s`; zone.appendChild(badge); const tick = setInterval(() => { t--; badge.textContent = `🔎 ${m.hidden.emoji} 찾기 · ${t}s`; if (t <= 0) { clearInterval(tick); badge.textContent = '⏰ 시간 초과'; setTimeout(() => badge.remove(), 1200); img.onclick = null; } }, 1000);
+      img.onclick = async (e) => { const r = img.getBoundingClientRect(); const px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height; if (Math.hypot(px - m.hidden.x, py - m.hidden.y) < 0.09) { clearInterval(tick); badge.textContent = `🎉 찾았다! ✨+15`; state.dust += 15; save(); fx.chime(2, false); fx.burst(2, false); const { updateMoment } = await import('../../game/media.js'); m.hidden.found = Date.now(); await updateMoment(m); img.onclick = null; setTimeout(() => badge.remove(), 1500); } else { fx.denied(); badge.classList.add('shake'); setTimeout(() => badge.classList.remove('shake'), 400); } }; };
     if (cu) $('#mClip', el).onclick = async (e) => { e.target.textContent = '…'; await shareBlob(m.clip, `wonder-clip-${m.id}.${m.clip.type.includes('mp4') ? 'mp4' : 'webm'}`, `${w.name} 포획 클립`); e.target.textContent = '🎬 클립 공유'; };
     $('#mFav', el).onclick = async () => { await toggleFav(m.id); fx.blip(); el.click(); go('album', filter); };
     $('#mDel', el).onclick = async () => { if (confirm('이 추억을 삭제할까요?')) { await deleteMoment(m.id); el.click(); go('album', filter); } };
