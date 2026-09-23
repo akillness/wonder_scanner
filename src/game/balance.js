@@ -1,29 +1,51 @@
 // 밸런스 상수 — 모든 숫자는 이 파일에서만 바꾼다.
 export const BALANCE = {
-  // 공명 게이지: 물체가 연속 탐지되는 동안 채워짐 (0~1)
   resonance: {
     baseFillPerSec: 0.45,       // 신뢰도 0.5 기준 약 2.2초
     confidenceWeight: 0.9,      // fill = base * (0.55 + conf * weight)
-    decayPerSec: 0.8,           // 물체를 놓치면 빠르게 감소
-    minConfidence: 0.5,         // 이 미만 탐지는 무시
+    decayPerSec: 0.8,
+    minConfidence: 0.5,
+    boostMultiplier: 2.0,       // 정령 조각 5개 = 공명 부스트 1회
   },
-  // 변이체(프리즘): 스캔 시 낮은 확률로 등장
-  variant: {
-    baseChance: 0.04,
-    confidenceBonus: 0.06,      // 신뢰도 1.0일 때 최대 +6%
-    stardustMultiplier: 3,
+  // 포획 타이밍 링: 링이 1.0 → 0 으로 줄어들고, 목표 반경(target) 근처에서 탭
+  capture: {
+    cycleMs: 1500,
+    cycles: 3,                  // 3회 동안 탭 없으면 AUTO(GOOD) 포획 — 접근성 경로
+    target: 0.30,               // 목표 반경 비율
+    perfect: 0.045,             // |r - target| ≤ → PERFECT (약 135ms 창)
+    great: 0.10,                // ≤ → GREAT (약 300ms)
+    good: 0.17,                 // ≤ → GOOD, 그 밖은 MISS
+    missGaugeReset: 0.35,       // MISS 시 공명 게이지 복귀값
+    grades: {
+      PERFECT: { dust: 2.0, xp: 1.5, variantMul: 3.0, label: '퍼펙트!', color: '#ffd166' },
+      GREAT:   { dust: 1.5, xp: 1.2, variantMul: 1.6, label: '그레이트', color: '#7cf59a' },
+      GOOD:    { dust: 1.0, xp: 1.0, variantMul: 1.0, label: '굿', color: '#8fd3ff' },
+      AUTO:    { dust: 1.0, xp: 1.0, variantMul: 1.0, label: '포획', color: '#8fd3ff' },
+    },
   },
-  // 보상
+  variant: { baseChance: 0.04, confidenceBonus: 0.06, stardustMultiplier: 3 },
+  // 정령(AR 위습)
+  spirits: {
+    spawnMinMs: 4500, spawnMaxMs: 8500, maxAlive: 3, lifeMs: 9000,
+    goldenChance: 0.08,         // 황금 정령 → 프리즘 토큰
+    fragmentsPerBoost: 5,       // 조각 5개 = 공명 부스트 1
+    maxBoost: 3,
+    tapRadiusPx: 36,
+    fovDeg: 60,                 // 자이로 1도 → 화면 픽셀 환산 기준 시야각
+  },
   reward: {
     xpNew:  { 1: 20, 2: 40, 3: 80, 4: 160 },
     xpDup:  { 1: 4,  2: 8,  3: 14, 4: 25 },
     dustNew:{ 1: 10, 2: 20, 3: 40, 4: 80 },
     dustDup:{ 1: 3,  2: 6,  3: 12, 4: 24 },
     chapterBonusXp: 120,
+    spiritDust: 2,
   },
-  // 같은 라벨 재스캔 쿨다운(ms): 같은 컵을 연타하는 파밍 방지
   rescanCooldownMs: 15000,
-  // 랭크 곡선: 누적 XP 임계값
+  // 연속 출석: 하루 +10%, 최대 +50% XP
+  streak: { perDay: 0.10, maxDays: 5 },
+  // 도감 깊이: 같은 원더 n회 → 루페 관찰 노트 해금
+  depth: { note1: 3, note2: 10 },
   ranks: [
     { xp: 0,    title: '견습 탐험가' },
     { xp: 50,   title: '렌즈 수습생' },
@@ -38,30 +60,46 @@ export const BALANCE = {
   ],
 };
 
-export function resonanceFillRate(confidence) {
+export function resonanceFillRate(confidence, boosted = false) {
   const r = BALANCE.resonance;
-  return r.baseFillPerSec * (0.55 + confidence * r.confidenceWeight);
+  return r.baseFillPerSec * (0.55 + confidence * r.confidenceWeight) * (boosted ? r.boostMultiplier : 1);
 }
 
-export function rollVariant(confidence, rng = Math.random) {
+export function rollVariant(confidence, gradeMul = 1, forced = false, rng = Math.random) {
+  if (forced) return true;
   const v = BALANCE.variant;
-  const chance = v.baseChance + Math.max(0, confidence - 0.5) * 2 * v.confidenceBonus;
-  return rng() < chance;
+  const chance = (v.baseChance + Math.max(0, confidence - 0.5) * 2 * v.confidenceBonus) * gradeMul;
+  return rng() < Math.min(0.5, chance);
+}
+
+/** 링 반경 비율(0~1)로 포획 등급 판정 */
+export function gradeCapture(r) {
+  const c = BALANCE.capture, d = Math.abs(r - c.target);
+  if (d <= c.perfect) return 'PERFECT';
+  if (d <= c.great) return 'GREAT';
+  if (d <= c.good) return 'GOOD';
+  return 'MISS';
 }
 
 export function rankFor(xp) {
   let idx = 0;
   BALANCE.ranks.forEach((r, i) => { if (xp >= r.xp) idx = i; });
-  const cur = BALANCE.ranks[idx];
-  const next = BALANCE.ranks[idx + 1] ?? null;
+  const cur = BALANCE.ranks[idx], next = BALANCE.ranks[idx + 1] ?? null;
   const progress = next ? (xp - cur.xp) / (next.xp - cur.xp) : 1;
   return { level: idx + 1, title: cur.title, next, progress: Math.min(1, progress) };
 }
 
-export function computeReward({ rarity, isNew, isVariant }) {
-  const R = BALANCE.reward;
+export function streakMultiplier(days) {
+  const s = BALANCE.streak;
+  return 1 + Math.min(Math.max(0, days - 1), s.maxDays) * s.perDay;
+}
+
+export function computeReward({ rarity, isNew, isVariant, grade = 'GOOD', streakDays = 1 }) {
+  const R = BALANCE.reward, G = BALANCE.capture.grades[grade] ?? BALANCE.capture.grades.GOOD;
   let xp = isNew ? R.xpNew[rarity] : R.xpDup[rarity];
   let dust = isNew ? R.dustNew[rarity] : R.dustDup[rarity];
   if (isVariant) { dust *= BALANCE.variant.stardustMultiplier; xp = Math.round(xp * 1.5); }
+  xp = Math.round(xp * G.xp * streakMultiplier(streakDays));
+  dust = Math.round(dust * G.dust);
   return { xp, dust };
 }

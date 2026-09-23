@@ -1,0 +1,86 @@
+{
+  "contract_version": 1,
+  "mechanic": {
+    "name": "wonder capture moment (resonance to reveal)",
+    "build": "wonder_scanner v2 (commit after 02ec778), Vite dev + production build",
+    "scene": "scan screen, live camera or photo fallback, single detected object",
+    "target_devices": ["iOS Safari touch", "Android Chrome touch", "desktop Chrome with photo fallback"],
+    "network_state": "offline after model load; all simulation on-device",
+    "camera": "rear camera full-bleed video with 2D canvas overlay"
+  },
+  "goal": "Make the capture moment a readable intention-to-consequence skill step (timing tap with graded outcome) and make the live camera view itself a playfield (AR spirits, aura, holo tag), without changing detection, cooldown, save schema truth, or blocking input.",
+  "baseline": {
+    "capture": "Chrome DevTools automation on 390x844 viewport with photo-fallback path; state read via window.__scan debug hook (mode, gauge, ring radius, grade) and localStorage.",
+    "observations": [
+      "v1 capture was passive: gauge filled while holding still, then reveal fired with no player action; every capture produced identical presentation.",
+      "Bounding box jittered frame to frame, weakening the anchored feel of the bracket.",
+      "The camera view had nothing to interact with between detections."
+    ],
+    "measured_stages": ["input", "simulation", "state", "render", "feedback", "recovery"],
+    "inferred_stages": ["intent", "perceived responsiveness on real touch devices"]
+  },
+  "response_chain": [
+    { "stage": "intent", "owner": "player", "evidence": "Player aims at an object, then taps when the shrinking ring meets the golden band.", "status": "inferred" },
+    { "stage": "input", "owner": "overlay pointerdown handler", "evidence": "Scripted pointerdown at ring radius 0.328 (target 0.30) produced grade PERFECT; at 0.90 produced MISS; at 0.46 produced GOOD.", "status": "measured" },
+    { "stage": "simulation", "owner": "capture.js state machine", "evidence": "Modes scan -> capture -> grade -> finish observed via debug hook; 3 cycles without tap resolved to AUTO.", "status": "measured" },
+    { "stage": "state", "owner": "state.discover / questEvent / checkAchievements", "evidence": "localStorage after PERFECT: bestGrade PERFECT, stats.perfects 1, XP 20*1.5*1.5=45, dust 10*3*2=60; MISS incremented stats.misses and reset gauge to 0.48.", "status": "measured" },
+    { "stage": "render", "owner": "ar/overlay.js", "evidence": "Smoothed bracket, aura particles scaled by gauge, holo tag, shrinking ring with golden band, grade burst text; screenshots v2-04/v2-05.", "status": "measured" },
+    { "stage": "feedback", "owner": "ui/fx.js", "evidence": "Grade flash color, chime on PERFECT, denied tone and haptic pattern on MISS, Lupe line changes per outcome.", "status": "measured" },
+    { "stage": "recovery", "owner": "scan.js", "evidence": "After MISS mode returned to scan with gauge 0.48 and refilled to a second capture; after finish the scan loop stopped, camera released, reveal rendered.", "status": "measured" }
+  ],
+  "primary_hypothesis": {
+    "weak_link": "simulation response: no player decision between resonance-full and reveal",
+    "problem": "Because the reveal fired automatically, the player had no moment of intention whose consequence they could read, so all captures felt equivalent regardless of skill.",
+    "change": "Insert a timing ring after the gauge fills: tap radius is graded PERFECT/GREAT/GOOD/MISS with continuous distance thresholds; MISS makes the wonder flee (gauge reset), grades scale rewards and variant odds. Detection, cooldown, and discovery bookkeeping are unchanged.",
+    "expected_signal": "Players can name their grade from the burst text and reward line, and repeat scans show different outcomes tied to their tap timing.",
+    "falsifier": "Grades feel random on real touch latency, or players cannot hit GOOD reliably, or the MISS flee reads as a bug.",
+    "competing_explanation": "The flat feel may have come from identical reveal presentation rather than the missing decision; addressed separately by grade-specific flash, chime and reward line."
+  },
+  "event_channels": [
+    { "event": "PERFECT capture", "importance": "high", "channels": ["gold grade burst text", "gold radial flash", "ascending chime", "5-pulse haptic", "reward line x1.5 XP / x2 dust", "Lupe line"], "necessary_information": "Tap landed inside the tightest window and rewards are multiplied.", "accessibility_alternative": "With reduced motion the flash/shake are skipped; grade text, reward line and Lupe line remain. With auto-capture on, the ring is skipped entirely." },
+    { "event": "MISS", "importance": "high", "channels": ["red burst text", "descending denied tone", "3-pulse haptic", "gauge visibly drops to 35%", "Lupe: fled"], "necessary_information": "The tap was outside the band; resonance must refill.", "accessibility_alternative": "Text and gauge state carry the information without sound or haptics." },
+    { "event": "spirit caught", "importance": "routine", "channels": ["pop scale-out", "floating +1 text", "short blip", "HUD fragment counter"], "necessary_information": "Fragment count progressed toward a boost.", "accessibility_alternative": "Counter and floating text carry the information; no camera motion involved." }
+  ],
+  "safety": {
+    "simulation_truth": "Detection confidence, cooldown, codex bookkeeping, XP curve and save schema are unchanged; grades only multiply rewards and variant odds.",
+    "input_policy": "No input lock is added. A tap during the ring resolves immediately; taps outside capture mode route to spirits. Three ring cycles without a tap resolve to AUTO so no player is blocked.",
+    "return_to_rest": "Capture stops on finish, target loss (1.5s), and screen exit; overlay is cleared every frame; camera tracks are stopped in the route cleanup.",
+    "multiplayer_authority": "Not applicable; single-device offline game."
+  },
+  "accessibility": {
+    "settings": [
+      { "control": "reduce motion", "affected_channels": ["camera shake", "glitch", "full-screen flash", "rays", "confetti", "aura particles", "tag bob"], "behavior": "Off path removes these while keeping grade text, reward line, Lupe text and stable brackets.", "persistence": "state.settings.reduceMotion in localStorage key wonder-scanner:v1" },
+      { "control": "auto capture", "affected_channels": ["timing ring"], "behavior": "Skips the ring and captures at AUTO grade when the gauge fills.", "persistence": "state.settings.autoCapture" },
+      { "control": "haptics", "affected_channels": ["vibration"], "behavior": "Off removes vibration without removing visual or audio confirmation.", "persistence": "state.settings.haptics" },
+      { "control": "sound", "affected_channels": ["Web Audio ticks and chimes"], "behavior": "Off silences synthesized audio.", "persistence": "state.settings.sound" }
+    ],
+    "redundant_signals": "Grade outcome is carried by text, color, sound, haptic and the reward line; none is the sole channel."
+  },
+  "comparison": {
+    "control": "v1 build (commit 02ec778): passive fill then automatic reveal.",
+    "variant": "v2 build: same detection and fill, then timing ring with graded resolution, AR spirits and aura layered on the overlay.",
+    "matched_conditions": ["same photo fixtures (dog.jpg, laptop.jpg, cup.jpg)", "same 390x844 viewport and camera-denied fallback", "same balance constants for fill rate and cooldown", "same save key"],
+    "repetition_basis": "Three captures (AUTO, PERFECT, MISS->GOOD) plus one spirit tap; each read back from state and DOM.",
+    "acceptance": [
+      "Grades map to tap radius as specified and are visible in burst text and reward line.",
+      "MISS returns to scan with gauge 0.35..0.5 and a second capture succeeds.",
+      "AUTO resolves after 3 cycles without input.",
+      "Reduced-motion and auto-capture settings persist and are honored by fx.js and scan.js.",
+      "No console errors across title, scan, reveal, codex, quests, profile."
+    ]
+  },
+  "performance": {
+    "budgets": "Overlay draw must stay under one frame at 60 Hz on mid-range phones; detection loop is throttled to about 20 Hz.",
+    "basis": "Desktop Chrome automation only; real-device frame pacing not yet measured.",
+    "measurement": "Bundle: app 79 KB (32 KB gzip), TF chunk 274 KB gzip unchanged."
+  },
+  "decisions": [
+    { "decision": "Add a timing ring rather than more reveal effects.", "basis": "The missing stage was a player decision, not feedback volume.", "owner": "game design" },
+    { "decision": "Treat AR as screen-space camera effects (gyro-anchored spirits, aura, holo tag) rather than world tracking.", "basis": "No WebXR; 3-DoF orientation is enough for look-around play and keeps the bundle static.", "owner": "AR overlay" },
+    { "decision": "Ship reduce-motion and auto-capture toggles with the effect.", "basis": "Timing rings and flashes are the largest new vestibular and skill demands.", "owner": "accessibility" }
+  ],
+  "route_out": {
+    "next_owner": "real-device QA (iOS Safari, Android Chrome)",
+    "reason": "Touch latency for the PERFECT window and gyro permission flow on iOS were not measurable in desktop automation."
+  }
+}

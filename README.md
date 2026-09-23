@@ -18,9 +18,11 @@ AI는 100% 브라우저 안에서만 돌아갑니다. 사진은 어디로도 전
 
 <br/>
 
-| 타이틀 | 발견(Reveal) | 도감(Codex) | 랭크 업 |
+| 타이틀 | 튜토리얼 | 퍼펙트 포획 → 변이체 | 도감 |
 |:--:|:--:|:--:|:--:|
-| <img src="docs/screens/01-title.png" width="180"/> | <img src="docs/screens/03-reveal.png" width="180"/> | <img src="docs/screens/04-codex.png" width="180"/> | <img src="docs/screens/05-rankup.png" width="180"/> |
+| <img src="docs/screens/v2-01-title.png" width="180"/> | <img src="docs/screens/v2-02-tutorial.png" width="180"/> | <img src="docs/screens/v2-04-perfect.png" width="180"/> | <img src="docs/screens/v2-06-codex.png" width="180"/> |
+| **오늘의 의뢰** | **프로필 · 업적** | **AR 스캔 HUD** | **발견 카드** |
+| <img src="docs/screens/v2-07-quests.png" width="180"/> | <img src="docs/screens/v2-08-profile.png" width="180"/> | <img src="docs/screens/v2-05-scan-ar.png" width="180"/> | <img src="docs/screens/v2-03-reveal.png" width="180"/> |
 
 </div>
 
@@ -60,10 +62,21 @@ flowchart LR
 ```
 
 1. **스캔 시작**을 누르고 카메라 권한을 허용합니다.
-2. 컵, 노트북, 의자… 아무 물건이든 화면 가운데에 두세요. 물체에 **브래킷**이 생기고 **공명 링**이 차오릅니다.
-3. 링이 꽉 차면 화면이 번쩍이며 **원더 카드**가 뒤집혀 나타납니다.
-4. 카드는 **PNG로 저장/공유**할 수 있습니다.
-5. 카메라가 없는 PC에서는 **사진 파일**을 골라 같은 방식으로 스캔할 수 있습니다.
+2. 컵, 노트북, 의자… 아무 물건이든 화면 가운데에 두세요. 물체에 **브래킷과 오라**가 생기고 **공명 링**이 차오릅니다.
+3. 링이 꽉 차면 **줄어드는 포획 링**이 나타납니다. 노란 선에 닿는 순간 **탭!**
+   - 🎯 **퍼펙트** = XP ×1.5 · 별가루 ×2 · 변이체 확률 ×3 / ⭐ 그레이트 / ○ 굿 / ✖ 미스 = 원더가 도망, 공명 다시 채우기
+4. 화면을 떠다니는 **정령**을 탭하면 조각(◇)을 얻습니다. 5개 = 다음 공명 2배 속도. 가끔 나오는 **황금 정령**은 프리즘 토큰을 줍니다.
+5. 카드는 **PNG로 저장/공유**할 수 있습니다. 카메라가 없는 PC에서는 **사진 파일**로 같은 흐름을 즐길 수 있습니다.
+
+### 🧭 AR 요소 (WebXR 없이, 2D 캔버스 + 자이로)
+
+| 요소 | 동작 |
+|---|---|
+| **스무딩 브래킷 + 홀로 태그** | AI 박스를 보간해 떨림을 없애고, 물체 위에 떠서 살랑이는 라벨을 붙입니다 |
+| **오라 파티클** | 공명이 찰수록 물체 주위를 도는 입자가 늘어납니다 (희귀도 색) |
+| **정령 (Spirits)** | 자이로 요/피치에 앵커돼 폰을 돌리면 시야 밖에서 나타나고, 탭하면 터집니다. 인식된 물체 쪽으로 끌립니다 |
+| **포획 링** | Pokémon GO의 서클 타이밍처럼 줄어드는 링을 노란 선에 맞춰 탭 |
+| **나침반 힌트** | 완성에 가장 가까운 챕터와 미수집 원더를 HUD에 띄워 "2개만 더!"를 유도 |
 
 ---
 
@@ -94,6 +107,11 @@ pie showData
 - **쿨다운 15초**: 같은 물건 연타 파밍을 막습니다. 다른 물건을 찾게 유도합니다.
 - **챕터 완성 보너스**: +120 XP와 루페의 스토리 조각.
 - **랭크 10단계**: 견습 탐험가(0) → 렌즈 수습생(50) → 골목 관찰자(150) → … → 원더 마스터(4600).
+- **포획 등급**: 링 반경과 목표(0.30)의 거리로 판정. 퍼펙트 ≤0.045, 그레이트 ≤0.10, 굿 ≤0.17, 그 밖은 미스(게이지 35%로 복귀). 3사이클 무입력 = 자동 포획.
+- **오늘의 의뢰 3개** (날짜 시드): 챕터 신규 2종 / 스캔 5회 / 희귀 이상 1종 / 정령 8마리 / 퍼펙트 2회 중 조합. 3번째 의뢰 = **프리즘 토큰**(다음 포획 변이체 확정).
+- **연속 출석**: 하루 +10% XP, 최대 +50%.
+- **도감 깊이**: 같은 원더 3회 → 루페의 관찰 노트, 10회 → 마스터 노트 + 금색 프레임.
+- **업적 15종**: 첫 원더 · 전설 목격 · 퍼펙트 10회 · 황금 정령 · 3일 연속 등.
 
 모든 숫자는 [`src/game/balance.js`](src/game/balance.js) 한 파일에 있습니다.
 
@@ -151,11 +169,12 @@ flowchart TB
 ```
 src/
 ├─ data/      wonders.js(80종) · chapters.js(6챕터)
-├─ game/      balance.js(수치) · state.js(저장/보상) · narrative.js(루페 대사)
-├─ scanner/   detector.js(TF.js) · camera.js(getUserMedia·스냅샷)
-├─ ui/        fx.js(파티클·사운드·글리치) · card.js(공유 카드 PNG)
-├─ main.js    화면 4종 + 스캔 루프
-└─ styles.css
+├─ game/      balance.js(수치) · state.js(저장/보상) · capture.js(타이밍 링) · quests.js(의뢰·스트릭) · achievements.js · notes.js(관찰 노트) · narrative.js
+├─ scanner/   detector.js(TF.js) · camera.js · gyro.js(DeviceOrientation)
+├─ ar/        overlay.js(브래킷·오라·태그·링) · spirits.js(자이로 앵커 정령)
+├─ ui/        shell.js(라우터·HUD·토스트) · fx.js · card.js · screens/(title·scan·reveal·codex·meta)
+└─ main.js    부트(스트릭·의뢰·업적 초기화)
+public/img/   lupe.svg(마스코트) · logo.svg · ch/*.svg(챕터 엠블럼) — 손으로 그린 벡터
 ```
 
 ---
@@ -172,7 +191,7 @@ vercel --prod      # 정적 배포
 | 항목 | 값 |
 |---|---|
 | 라이브 | https://wonderscanner.vercel.app |
-| 스택 | Vite 7 · Vanilla JS · TensorFlow.js 4 · COCO-SSD · canvas-confetti · Web Audio |
+| 스택 | Vite 7 · Vanilla JS · TensorFlow.js 4 · COCO-SSD · canvas-confetti · Web Audio · DeviceOrientation |
 | 데이터 | localStorage 단일 키 `wonder-scanner:v1` |
 | 지원 | iOS Safari / Android Chrome (카메라), 데스크톱 브라우저 (사진 업로드) |
 
@@ -182,13 +201,15 @@ vercel --prod      # 정적 배포
 
 - **인식이 안 돼요.** 물체를 화면의 절반 정도 크기로, 밝은 곳에서 비춰 보세요. 신뢰도 50% 이상만 인식합니다.
 - **왜 사람도 원더인가요?** COCO 80종에 `person`이 포함되어 있고, "두 발로 걷는 질문 생성기"는 서사상 원더를 발견하는 유일한 종입니다.
-- **데이터를 지우고 싶어요.** 도감 화면 하단 **초기화**.
+- **데이터를 지우고 싶어요.** 프로필 → 설정 → **초기화**.
+- **화면 효과가 부담돼요.** 프로필 → 설정 → **모션 줄이기** (흔들림·글리치·플래시 제거), **자동 포획** (타이밍 링 생략).
 
 ---
 
 ## 📚 문서
 
-- [`HISTORY.md`](HISTORY.md) — 4시간 스프린트 진행 기록 (기획 → 구현 → QA → 배포 → 남은 아이디어)
+- [`HISTORY.md`](HISTORY.md) — 스프린트 1(4시간 MVP) + 스프린트 2(AR·콘텐츠·폴리싱) 기록
+- [`docs/game-feel-contract.json`](docs/game-feel-contract.json) — 포획 순간의 게임 필 계약 (응답 체인 · 접근성 · 검증)
 - 원안: Gemini 브레인스토밍 "AI 매직 렌즈: 일상의 놀라운 재발견" (아이디어 3번)을 게임 요소·밸런스·서사·코어루프·연출 중심으로 확장
 
 <div align="center"><sub>Made in one 4-hour sprint · 2026-09-23</sub></div>

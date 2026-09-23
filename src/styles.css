@@ -43,7 +43,7 @@ h1.logo{margin:8px 0 0;font-size:34px;letter-spacing:.12em;background:linear-gra
 /* ── scan */
 .scan{padding:0;background:#000}
 .scan video,.scan canvas.overlay,.scan img.still{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.scan canvas.overlay{pointer-events:none}
+.scan canvas.overlay{pointer-events:auto;touch-action:none}
 .hud{position:absolute;left:0;right:0;top:0;padding:calc(var(--safe-t) + 10px) 12px 0;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;pointer-events:none}
 .pill{background:rgba(11,15,26,.72);border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:12px;backdrop-filter:blur(8px);display:inline-flex;align-items:center;gap:6px;pointer-events:auto}
 .pill b{color:var(--gold)}
@@ -112,3 +112,91 @@ h1.logo{margin:8px 0 0;font-size:34px;letter-spacing:.12em;background:linear-gra
 @keyframes glitch{0%{filter:hue-rotate(0) contrast(1);clip-path:inset(0)}20%{filter:hue-rotate(90deg) contrast(2);clip-path:inset(10% 0 60% 0);transform:translateX(-6px)}40%{filter:hue-rotate(-90deg) saturate(3);clip-path:inset(50% 0 10% 0);transform:translateX(6px)}60%{filter:invert(.2);clip-path:inset(30% 0 30% 0);transform:translateX(-3px)}100%{filter:none;clip-path:inset(0);transform:none}}
 .slowmo{animation:slow 1.4s ease-out both}
 @keyframes slow{from{filter:blur(6px) brightness(2);transform:scale(1.15)}to{filter:none;transform:none}}
+
+/* ═══════════ v2: 제품 폴리싱 ═══════════ */
+.lupe-img{width:44px;height:44px;flex:0 0 44px;filter:drop-shadow(0 0 10px rgba(167,139,250,.6));animation:float 3s ease-in-out infinite}
+.bubble{display:flex;gap:10px;align-items:flex-start;padding:10px 14px}
+.bubble::before{content:none}
+.bubble.wide{width:min(360px,100%)}
+.bubble>div{flex:1;min-width:0}
+.bg-spirits{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.logo-img{width:84px;height:84px;border-radius:22px;box-shadow:0 0 30px rgba(110,231,255,.35);animation:float 3s ease-in-out infinite}
+.gear{position:absolute;top:calc(var(--safe-t) + 12px);right:16px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:12px 0 4px}
+.pill.fire{border-color:#ff8a5c;color:#ffb38a}.pill.gold{border-color:var(--gold);color:var(--gold)}.pill.prism{border-color:#ff8ad4;color:#ffb0e4}
+.nudge{display:flex;gap:10px;align-items:center;background:rgba(255,209,102,.08);border:1px solid rgba(255,209,102,.35);border-radius:14px;padding:10px 12px;width:min(360px,100%);margin:8px 0;font-size:13px;text-align:left}
+.nudge img{width:34px;height:34px}.nudge small{display:block;color:var(--mute);margin-top:2px}
+.btn.big{padding:16px 22px;font-size:17px}
+.btn small{font-weight:500;color:var(--mute);margin-left:4px}
+.title .actions{margin-top:10px}
+
+/* 하단 탭 */
+.tabs-nav{position:absolute;left:0;right:0;bottom:0;display:flex;background:rgba(11,15,26,.92);border-top:1px solid var(--line);backdrop-filter:blur(10px);padding:6px 6px calc(var(--safe-b) + 6px)}
+.tab-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;color:var(--mute);padding:6px 0;border-radius:10px}
+.tab-btn span{font-size:20px}.tab-btn.on{color:var(--ink);background:rgba(255,255,255,.06)}
+.codex .grid,.meta{padding-bottom:calc(var(--safe-b) + 84px)}
+.codex .foot{display:none}
+
+/* 도감 v2 */
+.tabs .tab{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 12px 6px;border-radius:14px;min-width:88px}
+.tabs .tab small{font-size:10px;color:var(--mute)}.tab.on small{color:var(--bg)}
+.ring{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--accent) var(--deg),rgba(255,255,255,.12) 0)}
+.ring img{width:26px;height:26px;background:var(--bg2);border-radius:50%;padding:3px}
+.tab.on .ring img{background:var(--ink)}
+.slot .nm{font-size:10px;line-height:1.2;max-height:2.4em;overflow:hidden}
+.slot .mbar{position:absolute;left:0;bottom:0;height:3px;width:var(--m);background:linear-gradient(90deg,var(--sc),#fff)}
+.slot.master{border-color:var(--gold);box-shadow:0 0 14px rgba(255,209,102,.6)}
+.slot.master::before{content:"MASTER";position:absolute;top:3px;left:5px;font-size:8px;letter-spacing:.1em;color:var(--gold)}
+.card .big-e{font-size:72px;text-align:center;margin:10px 0}
+.card.master{border-color:var(--gold);box-shadow:0 0 40px rgba(255,209,102,.5)}
+.note{font-size:12px;color:#f3e7c4;background:rgba(255,209,102,.08);border-left:2px solid var(--gold);padding:6px 8px;border-radius:6px;line-height:1.45}
+.note.locked{color:var(--mute);border-left-color:var(--line);background:rgba(255,255,255,.03)}
+
+/* 의뢰 / 프로필 */
+.meta{overflow-y:auto}
+.meta header{display:flex;align-items:center;gap:10px;margin-bottom:12px}.meta h2{margin:0;flex:1;font-size:18px}
+.meta h3{font-size:14px;color:var(--mute);margin:18px 0 8px;display:flex;justify-content:space-between}
+.streak-card,.rank-card,.info-card{display:flex;gap:12px;align-items:center;background:var(--bg2);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin-bottom:10px}
+.info-card{flex-direction:column;align-items:flex-start;gap:4px;font-size:13px}.info-card small{color:var(--mute);line-height:1.5}
+.streak-card .fire{font-size:30px}.streak-card small,.rank-card small{display:block;color:var(--mute);font-size:12px;margin-top:2px}
+.days{display:flex;gap:4px}.days i{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.12)}.days i.on{background:#ff8a5c;box-shadow:0 0 6px #ff8a5c}
+.rank-card .rk{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font-weight:900;font-size:18px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:var(--bg)}
+.progress.sm{height:6px;margin:6px 0 2px}
+.quest-list{display:flex;flex-direction:column;gap:8px}
+.quest{display:flex;gap:12px;align-items:center;background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:12px}
+.quest.done{opacity:.6;border-color:var(--gold)}.quest .qi{font-size:20px}.quest b{font-size:14px}.quest small{color:var(--mute);font-size:11px}
+.quest .qr{font-size:11px;text-align:right;color:var(--gold);line-height:1.5}.quest .prism{color:#ffb0e4}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.stats div{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:10px 6px;text-align:center}.stats b{display:block;font-size:20px}.stats small{color:var(--mute);font-size:10px}
+.ach-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.ach{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:10px 6px;text-align:center;opacity:.4;filter:grayscale(1)}
+.ach.on{opacity:1;filter:none;border-color:var(--gold);box-shadow:0 0 10px rgba(255,209,102,.3)}
+.ach span{font-size:26px;display:block}.ach b{display:block;font-size:11px;margin-top:4px}.ach small{display:none}
+.settings{display:flex;flex-direction:column;gap:6px}
+.setting{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:10px 12px;cursor:pointer}
+.setting b{font-size:14px;display:block}.setting small{color:var(--mute);font-size:11px;line-height:1.4}
+.setting input{display:none}.sw{width:42px;height:24px;border-radius:12px;background:rgba(255,255,255,.15);position:relative;flex:0 0 42px;transition:background .2s}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .2s}
+.setting input:checked+.sw{background:var(--accent)}.setting input:checked+.sw::after{left:21px}
+
+/* 스캔 v2 */
+.hud{flex-wrap:wrap}
+.hud2{position:absolute;left:0;right:0;top:calc(var(--safe-t) + 50px);padding:0 12px;display:flex;gap:6px;justify-content:center;flex-wrap:wrap;pointer-events:none}
+.hud2 .pill{pointer-events:auto}
+.pill.armed{background:linear-gradient(90deg,#ff8ad4,#8affd4);color:#0b0f1a;border:0}
+.hint-chip{position:absolute;left:12px;right:12px;top:calc(var(--safe-t) + 92px);display:flex;justify-content:center;pointer-events:none}
+.hint-chip .pill{font-size:11px;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tutorial{position:absolute;inset:0;z-index:6;background:rgba(11,15,26,.9);display:flex;align-items:center;justify-content:center;padding:24px}
+.tutorial .steps{background:var(--bg2);border:1px solid var(--line);border-radius:20px;padding:22px;width:min(360px,100%);text-align:center;animation:pop .4s both}
+.tutorial .steps h3{margin:0 0 14px}.tutorial .step{display:flex;gap:12px;align-items:center;text-align:left;margin:10px 0;font-size:14px}.tutorial .step span{font-size:28px}.tutorial .step small{display:block;color:var(--mute);font-size:12px}
+.grade-flash{position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle,var(--gc) 0,transparent 60%);animation:flashOut .6s ease-out both;opacity:.5}
+.reveal .grade-badge{display:inline-block;padding:4px 10px;border-radius:8px;font-weight:900;font-size:12px;letter-spacing:.1em;margin-left:6px}
+.reveal .multi{color:var(--mute);font-size:11px}
+.toast-stack{position:fixed;left:12px;right:12px;top:calc(env(safe-area-inset-top,0px) + 12px);z-index:100;display:flex;flex-direction:column;gap:6px;pointer-events:none}
+.toast-stack .toast{margin:0;transition:opacity .4s,transform .4s;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.toast-stack .toast.out{opacity:0;transform:translateY(-10px)}
+.toast.ach{background:linear-gradient(90deg,#ffd166,#ff8a5c)}.toast.quest{background:linear-gradient(90deg,#7cf59a,#6ee7ff)}
+/* QA 수정: 카메라 폴백(status) 위에서도 HUD·토큰 칩·힌트가 눌리도록 */
+.scan .hud,.scan .hud2,.scan .hint-chip{z-index:4}
+.title .actions .row .btn{white-space:nowrap;padding:12px 6px;font-size:14px}
+.title .actions .row .btn small{display:block;margin:0;font-size:11px}

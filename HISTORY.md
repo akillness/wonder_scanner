@@ -109,7 +109,42 @@ gantt
 | 빌드 | Vite 7.3.6, Node 26 |
 | 진입 QR | `docs/qr.png` |
 
-## 7. 남은 아이디어
+## 7. 스프린트 2 — AR · 콘텐츠 · 제품 폴리싱 (2026-09-23 오후)
+
+요청: "UI와 콘텐츠가 부족하다. 단순히 찍는 게 아니라 AR 같은 요소. 딥서치 후 개선·테스트·배포. 캐릭터·아이콘 리소스, 프로덕트 수준 폴리싱."
+
+### 리서치 → 설계 결정
+| 근거 | 적용 |
+|---|---|
+| Pokémon GO 서클 타이밍: 링 크기가 스킬 테스트, 색이 정보, 연속 배율이 보상 ([GO Hub](https://pokemongohub.net/post/wiki/catch-mechanics/), [ring guide](https://www.switchbladegaming.com/pokemon-go/catch-ring-guide/)) | **포획 타이밍 링** + PERFECT/GREAT/GOOD/MISS 등급, 미스 시 도망 |
+| Zeigarnik / Endowed Progress: 절반 넘긴 세트, 빈 실루엣이 완성 욕구를 만든다 ([Yu-kai Chou](https://yukaichou.com/advanced-gamification/game-design-technique-collection-sets/)) | 도감 챕터 링 진행도, "N개만 더!" 넛지, HUD 나침반 힌트 |
+| 변동 비율 보상 + 희귀 변이체의 예측 오차 도파민 ([Psychology of Games](https://www.psychologyofgames.com/2019/12/why-do-people-collect-virtual-items/)) | 정령 8% 황금 → 프리즘 토큰, 퍼펙트 시 변이체 ×3 |
+| 세트 완성만 보상하지 말 것, 계층형 보상 ([Game Wisdom](https://game-wisdom.com/critical/collectible-design-videogames), [GameRefinery](https://www.gamerefinery.com/attracting-and-retaining-players-with-collection-systems/)) | 정령 조각 → 부스트, 의뢰 3단, 업적 15, 도감 깊이 노트 |
+| New Pokémon Snap: 명확한 채점 축이 만족감 ([Game8](https://game8.co/games/New-Pokemon-Snap/archives/328684)) | 등급·배율을 리빌 화면에 숫자로 표기 |
+| 브라우저 AR = getUserMedia + deviceorientation + 캔버스, 3-DoF "둘러보기"가 현실적 ([Gyro-web](https://trekhleb.dev/blog/2021/gyro-web/), Aside 리서치) | 자이로 앵커 정령, 스크린 스페이스 오라·태그·링 |
+| Pokémon GO AR은 배터리·난이도로 끄는 유저가 많음 | AR 요소는 전부 캔버스 2D, 설정에서 모션 줄이기·자동 포획 제공 |
+
+### 추가된 것
+- **AR 레이어**: 스무딩 브래킷, 오라 파티클, 홀로 태그, 자이로 앵커 정령(탭 포획, 황금 정령), 포획 링, 등급 버스트
+- **콘텐츠**: 오늘의 의뢰 3개(날짜 시드), 연속 출석 배율, 업적 15종, 도감 깊이 노트(3회/10회), 프리즘 토큰, 공명 부스트, 나침반 힌트
+- **화면**: 튜토리얼, 의뢰, 프로필(통계·업적·설정), 하단 탭, 토스트 스택
+- **리소스**: Pollinations 생성물은 흐리고 워터마크가 있어 폐기 → 손으로 그린 SVG(루페 마스코트, 로고, 챕터 엠블럼 6종, 총 6KB)
+- **접근성**: 모션 줄이기 / 자동 포획 / 햅틱 / 사운드 토글, 저장 스키마 v2 마이그레이션
+
+### QA (Chrome DevTools, 390×844, 카메라 거부 폴백 + 사진 주입)
+| 시나리오 | 결과 |
+|---|---|
+| 3사이클 무입력 → AUTO 포획 (dog) | ✅ NEW, +40/+20, 의뢰 "희귀 이상" 완료 → 프리즘 토큰, 업적 2개 |
+| 링 r=0.328 탭 (laptop) | ✅ PERFECT, XP 45 (20×1.5×1.5), 별가루 60 (10×3×2), 변이체, 랭크 업 |
+| 링 r=0.90 탭 (cup) | ✅ MISS → 도망, 게이지 0.48, misses+1, 재충전 |
+| 재충전 후 r=0.46 탭 | ✅ GOOD, 장착한 프리즘 토큰 소비 → 변이체 확정 |
+| 정령 탭 | ✅ 조각 0→1, 별가루 +2, 플로팅 텍스트 |
+| 도감/의뢰/프로필 | ✅ 렌더·탭 이동, 콘솔 에러 0 |
+
+**발견·수정한 버그**: (1) 카메라 폴백 오버레이가 HUD·토큰 칩 위에 있어 탭 불가 → z-index. (2) 타이틀 보조 버튼 3개가 세로로 줄바꿈 → nowrap.
+**게임 필 계약**: `docs/game-feel-contract.json` (validate-game-feel.py 통과). 실기기 터치 지연에서 PERFECT 창(±135ms) 검증은 남음.
+
+## 8. 남은 아이디어
 
 - 일일 퀘스트("오늘은 부엌에서 3개") / 스트릭
 - Supabase 1테이블 글로벌 도감 완성률 랭킹

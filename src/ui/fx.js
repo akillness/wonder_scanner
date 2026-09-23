@@ -5,6 +5,7 @@ import { state } from '../game/state.js';
 // ── 파티클
 export function burst(rarity, isVariant = false) {
   const colors = isVariant ? ['#ff8ad4', '#8affd4', '#ffe08a', '#ffffff'] : [RARITY[rarity].color, '#ffffff'];
+  if (state.settings.reduceMotion) return;
   const base = { origin: { y: 0.55 }, colors, zIndex: 50, disableForReducedMotion: true };
   confetti({ ...base, particleCount: 40 + rarity * 30, spread: 60 + rarity * 15, startVelocity: 35 + rarity * 8 });
   if (rarity >= 3) setTimeout(() => confetti({ ...base, particleCount: 60, angle: 60, spread: 55, origin: { x: 0, y: .7 } }), 200);
@@ -19,18 +20,18 @@ export function burst(rarity, isVariant = false) {
 }
 
 // ── 화면 연출
-export function flash() {
+export function flash() { if (state.settings.reduceMotion) return;
   const el = document.createElement('div'); el.className = 'flash';
   document.body.appendChild(el); setTimeout(() => el.remove(), 600);
 }
-export function shake(el = document.getElementById('app')) { retrigger(el, 'shake'); }
-export function glitch(el = document.getElementById('app')) { retrigger(el, 'glitch'); }
+export function shake(el = document.getElementById("app")) { if (state.settings.reduceMotion) return; retrigger(el, "shake"); }
+export function glitch(el = document.getElementById("app")) { if (state.settings.reduceMotion) return; retrigger(el, "glitch"); }
 function retrigger(el, cls) { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); el.addEventListener('animationend', () => el.classList.remove(cls), { once: true }); }
-export function vibrate(pattern) { try { navigator.vibrate?.(pattern); } catch {} }
+export function vibrate(pattern) { if (!state.settings.haptics) return; try { navigator.vibrate?.(pattern); } catch {} }
 
 // ── Web Audio (에셋 없이 합성)
 let ctx = null;
-function ac() { if (!state.sound) return null; if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)(); if (ctx.state === 'suspended') ctx.resume(); return ctx; }
+function ac() { if (!state.settings.sound) return null; if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)(); if (ctx.state === 'suspended') ctx.resume(); return ctx; }
 export function unlockAudio() { ac(); }
 function tone(freq, { type = 'sine', dur = 0.12, vol = 0.18, at = 0, slide = 0 } = {}) {
   const c = ac(); if (!c) return;
