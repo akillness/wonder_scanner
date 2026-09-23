@@ -1,0 +1,20 @@
+{
+  "name": "wonder-scanner",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "일상의 사물을 스캔해 '원더'를 수집하는 카메라 도감 게임 (100% 브라우저 온디바이스 AI)",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "vite build",
+    "preview": "vite preview --host"
+  },
+  "dependencies": {
+    "@tensorflow-models/coco-ssd": "^2.2.3",
+    "@tensorflow/tfjs": "^4.22.0",
+    "canvas-confetti": "^1.9.4"
+  },
+  "devDependencies": {
+    "vite": "^7.0.0"
+  }
+}
