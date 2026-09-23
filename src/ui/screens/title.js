@@ -8,7 +8,7 @@ import { questSummary } from '../../game/quests.js';
 import { LUPE } from '../../game/narrative.js';
 import { streakMultiplier } from '../../game/balance.js';
 import { requestGyro } from '../../scanner/gyro.js';
-import { geoSummary, gimmickRemainingMs, remainLabel } from '../../game/spots.js';
+import { geoSummary, gimmickRemainingMs, remainLabel, revalidateSpots, activeGimmick } from '../../game/spots.js';
 import { distanceLabel, bearingLabel } from '../../geo/provider.js';
 import * as fx from '../fx.js';
 
@@ -24,9 +24,9 @@ const THUMBS = 3;
  * state.geo 는 옛 저장에 없을 수 있으니 전부 방어적으로 읽는다. [data-go="spots"] 가 있으면 spots.js 의 자동 마운트는 중복 삽입하지 않는다.
  * 자리: 목표 장부 아래 · 최근 촬영 행 위. 주 CTA(.actions) 는 v7.css 가 sticky 로 하단 엄지 영역에 고정하므로 이 카드가 CTA 를 밀어내지 않는다 (DESIGN 5 · 10).
  */
-function spotCardHtml() {
-  let s = null;
-  try { s = geoSummary(); } catch { s = null; }
+function spotCardHtml(pre = null) {
+  let s = pre;
+  if (!s) { try { s = geoSummary(); } catch { s = null; } }
   const top = s?.top ?? null, active = s?.active ?? null, suggested = s?.suggested ?? null;
   const raw = !top && Array.isArray(state.geo?.spots) ? state.geo.spots[0] : null; // recommend 가 실패해도 캐시 1곳은 보여 준다
   const spot = top ?? raw;
@@ -107,6 +107,17 @@ register('title', () => {
   $('#start').onclick = async () => { fx.unlockAudio(); fx.blip(); state.onboarded = true; save(); requestGyro(); go('scan'); };
   $$('[data-go]').forEach(b => b.onclick = () => { fx.blip(); go(b.dataset.go); });
   $('#settings').onclick = () => { fx.blip(); go('profile', true); };
+  // 근처 촬영지 카드: 위치 권한이 이미 허용돼 있으면(권한 창 없음) 현재 위치로 재검증해 가장 가까운 곳으로 교체
+  // 이동해서 새로 검색하는 동안에도 첫 카테고리가 도착하는 즉시(≈1초) 현재 위치 기준으로 바꾼다 — 이전 위치의 거리를 남겨 두지 않는다
+  const swapSpot = (r) => {
+    if (!alive || !r || r.status !== 'ok' || !r.spots?.length) return;
+    const el = $('#spotCard'); if (!el) return;
+    let active = null; try { active = activeGimmick(); } catch {}
+    el.outerHTML = spotCardHtml({ top: r.spots[0], suggested: r.gimmick ?? null, active });
+    const n = $('#spotCard'); if (!n) return;
+    [n, ...n.querySelectorAll('[data-go]')].filter(b => b.dataset?.go).forEach(b => b.onclick = () => { fx.blip(); go(b.dataset.go); });
+  };
+  revalidateSpots({ onPartial: swapSpot }).then(swapSpot).catch(() => {});
   // 최근 촬영 3장 (GAMEPLAY_V7 6.8) — 원더·사진·영상 구분 없이 최신순. 탭 → 앨범 상세. 없으면 행을 숨긴다.
   listMoments().then(ms => {
     const el = $('#thumbs'); if (!el || !alive) return;

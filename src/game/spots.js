@@ -4,11 +4,12 @@
 import { state, save, owned, closestChapter } from './state.js';
 import { WONDERS } from '../data/wonders.js';
 import { CHAPTERS, chapterLabels } from '../data/chapters.js';
-import { nearby, locate, decorate, distanceM, providerName } from '../geo/provider.js';
+import { nearby, locate, decorate, distanceM, providerName, geoPermission } from '../geo/provider.js';
 
+// radiusM: 1차 검색 반경 · expandRadiusM: 그 반경에 없는 카테고리만 넓히는 반경 · moveRefreshM: 캐시 기준점에서 이만큼 움직이면 새로 검색
 export const GEO = Object.freeze({
-  radiusM: 800, cacheMs: 60 * 60 * 1000, gimmickMs: 30 * 60 * 1000, challengeRadiusM: 150, challengeReward: 100,
-  top: 5, timeoutMs: 8000, fixTimeoutMs: 5000,
+  radiusM: 800, expandRadiusM: 2000, moveRefreshM: 250, cacheMs: 60 * 60 * 1000, gimmickMs: 30 * 60 * 1000, challengeRadiusM: 150, challengeReward: 100,
+  top: 5, timeoutMs: 14000, locateTimeoutMs: 9000, fixTimeoutMs: 5000,
 });
 
 // 7.3 장소 유형 → 챕터 · 추천 원더 · 기믹. 위에서부터 첫 매치. types 는 Google Table A 키 + OSM 정규화 키(osm.js).
@@ -87,30 +88,76 @@ export function cachedGeo(now = Date.now()) {
   const g = state.geo; if (!g || typeof g !== 'object' || !g.at) return null;
   return now - g.at <= GEO.cacheMs && Array.isArray(g.spots) ? g : null;
 }
+/** 규칙(카페·공원·역…)별로 가까운 순서를 번갈아 n개 — 도심에서 가까운 20곳이 전부 식당이어도 공원·역이 캐시에 남는다 */
+export function diverse(spots, n = 30) {
+  const groups = new Map();
+  for (const s of [...spots].sort((a, b) => (a.dist_m ?? 0) - (b.dist_m ?? 0))) {
+    const k = classify(s)?.id ?? 'other';
+    if (!groups.has(k)) groups.set(k, []);
+    groups.get(k).push(s);
+  }
+  const out = [];
+  for (let i = 0; out.length < n; i++) {
+    let took = false;
+    for (const g of groups.values()) { if (g[i]) { out.push(g[i]); took = true; if (out.length >= n) break; } }
+    if (!took) break;
+  }
+  return out.sort((a, b) => (a.dist_m ?? 0) - (b.dist_m ?? 0));
+}
+
 /** 캐시 저장 — 좌표는 소수점 3자리, 장소는 최대 20건의 최소 필드만. 기믹·도전은 유지. */
 export function saveGeo({ lat, lng, spots, now = Date.now() }) {
   const g = ensureGeo();
   const r3 = (v) => Math.round(Number(v) * 1000) / 1000;
   g.at = now; g.lat = r3(lat); g.lng = r3(lng);
-  g.spots = (Array.isArray(spots) ? spots : []).slice(0, 20).map(s => ({ id: s.id, name: s.name, types: (s.types || []).slice(0, 8), lat: s.lat, lng: s.lng, dist_m: s.dist_m, bearing_deg: s.bearing_deg, mapsUrl: s.mapsUrl, source: s.source }));
+  g.spots = diverse(Array.isArray(spots) ? spots : [], 30).map(s => ({ id: s.id, name: s.name, types: (s.types || []).slice(0, 8), lat: s.lat, lng: s.lng, dist_m: s.dist_m, bearing_deg: s.bearing_deg, mapsUrl: s.mapsUrl, source: s.source }));
   save(); return g;
 }
 
-/** 위치 → 주변 → 추천 → 캐시. 절대 throw 하지 않는다. status: ok | denied | unavailable | empty */
-export async function refreshSpots({ force = false, position = null, now = Date.now() } = {}) {
+// 마지막으로 확인한 현재 위치 (메모리에만 — 저장하지 않는다). 5분 안이면 요약 카드 거리를 이 좌표로 계산한다.
+let liveOrigin = null;
+const LIVE_MS = 5 * 60 * 1000;
+export const currentOrigin = (now = Date.now()) => (liveOrigin && now - liveOrigin.at <= LIVE_MS ? liveOrigin : null);
+
+/** 캐시 기준점에서 현재 위치까지 거리(m). 비교 불가면 Infinity */
+export function movedFromCache(c, p) {
+  if (!c || !p || !Number.isFinite(c.lat) || !Number.isFinite(c.lng) || !Number.isFinite(p.lat) || !Number.isFinite(p.lng)) return Infinity;
+  return distanceM(c.lat, c.lng, p.lat, p.lng);
+}
+
+/**
+ * 현재 위치 → 주변 → 추천 → 캐시. 절대 throw 하지 않는다. status: ok | denied | unavailable | empty
+ * - force: 캐시를 무시하고 위치를 잡아 새로 검색 ("찾기"·"다시 찾기" 탭)
+ * - revalidate: 캐시가 있어도 위치를 다시 잡아, moveRefreshM 이상 움직였으면 새로 검색하고 아니면 거리·방위만 현재 위치로 갱신
+ * - onPartial(result): 검색 중 카테고리가 도착할 때마다 중간 추천 결과 (점진 렌더)
+ * 거리·방위는 항상 반올림 전 현재 좌표로 계산하고, 저장은 소수점 3자리(≈100m)만 한다.
+ */
+export async function refreshSpots({ force = false, revalidate = false, position = null, now = Date.now(), onPartial } = {}) {
   try {
     const c = cachedGeo(now);
-    if (c && !force && c.spots.length) return { status: 'ok', cached: true, source: c.spots[0]?.source, at: c.at, ...recommend(c.spots, c) };
-    const p = position ?? await locate({ timeoutMs: GEO.timeoutMs });
-    if (!p?.ok) return { status: p?.error === 'denied' ? 'denied' : 'unavailable', error: p?.error, cached: false, spots: [], gimmick: null };
-    const raw = await nearby({ lat: p.lat, lng: p.lng, radius: GEO.radiusM, timeoutMs: GEO.timeoutMs });
+    if (c && !force && !revalidate && !position && c.spots.length) return { status: 'ok', cached: true, source: c.spots[0]?.source, at: c.at, ...recommend(c.spots, c) };
+    const p = position ?? await locate({ timeoutMs: GEO.locateTimeoutMs, maximumAge: 15000, highAccuracy: true, precise: true });
+    if (!p?.ok) {
+      // 위치를 못 잡아도 유효한 캐시는 보여 준다 (단, 이전 위치 기준임을 표시)
+      if (c?.spots?.length && p?.error !== 'denied') return { status: 'ok', cached: true, stale: true, source: c.spots[0]?.source, at: c.at, ...recommend(c.spots, c) };
+      return { status: p?.error === 'denied' ? 'denied' : 'unavailable', error: p?.error, cached: false, spots: [], gimmick: null };
+    }
+    const origin = { lat: p.lat, lng: p.lng, accuracy: p.accuracy };
+    liveOrigin = { ...origin, at: now };
+    const moved = movedFromCache(c, p);
+    if (c?.spots?.length && !force && moved <= GEO.moveRefreshM) {
+      return { status: 'ok', cached: true, source: c.spots[0]?.source, at: c.at, origin, moved: Math.round(moved), ...recommend(c.spots, origin) };
+    }
+    const partial = typeof onPartial === 'function' ? (spots) => { try { onPartial({ status: 'ok', partial: true, cached: false, source: spots[0]?.source, at: now, origin, ...recommend(spots, origin) }); } catch {} } : undefined;
+    const raw = await nearby({ lat: p.lat, lng: p.lng, radius: GEO.radiusM, expandRadius: GEO.expandRadiusM, timeoutMs: GEO.timeoutMs, onBatch: partial });
     // 강제 새로고침이 일시적으로 실패해도 유효한 1시간 캐시를 비우지 않는다.
     // stale 표시는 UI가 사용자에게 이전 결과를 보여 주고 있음을 명시할 때만 사용한다.
     if (!raw.length && c?.spots?.length) {
-      return { status: 'ok', cached: true, stale: true, source: c.spots[0]?.source ?? providerName(), at: c.at, ...recommend(c.spots, c) };
+      // 거리는 현재 위치 기준 — 멀리 이동했다면 이전 장소들이 멀게 보여야 오해가 없다
+      return { status: 'ok', cached: true, stale: true, source: c.spots[0]?.source ?? providerName(), at: c.at, origin, moved: Math.round(moved), ...recommend(c.spots, origin) };
     }
     if (raw.length) saveGeo({ lat: p.lat, lng: p.lng, spots: raw, now });
-    return { status: raw.length ? 'ok' : 'empty', cached: false, source: raw[0]?.source ?? providerName(), at: now, ...recommend(raw, p) };
+    return { status: raw.length ? 'ok' : 'empty', cached: false, source: raw[0]?.source ?? providerName(), at: now, origin, ...recommend(raw, origin) };
   } catch (e) { console.info('[geo] refresh failed:', e?.name || e); return { status: 'unavailable', cached: false, spots: [], gimmick: null }; }
 }
 
@@ -186,9 +233,20 @@ export async function challengeProgress(label, { position = null, now = Date.now
   } catch { return null; }
 }
 
+/**
+ * 권한이 이미 허용된 경우에만(권한 창을 띄우지 않음) 현재 위치로 추천을 재검증한다. 허용 전이면 null.
+ * 타이틀·촬영지 화면 진입 시 백그라운드로 부른다.
+ */
+export async function revalidateSpots({ onPartial } = {}) {
+  try {
+    if (await geoPermission() !== 'granted') return null;
+    return await refreshSpots({ revalidate: true, onPartial });
+  } catch { return null; }
+}
+
 /** 타이틀 카드용 요약 */
 export function geoSummary(now = Date.now()) {
   const c = cachedGeo(now);
-  const rec = c && c.spots.length ? recommend(c.spots, c) : null;
+  const rec = c && c.spots.length ? recommend(c.spots, currentOrigin(now) ?? c) : null;
   return { cached: !!rec, top: rec?.spots[0] ?? null, suggested: rec?.gimmick ?? null, active: activeGimmick(now), challenge: spotChallenge(), count: rec?.spots.length ?? 0, at: c?.at ?? 0 };
 }

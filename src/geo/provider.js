@@ -47,17 +47,32 @@ export function decorate(spots, { lat, lng } = {}) {
 }
 
 /**
- * 주변 장소. google(키 있을 때) → osm → []. 절대 throw 하지 않는다.
+ * 주변 장소. google(키 있을 때) → nominatim(카테고리별 확장 반경) → overpass → []. 절대 throw 하지 않는다.
+ * onBatch(spots) 는 nominatim 이 카테고리를 하나 받을 때마다 거리순 장식된 누적 결과로 호출된다 (점진 렌더용).
  * @returns {Promise<Spot[]>}  Spot = { id, name, types, lat, lng, dist_m, bearing_deg, mapsUrl, source }
  */
-export async function nearby({ lat, lng, radius = 800, timeoutMs = 8000, fetchImpl } = {}) {
+export async function nearby({ lat, lng, radius = 800, expandRadius = 2000, timeoutMs = 12000, fetchImpl, onBatch } = {}) {
   if (!Number.isFinite(lat) || !Number.isFinite(lng)) return [];
-  const key = googleKey();
+  const key = googleKey(), maxM = Math.max(radius, expandRadius) * 1.2;
+  const fin = (spots) => decorate(spots, { lat, lng }).filter(s => s.dist_m <= maxM);
   let spots = [];
   if (key) { try { spots = await googleNearby({ lat, lng, radius, key, timeoutMs, fetchImpl }); } catch { spots = []; } }
-  if (!spots.length) { try { spots = await nominatimNearby({ lat, lng, radius, timeoutMs, fetchImpl }); } catch { spots = []; } }
-  if (!spots.length) { try { spots = await osmNearby({ lat, lng, radius, timeoutMs: Math.min(timeoutMs, 6000), fetchImpl }); } catch { spots = []; } }
-  return decorate(spots, { lat, lng }).filter(s => s.dist_m <= radius * 1.6);
+  if (!spots.length) {
+    const batch = typeof onBatch === 'function' ? (s) => { const d = fin(s); if (d.length) onBatch(d); } : undefined;
+    try { spots = await nominatimNearby({ lat, lng, radius, expandRadius, timeoutMs, fetchImpl, onBatch: batch }); } catch { spots = []; }
+  }
+  if (!spots.length) { try { spots = await osmNearby({ lat, lng, radius: expandRadius, timeoutMs: Math.min(timeoutMs, 6000), fetchImpl }); } catch { spots = []; } }
+  return fin(spots);
+}
+
+/** 위치 권한 상태 (권한 창을 띄우지 않는다): 'granted' | 'prompt' | 'denied' | 'unknown' */
+export async function geoPermission() {
+  try {
+    const p = globalThis.navigator?.permissions;
+    if (!p || typeof p.query !== 'function') return 'unknown';
+    const s = await p.query({ name: 'geolocation' });
+    return s?.state || 'unknown';
+  } catch { return 'unknown'; }
 }
 /** 지금 쓰일 제공자 이름 (표시용) */
 export const providerName = () => (hasGoogleKey() ? 'Google' : 'OSM (Nominatim)');
@@ -66,7 +81,16 @@ export const providerName = () => (hasGoogleKey() ? 'Google' : 'OSM (Nominatim)'
  * 옵트인 위치 요청 — 탭에서만 호출. 좌표는 소수점 3자리로 반올림 (precise: 저장하지 않는 1회 판정용 원좌표).
  * @returns {Promise<{ ok:true, lat:number, lng:number, accuracy:number }|{ ok:false, error:'unsupported'|'denied'|'unavailable'|'timeout' }>}
  */
-export function locate({ timeoutMs = 8000, maximumAge = 60000, highAccuracy = false, precise = false } = {}) {
+export async function locate({ timeoutMs = 8000, maximumAge = 60000, highAccuracy = false, precise = false } = {}) {
+  // 고정밀(GPS) 요청은 실내에서 타임아웃이 잦다 → 타임아웃·불가면 저정밀(Wi-Fi·기지국)로 한 번 더. 권한 거부는 재시도하지 않는다.
+  if (highAccuracy) {
+    const hi = await locateOnce({ timeoutMs: Math.min(timeoutMs, 7000), maximumAge, highAccuracy: true, precise });
+    if (hi.ok || hi.error === 'denied' || hi.error === 'unsupported') return hi;
+    return locateOnce({ timeoutMs: Math.max(3000, timeoutMs - 5000), maximumAge: Math.max(maximumAge, 120000), highAccuracy: false, precise });
+  }
+  return locateOnce({ timeoutMs, maximumAge, highAccuracy, precise });
+}
+function locateOnce({ timeoutMs, maximumAge, highAccuracy, precise }) {
   return new Promise((resolve) => {
     const geo = globalThis.navigator?.geolocation;
     if (!geo || typeof geo.getCurrentPosition !== 'function') return resolve({ ok: false, error: 'unsupported' });

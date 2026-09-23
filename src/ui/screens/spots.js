@@ -6,8 +6,8 @@ import { register, go, app, $, $$, esc, tabsHtml, bindTabs, toast, icon, glyph }
 import { hasIcon } from '../icons.js';
 import { state, save } from '../../game/state.js';
 import { WONDERS } from '../../data/wonders.js';
-import { refreshSpots, cachedGeo, recommend, activeGimmick, startGimmick, gimmickRemainingMs, remainLabel, spotChallenge, geoSummary, challengeProgress } from '../../game/spots.js';
-import { providerName, distanceLabel, bearingLabel } from '../../geo/provider.js';
+import { refreshSpots, revalidateSpots, currentOrigin, cachedGeo, recommend, activeGimmick, startGimmick, gimmickRemainingMs, remainLabel, spotChallenge, geoSummary, challengeProgress } from '../../game/spots.js';
+import { providerName, distanceLabel, bearingLabel, geoPermission } from '../../geo/provider.js';
 import * as fx from '../fx.js';
 
 const PIN = hasIcon('pin') ? 'pin' : 'globe';
@@ -80,11 +80,14 @@ register('spots', () => {
   const view = (html) => { const b = $('#body'); if (b) { b.innerHTML = html; bindBody(); } };
   const listHtml = (r) => {
     const full = r.source === 'google' ? 'Google Places' : r.source === 'osm' ? 'OSM (Nominatim)' : providerName();
+    const acc = Number(r.origin?.accuracy);
+    const accTxt = Number.isFinite(acc) && acc > 0 ? ` · ±${acc < 1000 ? Math.round(acc) + 'm' : (acc / 1000).toFixed(1) + 'km'}` : '';
     const s = $('#src'); if (s) {
-      s.title = r.stale ? '지도 서버가 잠시 응답하지 않아 이전 결과를 표시 중' : full;
-      s.innerHTML = `${icon(PIN)} ${esc(srcShort(full))}${r.stale ? ' · 이전 결과' : (r.at ? ` · ${ago(r.at)}` : '')}`;
+      s.title = r.stale ? '지도 서버나 위치를 잠시 못 잡아 이전 결과를 표시 중' : `${full}${r.origin ? ' · 현재 위치 기준' : ''}`;
+      s.innerHTML = `${icon(PIN)} ${esc(srcShort(full))}${r.stale ? ' · 이전 결과' : (r.at ? ` · ${ago(r.at)}` : '')}${r.stale ? '' : accTxt}`;
     }
-    return `<div class="spot-list">${r.spots.map((sp, i) => cardHtml(sp, i)).join('')}</div>`;
+    const more = r.partial ? `<small class="mono spot-more" aria-live="polite" style="display:block;text-align:center;color:var(--mute);margin:8px 0">${icon('repeat', { size: 12 })} 더 찾는 중… (카페·공원·역·도서관·마트)</small>` : '';
+    return `<div class="spot-list">${r.spots.map((sp, i) => cardHtml(sp, i)).join('')}</div>${more}`;
   };
   const show = (r) => {
     last = r;
@@ -94,19 +97,34 @@ register('spots', () => {
     else view(emptyHtml(r));
     const g = $('#gim'); if (g) { g.innerHTML = gimmickHtml(); bindGim(); }
   };
+  // 점진 렌더: 카테고리가 도착할 때마다 카드를 갱신 (최종 결과가 오면 덮어쓴다)
+  let done = false;
+  const partial = (r) => { if (alive && !done && r?.spots?.length) show(r); };
   const run = async (force = false) => {
-    if (busy) return; busy = true;
+    if (busy) return; busy = true; done = false;
     if (force) { view(skeletonHtml()); const b = $('#refresh'); if (b) b.disabled = true; }
-    const r = await refreshSpots({ force });
-    busy = false; const b = $('#refresh'); if (b) b.disabled = false;
+    const r = await refreshSpots({ force, onPartial: partial });
+    done = true; busy = false; const b = $('#refresh'); if (b) b.disabled = false;
     if (r.status === 'denied') fx.denied();
     show(r);
+  };
+  // 권한이 이미 허용돼 있으면 권한 창 없이 현재 위치로 재검증 (이동했으면 새로 검색, 아니면 거리만 갱신)
+  const revalidate = async () => {
+    if (busy) return; busy = true; done = false;
+    const s = $('#src'); if (s) s.insertAdjacentHTML('beforeend', '<span class="spot-locating"> · 위치 확인 중</span>');
+    const r = await revalidateSpots({ onPartial: partial });
+    done = true; busy = false; $('.spot-locating')?.remove();
+    if (r && alive) show(r);
   };
 
   shell();
   const c = cachedGeo(now());
-  if (c && c.spots.length) show({ status: 'ok', cached: true, source: c.spots[0]?.source, at: c.at, ...recommend(c.spots, c) });
-  else view(idleHtml());
+  if (c && c.spots.length) { const o = currentOrigin(); show({ status: 'ok', cached: true, source: c.spots[0]?.source, at: c.at, origin: o ?? undefined, ...recommend(c.spots, o ?? c) }); revalidate(); }
+  else {
+    view(idleHtml());
+    // 캐시가 없어도 권한이 이미 있으면 바로 현재 위치로 찾는다 (권한 창은 띄우지 않는다)
+    geoPermission().then(st => { if (alive && st === 'granted' && !busy) run(true); }).catch(() => {});
+  }
   // 기믹 남은 시간 갱신 (15초) — 만료되면 배너 제거
   timer = setInterval(() => { if (!alive) return; const el = $('[data-gim-left]'); if (!el) return; if (!activeGimmick()) { const g = $('#gim'); if (g) g.innerHTML = ''; return; } el.textContent = `${remainLabel(gimmickRemainingMs())} 남음`; }, 15000);
   if (location.search.includes('debug')) window.__spots = { run, show, recommend, refreshSpots, startGimmick, activeGimmick, challengeProgress, last: () => last };
