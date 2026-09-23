@@ -4,15 +4,21 @@ import { state, save, todayKey, ownedCount, closestChapter, chapterProgress } fr
 import { CHAPTERS } from '../data/chapters.js';
 import { WONDERS } from '../data/wonders.js';
 import { nextMilestone } from './economy.js';
+import { activeGimmick, gimmickMod, gimmickRemainingMs, remainLabel } from './spots.js';
+import { hasIcon } from '../ui/icons.js';
+
+const PIN = hasIcon('pin') ? 'pin' : 'globe';
 
 const hour = () => new Date().getHours();
 const seeded = (str) => { let h = 2166136261; for (const c of str) h = Math.imul(h ^ c.charCodeAt(0), 16777619); return () => { h = Math.imul(h ^ (h >>> 15), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909); return ((h ^= h >>> 16) >>> 0) / 4294967296; }; };
 
 /** 상황별 조언 — 위에서부터 첫 매치 (긴급 > 결정 지원 > 힌트 > 잡담) */
 export function advise(ctx = {}) {
-  const c = closestChapter(), nm = nextMilestone(), ev = activeEvent();
+  const c = closestChapter(), nm = nextMilestone(), ev = activeEvent(), gim = safeGimmick();
   const rules = [
     [() => ev && !ev.seen, () => ({ icon: 'event', text: `사건 발생! ${ev.title} — ${ev.desc}`, action: 'event' })],
+    // 위치 기믹 (GAMEPLAY_V7 §7.3): 사건 다음 순위. 스팟 화면에서는 이미 배너가 있으니 건너뛴다.
+    [() => gim && ctx.screen !== 'spots', () => ({ icon: PIN, text: `기믹 「${gim.title}」 진행 중 — ${gim.desc}. ${remainLabel(gimmickRemainingMs())} 남았어${gim.spotName ? `, ${gim.spotName} 근처야` : ''}.`, action: 'spots' })],
     [() => state.prismTokens > 0 && ctx.screen === 'scan' && !ctx.armed, () => ({ icon: 'prism', text: `프리즘 토큰이 ${state.prismTokens}개 있어. 희귀한 게 보이면 장착해서 변이체로 만들자.`, action: 'arm' })],
     [() => state.boost > 0 && ctx.screen === 'scan', () => ({ icon: 'boost', text: '공명 부스트가 걸려 있어. 이번엔 두 배로 빨리 찰 거야.' })],
     [() => state.dust >= 320 && state.prismTokens === 0, () => ({ icon: 'shop', text: `별가루가 ${state.dust}이나 쌓였어. 상점에서 프리즘 토큰을 사 두는 건 어때?`, action: 'shop' })],
@@ -47,14 +53,19 @@ export function activeEvent() {
   return state.event;
 }
 export function markEventSeen() { const e = activeEvent(); if (!e.seen) { e.seen = true; save(); } }
-/** 사건 보정치 조회 */
+/** 사건 보정치 조회 — 기존 사건 배율 × 위치 기믹 배율(spots.gimmickMod). 사건 로직은 불변, 곱만 추가. */
 export function eventMod(key, ctx = {}) {
+  return baseEventMod(key, ctx) * safeGimmickMod(key, ctx);
+}
+function baseEventMod(key, ctx = {}) {
   const e = activeEvent(); if (!e || e.done) return 1;
   if (key === 'dust' && e.mod.dustMulChapter && ctx.chapter === e.params.chapter) return e.mod.dustMulChapter;
   if (key === 'spirit' && e.mod.spiritMul) return e.mod.spiritMul;
   if (key === 'fill' && e.mod.fillMul) return e.mod.fillMul;
   return 1;
 }
+function safeGimmickMod(key, ctx) { try { const m = Number(gimmickMod(key, ctx)); return Number.isFinite(m) && m > 0 ? m : 1; } catch { return 1; } }
+function safeGimmick() { try { return activeGimmick(); } catch { return null; } }
 /** 발견 시 부탁/사건 완료 판정 → 보상 리턴 */
 export function onDiscoverEvent(label) {
   const e = activeEvent(); if (!e || e.done) return null;

@@ -1,0 +1,15 @@
+{
+  "name": "Wonder Scanner",
+  "short_name": "Wonder",
+  "description": "일상의 사물을 스캔해 숨겨진 '원더'를 수집하는 카메라 도감 게임. 100% 브라우저 온디바이스 AI.",
+  "lang": "ko",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0F141E",
+  "theme_color": "#0F141E",
+  "icons": [
+    { "src": "/img/logo.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

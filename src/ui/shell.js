@@ -3,8 +3,8 @@ import { questSummary } from '../game/quests.js';
 import { WONDERS, RARITY, ALL_LABELS } from '../data/wonders.js';
 import { icon } from './icons.js';
 
-// ── 아이콘 재수출 (DESIGN.md 9.4): 화면 코드는 shell 에서 icon 을 가져다 쓴다
-export { icon } from './icons.js';
+// ── 아이콘 재수출 (DESIGN.md 9.4): 화면 코드는 shell 에서 icon 을 가져다 쓴다. hasIcon 은 신규 아이콘 이름 폴백용.
+export { icon, hasIcon } from './icons.js';
 
 export const app = document.getElementById('app');
 export const esc = (s) => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -32,6 +32,15 @@ export const rarityHtml = (n, { label = true } = {}) => {
 export const catalogNo = (label) => `No. ${String(ALL_LABELS.indexOf(label) + 1).padStart(3, '0')}`;
 // 원더 글리프 — 이모지 사용의 유일한 예외 (4.11). 반드시 렌즈 접시(.glyph) 안에서만.
 export const glyph = (emoji, cls = '') => `<span class="glyph ${cls}">${emoji}</span>`;
+// 추억(moment) 표시 헬퍼 — v7 의 kind 'photo'/'video' 추억은 label 이 null 일 수 있다 (GAMEPLAY_V7 6.5).
+// 원더가 아니면 이름은 '스냅', 표식은 글리프 대신 camera/film 아이콘 (UI 크롬 이모지 금지 규칙과도 맞는다).
+export const momentName = (m) => WONDERS[m?.label]?.name ?? '스냅';
+export const momentMark = (m, cls = '') => {
+  const w = WONDERS[m?.label];
+  if (w) return glyph(w.emoji, cls);
+  const video = m?.kind === 'video' || (!!m?.clip && !m?.label) || (!!m?.clipUrl && !m?.label);
+  return `<span class="glyph ${cls}">${icon(video ? 'film' : 'camera', { size: 16 })}</span>`;
+};
 // 모션 줄이기(설정) → :root.reduce-motion. prefers-reduced-motion 과 함께 존중한다 (DESIGN 6). 부팅·설정 변경·초기화 시 호출.
 export const syncReduceMotion = () => document.documentElement.classList.toggle('reduce-motion', !!state.settings?.reduceMotion);
 

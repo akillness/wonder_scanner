@@ -3,6 +3,7 @@ import { WONDERS } from '../data/wonders.js';
 import { CHAPTERS } from '../data/chapters.js';
 import { ACHIEVEMENTS } from './achievements.js';
 import { BALANCE } from './balance.js';
+import { AURAS, ownsAura } from '../ar/auras.js';
 
 // ── 별가루 상점 (별가루의 사용처 = 경제 순환) — icon 은 src/ui/icons.js 아이콘 이름, FRAMES 색은 DESIGN.md 9.3
 export const FRAMES = [
@@ -16,10 +17,14 @@ export const SHOP = [
   { id: 'prism', icon: 'prism', name: '프리즘 토큰', desc: '다음 포획 변이체 확정', price: 320, buy: () => { state.prismTokens += 1; } },
   { id: 'reroll', icon: 'repeat', name: '의뢰 새로고침', desc: '미완료 의뢰 1개를 다른 의뢰로', price: 60, buy: () => { const q = state.quests.items.find(q => !q.done); if (!q) return '새로고칠 의뢰가 없어요'; q.type = q.type === 'spirits' ? 'scanAny' : 'spirits'; q.goal = q.type === 'spirits' ? 8 : 5; q.params.goal = q.goal; q.progress = 0; } },
   ...FRAMES.filter(f => f.price).map(f => ({ id: `frame:${f.id}`, icon: 'frame', name: f.name, desc: '카드·앨범 프레임 스킨', price: f.price, once: true, buy: () => { state.frames.push(f.id); state.activeFrame = f.id; } })),
+  // 아우라 스킨 (GAMEPLAY_V7 4.2) — 보유 판정은 state.auraSkins(없으면 ['ember']). 구매 = "바꿀 권리"; 기본 매핑으로는 미보유도 보인다
+  ...Object.values(AURAS).filter(a => a.price > 0).map(a => ({ id: `aura:${a.id}`, icon: 'star', name: `${a.name} 아우라`, desc: a.desc, price: a.price, once: true, buy: () => { if (ownsAura(a.id)) return '이미 보유'; if (!Array.isArray(state.auraSkins)) state.auraSkins = ['ember']; state.auraSkins.push(a.id); } })),
 ];
+/** once 상품 보유 여부 (frame:* → state.frames, aura:* → state.auraSkins) */
+export const shopOwned = (item) => !!item?.once && (item.id.startsWith('aura:') ? ownsAura(item.id.slice(5)) : state.frames.includes(item.id.split(':')[1]));
 export function buy(id) {
   const item = SHOP.find(i => i.id === id); if (!item) return { ok: false, msg: '없는 상품' };
-  if (item.once && state.frames.includes(id.split(':')[1])) return { ok: false, msg: '이미 보유' };
+  if (shopOwned(item)) return { ok: false, msg: '이미 보유' };
   if (state.dust < item.price) return { ok: false, msg: `별가루가 ${item.price - state.dust} 부족해요` };
   const err = item.buy(); if (err) return { ok: false, msg: err };
   state.dust -= item.price; save(); return { ok: true, item };

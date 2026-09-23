@@ -35,6 +35,22 @@ function ac() { if (!state.settings.sound) return null; if (!ctx) { ctx = new (w
 /** 녹화기가 게임 사운드를 믹스할 수 있도록 MediaStream 제공 */
 export function audioStream() { const c = ac(); if (!c) return null; if (!tapDest) { tapDest = c.createMediaStreamDestination(); master.connect(tapDest); } return tapDest.stream; }
 export function unlockAudio() { ac(); }
+// ── 셔터 (GAMEPLAY_V7 6.3): 2단 기계식 클릭 — 미러 업(밝은 클릭) → 미러 다운(낮고 둔한 클릭). settings.sound 와 settings.shutterSound(!== false) 존중
+let noiseBuf = null;
+function noise(c) { if (noiseBuf) return noiseBuf; const n = Math.round(c.sampleRate * 0.05); noiseBuf = c.createBuffer(1, n, c.sampleRate); const d = noiseBuf.getChannelData(0); for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1; return noiseBuf; }
+function click(c, { at = 0, freq = 3000, q = 1.1, dur = 0.022, vol = 0.22 } = {}) {
+  const t = c.currentTime + at, src = c.createBufferSource(), bp = c.createBiquadFilter(), g = c.createGain();
+  src.buffer = noise(c); bp.type = 'bandpass'; bp.frequency.value = freq; bp.Q.value = q;
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + 0.002); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  src.connect(bp).connect(g).connect(master); src.start(t); src.stop(t + dur + 0.01);
+}
+export function shutter() {
+  if (state.settings?.shutterSound === false) return;
+  const c = ac(); if (!c) return;
+  click(c, { at: 0, freq: 3200, dur: 0.02, vol: 0.2 });                 // 1단: 미러 업
+  click(c, { at: 0.085, freq: 1700, q: 0.9, dur: 0.034, vol: 0.26 });    // 2단: 미러 다운
+  tone(170, { type: 'sine', dur: 0.05, vol: 0.1, at: 0.085, slide: -70 }); // 몸통 울림
+}
 function tone(freq, { type = 'sine', dur = 0.12, vol = 0.18, at = 0, slide = 0 } = {}) {
   const c = ac(); if (!c) return;
   const o = c.createOscillator(), g = c.createGain();

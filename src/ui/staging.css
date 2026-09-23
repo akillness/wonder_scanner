@@ -1,0 +1,42 @@
+/* ── staging.css — GAMEPLAY_V7 §1 / §2 / §4.3 연출용 DOM 훅 (캔버스 밖 요소만)
+   팔레트: DESIGN.md 토큰만 (Bone #EDE6D6 · Brass #E2B45A / #C99A3F · Ink #0F141E / #161D2B).
+   .eye-hud 는 styles.css(peer) 소유 — 여기서 정의하지 않는다. */
+
+/* 줌 펀치 대상: 비디오+오버레이를 감싸는 단 하나의 래퍼 (§2 "새 DOM 요소는 .overlay-wrap 1개뿐") */
+.overlay-wrap{position:absolute;inset:0;will-change:transform;transform-origin:50% 50%}
+
+/* 발견 화면·앨범 상세: 사진 위 각인 윤곽 오버레이 (선만, 글자 없음 — §1.3) */
+.photo-wrap{position:relative}
+.photo-wrap>.etch{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1;border-radius:inherit;overflow:visible}
+
+/* 발견 서스펜스 앞 "포획 실루엣" 히어로: 화면 중앙에 황동 윤곽이 먼저 떠오르고(1.15→1) 그 자리에서 카드가 뒤집혀 나온다 */
+.etch-hero{position:absolute;left:50%;top:44%;width:min(320px,86vw);aspect-ratio:1;translate:-50% -50%;pointer-events:none;z-index:5;
+  animation:stgEtchHero .4s var(--ease-out,cubic-bezier(.2,.8,.2,1)) both}
+.etch-hero>.etch{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.etch-hero.out{animation:stgEtchHeroOut .28s var(--ease-out,cubic-bezier(.2,.8,.2,1)) both}
+@keyframes stgEtchHero{0%{opacity:0;transform:scale(1.15)}55%{opacity:1}100%{opacity:1;transform:scale(1)}}
+@keyframes stgEtchHeroOut{0%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(.96)}}
+
+/* 세션 추적 로그: hint-chip 아래 mono 한 줄 (§1.2 "최근: cup 62% · laptop ✓") */
+.track-log{display:block;margin:4px auto 0;max-width:100%;padding:0 12px;font-family:var(--font-mono,"IBM Plex Mono",monospace);font-weight:500;font-size:11px;line-height:18px;
+  letter-spacing:.04em;color:var(--mute,#8F8A7C);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
+.track-log b{font-weight:500;color:var(--bone-2,#CFC7B4)}
+.track-log .ok{color:var(--ok,#6DB5A0)}
+
+/* 아이 임팩트 ⑤ 화면 가장자리 황동 플래시 180ms (§4.3). styles.css 의 동명 규칙과 같은 룩 — 어느 쪽이 이겨도 같다 */
+.eye-flash{position:absolute;inset:0;pointer-events:none;z-index:3;opacity:0;
+  box-shadow:inset 0 0 0 3px #E2B45A,inset 0 0 40px rgba(226,180,90,.45)}
+.eye-flash.on{animation:stgEyeFlash .18s ease-out both}
+@keyframes stgEyeFlash{0%{opacity:1}100%{opacity:0}}
+
+/* 모션 줄이기: 히어로 스케일·플래시 OFF, 윤곽·로그는 유지 (DESIGN 6 · GAMEPLAY §1.3/§2/§4.3) */
+@media (prefers-reduced-motion:reduce){
+  .etch-hero,.etch-hero.out{animation:none;opacity:1;transform:none}
+  .etch-hero.out{opacity:0}
+  .eye-flash.on{animation:none;opacity:0}
+  .overlay-wrap{will-change:auto}
+}
+:root.reduce-motion .etch-hero,:root.reduce-motion .etch-hero.out{animation:none;opacity:1;transform:none}
+:root.reduce-motion .etch-hero.out{opacity:0}
+:root.reduce-motion .eye-flash.on{animation:none;opacity:0}
+:root.reduce-motion .overlay-wrap{will-change:auto}
